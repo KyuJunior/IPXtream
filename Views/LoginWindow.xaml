@@ -139,6 +139,18 @@
         </Style>
     </Window.Resources>
 
+    <!-- ── Window load animation ────────────────────────────────────────────── -->
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                     From="0.0" To="1.0" Duration="0:0:0.35"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+
     <!-- ── Root card ────────────────────────────────────────────────────────── -->
     <Border Background="{StaticResource BgCard}"
             CornerRadius="16"

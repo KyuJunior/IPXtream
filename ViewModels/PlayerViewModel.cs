@@ -1,8 +1,11 @@
+using System;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IPXtream.Models;
 using IPXtream.Services;
 using LibVLCSharp.Shared;
+using LibVLCSharp.Shared.Structures;
 
 namespace IPXtream.ViewModels;
 
@@ -34,6 +37,57 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     {
         if (MediaPlayer is not null)
             MediaPlayer.Volume = value;
+    }
+
+    // ── Timeline / Seekbar ────────────────────────────────────────────────────
+    [ObservableProperty] private float _position;
+    [ObservableProperty] private string _positionText = "00:00:00";
+    [ObservableProperty] private string _lengthText = "00:00:00";
+    [ObservableProperty] private bool _isSeekable;
+
+    /// <summary>Set to true by the View when the user is actively dragging the slider, to prevent stutter.</summary>
+    public bool IsUserSeeking { get; set; }
+
+    public void CommitSeek(float targetPosition)
+    {
+        if (MediaPlayer is not null)
+        {
+            MediaPlayer.Position = targetPosition;
+            // Instantly update UI text so it doesn't freeze until next VLC tick
+            PositionText = TimeSpan.FromMilliseconds(MediaPlayer.Length * targetPosition).ToString(@"hh\:mm\:ss");
+        }
+    }
+
+    // ── Tracks (Audio / Subtitles) ────────────────────────────────────────────
+    [ObservableProperty] private TrackDescription[] _audioTracks = Array.Empty<TrackDescription>();
+    [ObservableProperty] private TrackDescription[] _subtitleTracks = Array.Empty<TrackDescription>();
+
+    private TrackDescription? _selectedAudioTrack;
+    public TrackDescription? SelectedAudioTrack
+    {
+        get => _selectedAudioTrack;
+        set
+        {
+            if (SetProperty(ref _selectedAudioTrack, value))
+            {
+                if (MediaPlayer != null && value.HasValue)
+                    MediaPlayer.SetAudioTrack(value.Value.Id);
+            }
+        }
+    }
+
+    private TrackDescription? _selectedSubtitleTrack;
+    public TrackDescription? SelectedSubtitleTrack
+    {
+        get => _selectedSubtitleTrack;
+        set
+        {
+            if (SetProperty(ref _selectedSubtitleTrack, value))
+            {
+                if (MediaPlayer != null && value.HasValue)
+                    MediaPlayer.SetSpu(value.Value.Id);
+            }
+        }
     }
 
     // ── UI state ──────────────────────────────────────────────────────────────
@@ -89,6 +143,35 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
             IsBuffering = false;
             StatusText  = string.Empty;
             ErrorText   = string.Empty;
+
+            // Extract Audio and Subtitle tracks now that playback started
+            if (MediaPlayer != null)
+            {
+                AudioTracks = MediaPlayer.AudioTrackDescription;
+                SubtitleTracks = MediaPlayer.SpuDescription;
+
+                var aid = MediaPlayer.AudioTrack;
+                SelectedAudioTrack = AudioTracks?.FirstOrDefault(t => t.Id == aid);
+
+                var sid = MediaPlayer.Spu;
+                SelectedSubtitleTrack = SubtitleTracks?.FirstOrDefault(t => t.Id == sid);
+            }
+        });
+
+        player.LengthChanged += (_, e) => App.Current.Dispatcher.Invoke(() =>
+        {
+            IsSeekable = e.Length > 0;
+            if (IsSeekable)
+                LengthText = TimeSpan.FromMilliseconds(e.Length).ToString(@"hh\:mm\:ss");
+        });
+
+        player.TimeChanged += (_, e) => App.Current.Dispatcher.Invoke(() =>
+        {
+            if (!IsUserSeeking && MediaPlayer != null && MediaPlayer.Length > 0)
+            {
+                Position = (float)e.Time / MediaPlayer.Length;
+                PositionText = TimeSpan.FromMilliseconds(e.Time).ToString(@"hh\:mm\:ss");
+            }
         });
 
         player.Buffering += (_, e) => App.Current.Dispatcher.Invoke(() =>

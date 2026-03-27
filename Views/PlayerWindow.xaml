@@ -59,6 +59,18 @@
         </Style>
     </Window.Resources>
 
+    <!-- ── Window load animation ────────────────────────────────────────────── -->
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                     From="0.0" To="1.0" Duration="0:0:0.35"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+
     <!-- ── Root: video + bars ───────────────────────────────────── -->
     <Grid Background="Black">
         <Grid.RowDefinitions>
@@ -174,10 +186,39 @@
                 BorderBrush="#2E2E50" BorderThickness="0,1,0,0"
                 Padding="16,12">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- ── SEEKBAR (Row 0) ─────────────────────────────────── -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12" 
+                          Visibility="{Binding IsSeekable, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="{Binding PositionText}" 
+                                   Foreground="White" FontSize="12" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        
+                        <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Position}"
+                                SmallChange="0.01" LargeChange="0.1"
+                                Thumb.DragStarted="SeekSlider_DragStarted"
+                                Thumb.DragCompleted="SeekSlider_DragCompleted"
+                                VerticalAlignment="Center" Foreground="{StaticResource AccentBlue}"/>
+                        
+                        <TextBlock Grid.Column="2" Text="{Binding LengthText}" 
+                                   Foreground="{StaticResource TextMuted}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- ── CONTROLS (Row 1) ────────────────────────────────── -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
                     <!-- Left: Play/Pause · Stop -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal"
@@ -234,11 +275,37 @@
                                 ToolTip="Volume"/>
                         <TextBlock Text="{Binding Volume, StringFormat='{}{0}%'}"
                                    Foreground="{StaticResource TextMuted}"
-                                   FontSize="12" Width="38"
-                                   VerticalAlignment="Center"
-                                   Margin="6,0,0,0"/>
+                                   Margin="6,0,16,0"/>
+                        
+                        <!-- Tracks & Subtitles -->
+                        <Border Background="#1A1A2E" CornerRadius="6" Padding="6,2">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="DUB:" Foreground="{StaticResource TextMuted}" FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <ComboBox Width="100" Margin="0,0,12,0" Foreground="Black"
+                                          ItemsSource="{Binding AudioTracks}" DisplayMemberPath="Name" 
+                                          SelectedItem="{Binding SelectedAudioTrack}">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Foreground" Value="Black"/>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                </ComboBox>
+
+                                <TextBlock Text="SUB:" Foreground="{StaticResource TextMuted}" FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <ComboBox Width="100" Foreground="Black"
+                                          ItemsSource="{Binding SubtitleTracks}" DisplayMemberPath="Name" 
+                                          SelectedItem="{Binding SelectedSubtitleTrack}">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Foreground" Value="Black"/>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                </ComboBox>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Grid>
+            </Grid>
         </Border>
 
     </Grid>

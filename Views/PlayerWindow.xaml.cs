@@ -170,4 +170,19 @@ public partial class PlayerWindow : Window
         if (_vm.IsFullscreen) Cursor = Cursors.None;
         _hideTimer.Stop();
     }
+
+    // ── Seekbar Dragging ──────────────────────────────────────────────────────
+    private void SeekSlider_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+    {
+        _vm.IsUserSeeking = true;
+    }
+
+    private void SeekSlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        _vm.IsUserSeeking = false;
+        if (sender is System.Windows.Controls.Slider slider)
+        {
+            _vm.CommitSeek((float)slider.Value);
+        }
+    }
 }
