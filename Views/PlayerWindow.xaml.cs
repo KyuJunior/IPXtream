@@ -103,14 +103,18 @@ public partial class PlayerWindow : Window
 
         if (_vm.IsFullscreen)
         {
-            WindowStyle      = WindowStyle.None;
-            WindowState      = WindowState.Maximized;
-            ResizeMode       = ResizeMode.NoResize;
+            // IMPORTANT: set WindowStyle BEFORE maximizing to prevent the
+            // white titlebar flash that renders between the two state changes.
+            WindowStyle = WindowStyle.None;
+            ResizeMode  = ResizeMode.NoResize;
+            WindowState = WindowState.Maximized;
         }
         else
         {
-            WindowStyle = WindowStyle.SingleBorderWindow;
+            // Restore normal window: must un-maximize BEFORE re-adding the border,
+            // otherwise WPF draws a ghost frame over the video.
             WindowState = WindowState.Normal;
+            WindowStyle = WindowStyle.SingleBorderWindow;
             ResizeMode  = ResizeMode.CanResize;
         }
     }

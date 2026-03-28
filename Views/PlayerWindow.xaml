@@ -133,9 +133,14 @@
                         Opacity="0" IsHitTestVisible="False"
                         MouseEnter="ControlsOverlay_MouseEnter"
                         MouseLeave="ControlsOverlay_MouseLeave"
-                        Background="#0F0F1A"
-                        BorderBrush="#2E2E50" BorderThickness="0,0,0,1"
+                        BorderThickness="0"
                         Padding="12,10">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#CC000000" Offset="0"/>
+                            <GradientStop Color="#00000000" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -190,9 +195,14 @@
                         Opacity="0" IsHitTestVisible="False"
                         MouseEnter="ControlsOverlay_MouseEnter"
                         MouseLeave="ControlsOverlay_MouseLeave"
-                        Background="#0F0F1A"
-                        BorderBrush="#2E2E50" BorderThickness="0,1,0,0"
+                        BorderThickness="0"
                         Padding="16,12">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#00000000" Offset="0"/>
+                            <GradientStop Color="#CC000000" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
