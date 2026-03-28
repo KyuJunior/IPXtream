@@ -78,6 +78,10 @@ public partial class DashboardViewModel : ObservableObject
     // ── Event: Open player ────────────────────────────────────────────────────
     public event Action<StreamItem>? PlayRequested;
 
+    // ── Embedded player VM (null when no stream is playing) ───────────────────
+    [ObservableProperty]
+    private PlayerViewModel? _playerVm;
+
     // ── Event: Logout ─────────────────────────────────────────────────────────
     public event Action? LogoutRequested;
 
