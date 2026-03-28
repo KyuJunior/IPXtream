@@ -535,6 +535,7 @@
             -->
             <vlc:VideoView x:Name="VideoView"
                            MediaPlayer="{Binding PlayerVm.MediaPlayer}"
+                           Background="Black"
                            HorizontalAlignment="Stretch"
                            VerticalAlignment="Stretch">
 

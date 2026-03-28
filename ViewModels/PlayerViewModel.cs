@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -176,8 +176,17 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
 
         player.Buffering += (_, e) => App.Current.Dispatcher.BeginInvoke(() =>
         {
-            IsBuffering = true;
-            StatusText  = $"Bufferingâ€¦ {e.Cache:0}%";
+            if (e.Cache >= 100)
+            {
+                // Buffering complete — hide the spinner so it doesn't linger
+                IsBuffering = false;
+                StatusText  = string.Empty;
+            }
+            else
+            {
+                IsBuffering = true;
+                StatusText  = $"Buffering\u2026 {e.Cache:0}%";
+            }
         });
 
         player.Paused += (_, _) => App.Current.Dispatcher.BeginInvoke(() =>
