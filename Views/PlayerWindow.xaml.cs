@@ -35,11 +35,8 @@ public partial class PlayerWindow : Window
         };
         _hideTimer.Tick += (_, _) => HideControls();
 
-        Loaded  += OnLoaded;
-        Closed  += OnClosed;
-        PreviewMouseMove += OnMouseMove;
-        LocationChanged += OnWindowMovedOrResized;
-        SizeChanged += OnWindowMovedOrResized;
+        Loaded += OnLoaded;
+        Closed += OnClosed;
     }
 
     // ── Startup: build stream URL and start VLC ───────────────────────────────
@@ -66,13 +63,7 @@ public partial class PlayerWindow : Window
         _hideTimer.Stop();
     }
 
-    private void OnWindowMovedOrResized(object? sender, EventArgs e)
-    {
-        // Simple hack to force exactly positioned popups to follow WPF parent windows.
-        var offset = ControlsPopup.HorizontalOffset;
-        ControlsPopup.HorizontalOffset = offset + 1;
-        ControlsPopup.HorizontalOffset = offset;
-    }
+    // (Popup sync removed — overlay is now inside VideoView.Content, no sync needed)
 
     // ── Stream URL construction ───────────────────────────────────────────────
     /// <summary>
