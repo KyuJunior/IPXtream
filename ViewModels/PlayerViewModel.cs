@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,21 +16,21 @@ namespace IPXtream.ViewModels;
 /// </summary>
 public partial class PlayerViewModel : ObservableObject, IDisposable
 {
-    // ── LibVLC core (shared per-process) ──────────────────────────────────────
+    // â”€â”€ LibVLC core (shared per-process) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // LibVLC must be initialised on the UI thread; we do so in the View ctor.
     private LibVLC?      _libVlc;
     private Media?       _media;
 
-    // ── Public MediaPlayer (bound to VideoView in XAML) ───────────────────────
+    // â”€â”€ Public MediaPlayer (bound to VideoView in XAML) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [ObservableProperty] private MediaPlayer? _mediaPlayer;
 
-    // ── Playback state ────────────────────────────────────────────────────────
+    // â”€â”€ Playback state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [ObservableProperty] private bool   _isPlaying;
     [ObservableProperty] private bool   _isBuffering;
-    [ObservableProperty] private string _statusText  = "Connecting…";
+    [ObservableProperty] private string _statusText  = "Connectingâ€¦";
     [ObservableProperty] private string _errorText   = string.Empty;
 
-    // ── Volume (0–100) ────────────────────────────────────────────────────────
+    // â”€â”€ Volume (0â€“100) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [ObservableProperty] private int _volume = 80;
 
     partial void OnVolumeChanged(int value)
@@ -39,7 +39,7 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
             MediaPlayer.Volume = value;
     }
 
-    // ── Timeline / Seekbar ────────────────────────────────────────────────────
+    // â”€â”€ Timeline / Seekbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [ObservableProperty] private float _position;
     [ObservableProperty] private string _positionText = "00:00:00";
     [ObservableProperty] private string _lengthText = "00:00:00";
@@ -58,7 +58,7 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         }
     }
 
-    // ── Tracks (Audio / Subtitles) ────────────────────────────────────────────
+    // â”€â”€ Tracks (Audio / Subtitles) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [ObservableProperty] private TrackDescription[] _audioTracks = Array.Empty<TrackDescription>();
     [ObservableProperty] private TrackDescription[] _subtitleTracks = Array.Empty<TrackDescription>();
 
@@ -90,28 +90,28 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         }
     }
 
-    // ── UI state ──────────────────────────────────────────────────────────────
+    // â”€â”€ UI state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [ObservableProperty] private bool _controlsVisible = true;
     [ObservableProperty] private bool _isFullscreen;
 
-    // ── Stream metadata (shown in the title bar / overlay) ───────────────────
+    // â”€â”€ Stream metadata (shown in the title bar / overlay) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public string StreamTitle   { get; }
     public string StreamIconUrl { get; }
 
-    // ── Back-reference so the "Back" button can show the Dashboard ───────────
+    // â”€â”€ Back-reference so the "Back" button can show the Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private readonly DashboardViewModel _dashboardVm;
 
-    // ── Event: close player ───────────────────────────────────────────────────
+    // â”€â”€ Event: close player â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public event Action?  CloseRequested;
 
-    // ── Data ──────────────────────────────────────────────────────────────────
+    // â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private readonly StreamItem      _stream;
     private readonly XtreamApiService _api;       // only needed for credentials
 
     /// <summary>Exposed so PlayerWindow code-behind can build the stream URL.</summary>
     public StreamItem Stream => _stream;
 
-    // ── Constructor ───────────────────────────────────────────────────────────
+    // â”€â”€ Constructor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public PlayerViewModel(
         XtreamApiService   api,
         StreamItem         stream,
@@ -124,7 +124,7 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         StreamIconUrl = stream.StreamIcon;
     }
 
-    // ── Called by the View after LibVLC is initialised ────────────────────────
+    // â”€â”€ Called by the View after LibVLC is initialised â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Initialises the <see cref="MediaPlayer"/> and begins playback.
@@ -136,8 +136,8 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
 
         var player = new MediaPlayer(libVlc) { Volume = Volume };
 
-        // ── Wire up playback events (all marshalled to UI thread) ─────────────
-        player.Playing   += (_, _) => App.Current.Dispatcher.Invoke(() =>
+        // â”€â”€ Wire up playback events (all marshalled to UI thread) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        player.Playing   += (_, _) => App.Current.Dispatcher.BeginInvoke(() =>
         {
             IsPlaying   = true;
             IsBuffering = false;
@@ -158,14 +158,14 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
             }
         });
 
-        player.LengthChanged += (_, e) => App.Current.Dispatcher.Invoke(() =>
+        player.LengthChanged += (_, e) => App.Current.Dispatcher.BeginInvoke(() =>
         {
             IsSeekable = e.Length > 0;
             if (IsSeekable)
                 LengthText = TimeSpan.FromMilliseconds(e.Length).ToString(@"hh\:mm\:ss");
         });
 
-        player.TimeChanged += (_, e) => App.Current.Dispatcher.Invoke(() =>
+        player.TimeChanged += (_, e) => App.Current.Dispatcher.BeginInvoke(() =>
         {
             if (!IsUserSeeking && MediaPlayer != null && MediaPlayer.Length > 0)
             {
@@ -174,26 +174,26 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
             }
         });
 
-        player.Buffering += (_, e) => App.Current.Dispatcher.Invoke(() =>
+        player.Buffering += (_, e) => App.Current.Dispatcher.BeginInvoke(() =>
         {
             IsBuffering = true;
-            StatusText  = $"Buffering… {e.Cache:0}%";
+            StatusText  = $"Bufferingâ€¦ {e.Cache:0}%";
         });
 
-        player.Paused += (_, _) => App.Current.Dispatcher.Invoke(() =>
+        player.Paused += (_, _) => App.Current.Dispatcher.BeginInvoke(() =>
         {
             IsPlaying  = false;
             StatusText = "Paused";
         });
 
-        player.Stopped += (_, _) => App.Current.Dispatcher.Invoke(() =>
+        player.Stopped += (_, _) => App.Current.Dispatcher.BeginInvoke(() =>
         {
             IsPlaying   = false;
             IsBuffering = false;
             StatusText  = "Stopped";
         });
 
-        player.EncounteredError += (_, _) => App.Current.Dispatcher.Invoke(() =>
+        player.EncounteredError += (_, _) => App.Current.Dispatcher.BeginInvoke(() =>
         {
             IsPlaying  = false;
             IsBuffering= false;
@@ -208,7 +208,7 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         MediaPlayer = player;   // triggers VideoView binding
     }
 
-    // ── Commands ──────────────────────────────────────────────────────────────
+    // â”€â”€ Commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [RelayCommand]
     private void TogglePlay()
@@ -244,12 +244,14 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         CloseRequested?.Invoke();
     }
 
-    // ── IDisposable ───────────────────────────────────────────────────────────
+    // â”€â”€ IDisposable â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public void Dispose()
     {
         MediaPlayer?.Stop();
         MediaPlayer?.Dispose();
         _media?.Dispose();
-        // Do NOT dispose _libVlc here — it is shared and owned by the View.
+        // Do NOT dispose _libVlc here â€” it is shared and owned by the View.
     }
 }
+
+

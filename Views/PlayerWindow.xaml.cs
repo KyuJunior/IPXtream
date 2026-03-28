@@ -151,6 +151,14 @@ public partial class PlayerWindow : Window
         ShowControls();
     }
 
+    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            _vm.ToggleFullscreenCommand.Execute(null);
+        }
+    }
+
     private void ControlsOverlay_MouseEnter(object sender, MouseEventArgs e)
     {
         _controlsLocked = true;
