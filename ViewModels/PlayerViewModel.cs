@@ -244,13 +244,25 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         CloseRequested?.Invoke();
     }
 
-    // â”€â”€ IDisposable â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- IDisposable -------------------------------------------------------
     public void Dispose()
     {
-        MediaPlayer?.Stop();
-        MediaPlayer?.Dispose();
-        _media?.Dispose();
-        // Do NOT dispose _libVlc here â€” it is shared and owned by the View.
+        var player = MediaPlayer;
+        MediaPlayer = null;   // unbind from VideoView immediately
+
+        if (player is null) { _media?.Dispose(); return; }
+
+        // Stop() fires events on LibVLC's thread that BeginInvoke back to UI.
+        // If called synchronously on the UI thread during shutdown => deadlock.
+        // Fix: push all cleanup to a background Task.
+        var media = _media;
+        _media = null;
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            try { player.Stop(); }    catch { }
+            try { player.Dispose(); } catch { }
+            try { media?.Dispose(); } catch { }
+        });
     }
 }
 
