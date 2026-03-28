@@ -112,17 +112,33 @@ public partial class DashboardWindow : Window
         _isFullscreen = go;
         if (go)
         {
+            // Set pure black background to hide WPF airspace borders
+            Background = System.Windows.Media.Brushes.Black;
+            
             WindowStyle = WindowStyle.None;
-            ResizeMode  = ResizeMode.NoResize;
+            // Intentionally keeping ResizeMode.CanResize — setting NoResize 
+            // causes a known WPF bug on Win11 where it leaves white margins.
+            
+            // Force layout refresh
+            if (WindowState == WindowState.Maximized)
+                WindowState = WindowState.Normal;
             WindowState = WindowState.Maximized;
-            // Extend player panel over the sidebar too
+            
+            Topmost = true; // Cover taskbar
+
+            // Extend player panel over the sidebar
             PlayerPanel.Margin = new Thickness(0);
         }
         else
         {
+            Topmost = false;
+            // Restore original dark dashboard background
+            Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#0F0F1A")!;
+            
             WindowState = WindowState.Normal;
             WindowStyle = WindowStyle.SingleBorderWindow;
             ResizeMode  = ResizeMode.CanResize;
+            
             // Restore sidebar gap
             PlayerPanel.Margin = new Thickness(220, 0, 0, 0);
         }
