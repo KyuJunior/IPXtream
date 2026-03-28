@@ -533,7 +533,10 @@
                 All playback controls live inside VideoView.Content to avoid
                 HwndHost airspace artifacts (no white bars).
             -->
-            <vlc:VideoView x:Name="VideoView" MediaPlayer="{Binding PlayerVm.MediaPlayer}">
+            <vlc:VideoView x:Name="VideoView"
+                           MediaPlayer="{Binding PlayerVm.MediaPlayer}"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch">
 
                 <!-- Overlay: single-cell, bars float with VerticalAlignment -->
                 <Grid Background="Transparent"
