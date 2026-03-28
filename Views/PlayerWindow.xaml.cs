@@ -38,6 +38,8 @@ public partial class PlayerWindow : Window
         Loaded  += OnLoaded;
         Closed  += OnClosed;
         PreviewMouseMove += OnMouseMove;
+        LocationChanged += OnWindowMovedOrResized;
+        SizeChanged += OnWindowMovedOrResized;
     }
 
     // ── Startup: build stream URL and start VLC ───────────────────────────────
@@ -62,6 +64,14 @@ public partial class PlayerWindow : Window
     {
         _vm.Dispose();
         _hideTimer.Stop();
+    }
+
+    private void OnWindowMovedOrResized(object? sender, EventArgs e)
+    {
+        // Simple hack to force exactly positioned popups to follow WPF parent windows.
+        var offset = ControlsPopup.HorizontalOffset;
+        ControlsPopup.HorizontalOffset = offset + 1;
+        ControlsPopup.HorizontalOffset = offset;
     }
 
     // ── Stream URL construction ───────────────────────────────────────────────

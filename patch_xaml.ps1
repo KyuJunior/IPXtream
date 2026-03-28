@@ -1,77 +1,8 @@
-﻿<Window x:Class="IPXtream.Views.PlayerWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
-        mc:Ignorable="d"
-        Title="{Binding StreamTitle, StringFormat='â–¶  {0} â€” IPXtream'}"
-        Width="1100" Height="680"
-        MinWidth="640" MinHeight="400"
-        WindowStartupLocation="CenterScreen"
-        Background="Black"
-        KeyDown="Window_KeyDown">
+$content = Get-Content -Path "Views/PlayerWindow.xaml" -Raw
+$pattern = '(?s)<!-- ── Root: video \+ bars ───────────────────────────────────── -->.*?</Grid>\s*</Window>'
 
-    <Window.Resources>
-        <SolidColorBrush x:Key="OverlayBg"     Color="#CC000000"/>
-        <SolidColorBrush x:Key="AccentBlue"    Color="#4F8EF7"/>
-        <SolidColorBrush x:Key="AccentPurple"  Color="#7C5CBF"/>
-        <SolidColorBrush x:Key="TextPrimary"   Color="#E8E8F0"/>
-        <SolidColorBrush x:Key="TextMuted"     Color="#888899"/>
-        <SolidColorBrush x:Key="ErrorRed"      Color="#FF5370"/>
-
-        <!-- Icon button: round translucent -->
-        <Style x:Key="CtrlBtn" TargetType="Button">
-            <Setter Property="Width"           Value="42"/>
-            <Setter Property="Height"          Value="42"/>
-            <Setter Property="Foreground"      Value="White"/>
-            <Setter Property="FontSize"        Value="16"/>
-            <Setter Property="Cursor"          Value="Hand"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" CornerRadius="21"
-                                Background="#55FFFFFF">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background"
-                                        Value="#88FFFFFF"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background"
-                                        Value="#AAFFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Volume slider -->
-        <Style x:Key="VolumeSlider" TargetType="Slider">
-            <Setter Property="Width"           Value="100"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground"      Value="{StaticResource AccentBlue}"/>
-        </Style>
-    </Window.Resources>
-
-    <!-- â”€â”€ Window load animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
-    <Window.Triggers>
-        <EventTrigger RoutedEvent="Window.Loaded">
-            <BeginStoryboard>
-                <Storyboard>
-                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                     From="0.0" To="1.0" Duration="0:0:0.35"/>
-                </Storyboard>
-            </BeginStoryboard>
-        </EventTrigger>
-    </Window.Triggers>
-
-        <!-- â”€â”€ Root: video + bars â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+$replacement = @"
+    <!-- ── Root: video + bars ───────────────────────────────────── -->
     <Grid x:Name="RootGrid" Background="Black">
 
         <!-- VLC Video Surface (spans the entire window) -->
@@ -97,14 +28,14 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- â”€â”€ Buffering spinner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+                <!-- ── Buffering spinner ──────────────────────────────────────────── -->
                 <Border Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
                         Background="#99000000" CornerRadius="12"
                         Padding="24,16"
                         Visibility="{Binding IsBuffering,
                                      Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="â³" FontSize="22" Margin="0,0,10,0"
+                        <TextBlock Text="⏳" FontSize="22" Margin="0,0,10,0"
                                    VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding StatusText}"
                                    Foreground="White" FontSize="15"
@@ -112,14 +43,14 @@
                     </StackPanel>
                 </Border>
 
-                <!-- â”€â”€ Error message â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+                <!-- ── Error message ──────────────────────────────────────────────── -->
                 <Border Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
                         Background="#99200000" CornerRadius="12"
                         Padding="24,16"
                         Visibility="{Binding ErrorText,
                                      Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
                     <StackPanel>
-                        <TextBlock Text="âš  Playback Error" FontSize="16" FontWeight="Bold"
+                        <TextBlock Text="⚠ Playback Error" FontSize="16" FontWeight="Bold"
                                    Foreground="{StaticResource ErrorRed}"
                                    HorizontalAlignment="Center" Margin="0,0,0,6"/>
                         <TextBlock Text="{Binding ErrorText}" Foreground="#FFDDDD"
@@ -148,7 +79,7 @@
                                     Style="{StaticResource CtrlBtn}"
                                     Command="{Binding BackCommand}"
                                     ToolTip="Back to Dashboard">
-                                <TextBlock Text="â†" FontSize="18"/>
+                                <TextBlock Text="←" FontSize="18"/>
                             </Button>
 
                             <!-- Channel name + icon -->
@@ -180,7 +111,7 @@
                                     Style="{StaticResource CtrlBtn}"
                                     Command="{Binding ToggleFullscreenCommand}"
                                     ToolTip="Toggle fullscreen (F)">
-                                <TextBlock Text="â›¶" FontSize="18"/>
+                                <TextBlock Text="⛶" FontSize="18"/>
                             </Button>
                         </Grid>
                 </Border>
@@ -199,7 +130,7 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <!-- â”€â”€ SEEKBAR (Row 0) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+                            <!-- ── SEEKBAR (Row 0) ─────────────────────────────────── -->
                             <Grid Grid.Row="0" Margin="0,0,0,12" 
                                   Visibility="{Binding IsSeekable, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Grid.ColumnDefinitions>
@@ -221,14 +152,14 @@
                                            Foreground="{StaticResource TextMuted}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"/>
                             </Grid>
 
-                            <!-- â”€â”€ CONTROLS (Row 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+                            <!-- ── CONTROLS (Row 1) ────────────────────────────────── -->
                             <Grid Grid.Row="1">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                            <!-- Left: Play/Pause Â· Stop -->
+                            <!-- Left: Play/Pause · Stop -->
                             <StackPanel Grid.Column="0" Orientation="Horizontal"
                                         VerticalAlignment="Center">
                                 <!-- Play / Pause -->
@@ -239,11 +170,11 @@
                                     <TextBlock FontSize="18">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="â–¶"/>
+                                                <Setter Property="Text" Value="▶"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsPlaying}"
                                                                  Value="True">
-                                                        <Setter Property="Text" Value="â¸"/>
+                                                        <Setter Property="Text" Value="⏸"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -256,7 +187,7 @@
                                         Command="{Binding StopCommand}"
                                         Margin="0,0,16,0"
                                         ToolTip="Stop">
-                                    <TextBlock Text="â¹" FontSize="18"/>
+                                    <TextBlock Text="⏹" FontSize="18"/>
                                 </Button>
 
                                 <!-- Status label (e.g. "Paused") -->
@@ -268,14 +199,14 @@
                                                         Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
                             </StackPanel>
 
-                            <!-- Right: Mute Â· Volume slider -->
+                            <!-- Right: Mute · Volume slider -->
                             <StackPanel Grid.Column="1" Orientation="Horizontal"
                                         VerticalAlignment="Center">
                                 <Button Style="{StaticResource CtrlBtn}"
                                         Command="{Binding ToggleMuteCommand}"
                                         Margin="0,0,8,0"
                                         ToolTip="Toggle mute (M)">
-                                    <TextBlock Text="ðŸ”Š" FontSize="16"/>
+                                    <TextBlock Text="🔊" FontSize="16"/>
                                 </Button>
                                 <Slider Style="{StaticResource VolumeSlider}"
                                         Minimum="0" Maximum="100"
@@ -319,5 +250,7 @@
         </Popup>
     </Grid>
 </Window>
+"@
 
-
+$newContent = [regex]::Replace($content, $pattern, $replacement)
+Set-Content -Path "Views/PlayerWindow.xaml" -Value $newContent -Encoding UTF8
