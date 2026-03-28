@@ -308,7 +308,7 @@
             </Border>
 
             <!-- ══════════ CATEGORIES ════════════════════════════════════════ -->
-            <Border Grid.Column="1" Background="{StaticResource BgDeep}"
+            <Border x:Name="CategoriesPanel" Grid.Column="1" Background="{StaticResource BgDeep}"
                     BorderBrush="{StaticResource DividerColor}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -385,7 +385,7 @@
             </Border>
 
             <!-- ══════════ STREAMS ═══════════════════════════════════════════ -->
-            <Grid Grid.Column="2" Background="{StaticResource BgDeep}">
+            <Grid x:Name="StreamsPanel" Grid.Column="2" Background="{StaticResource BgDeep}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>

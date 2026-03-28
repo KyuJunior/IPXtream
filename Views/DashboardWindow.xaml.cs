@@ -74,6 +74,11 @@ public partial class DashboardWindow : Window
                 ApplyFullscreen(playerVm.IsFullscreen);
         };
 
+        // Hide the dashboard content panels behind the player to prevent
+        // WPF airspace bleed-through (HwndHost can't fully block WPF siblings)
+        CategoriesPanel.Visibility = Visibility.Hidden;
+        StreamsPanel.Visibility    = Visibility.Hidden;
+
         // Show the player panel
         PlayerPanel.Visibility = Visibility.Visible;
         _hideTimer.Start();
@@ -90,6 +95,10 @@ public partial class DashboardWindow : Window
         var old = _vm.PlayerVm;
         _vm.PlayerVm = null;
         old?.Dispose();
+
+        // Restore dashboard content panels
+        CategoriesPanel.Visibility = Visibility.Visible;
+        StreamsPanel.Visibility    = Visibility.Visible;
 
         PlayerPanel.Visibility = Visibility.Collapsed;
     }
