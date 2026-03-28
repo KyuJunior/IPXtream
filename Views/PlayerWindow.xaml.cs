@@ -156,7 +156,8 @@ public partial class PlayerWindow : Window
 
     private void ShowControls()
     {
-        ControlsOverlay.Visibility = Visibility.Visible;
+        ControlsOverlay.Opacity = 1;
+        ControlsOverlay.IsHitTestVisible = true;
         Cursor = Cursors.Arrow;
         _hideTimer.Stop();
         if (!_controlsLocked) _hideTimer.Start();
@@ -165,7 +166,8 @@ public partial class PlayerWindow : Window
     private void HideControls()
     {
         if (_controlsLocked) return;
-        ControlsOverlay.Visibility = Visibility.Collapsed;
+        ControlsOverlay.Opacity = 0;
+        ControlsOverlay.IsHitTestVisible = false;
         // Hide cursor in fullscreen only
         if (_vm.IsFullscreen) Cursor = Cursors.None;
         _hideTimer.Stop();

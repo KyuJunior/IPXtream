@@ -79,9 +79,9 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- VLC Video Surface -->
+        <!-- VLC Video Surface (spans ALL rows so it never resizes) -->
         <vlc:VideoView x:Name="VideoView"
-                       Grid.Row="1"
+                       Grid.Row="0" Grid.RowSpan="3"
                        MediaPlayer="{Binding MediaPlayer}"
                        HorizontalAlignment="Stretch"
                        VerticalAlignment="Stretch"/>
@@ -117,12 +117,11 @@
             </StackPanel>
         </Border>
 
-        <!-- ── Hidden Logic Element ───────────────────────────────────────── -->
-        <Grid x:Name="ControlsOverlay" Visibility="Collapsed"/>
+        <!-- ── Controls Overlay (opacity-based to avoid HwndHost resize artifacts) ── -->
+        <Grid x:Name="ControlsOverlay" Grid.Row="0" Grid.RowSpan="3" Opacity="0" IsHitTestVisible="False">
 
         <!-- Top bar: back button + stream name + icon -->
-        <Border Grid.Row="0"
-                Visibility="{Binding Visibility, ElementName=ControlsOverlay}"
+        <Border VerticalAlignment="Top"
                 MouseEnter="ControlsOverlay_MouseEnter"
                 MouseLeave="ControlsOverlay_MouseLeave"
                 Background="#0F0F1A"
@@ -178,8 +177,7 @@
             </Border>
 
         <!-- Bottom bar: playback controls + volume -->
-        <Border Grid.Row="2"
-                Visibility="{Binding Visibility, ElementName=ControlsOverlay}"
+        <Border VerticalAlignment="Bottom"
                 MouseEnter="ControlsOverlay_MouseEnter"
                 MouseLeave="ControlsOverlay_MouseLeave"
                 Background="#0F0F1A"
@@ -307,6 +305,7 @@
                 </Grid>
             </Grid>
         </Border>
+        </Grid> <!-- /ControlsOverlay -->
 
     </Grid>
 </Window>
