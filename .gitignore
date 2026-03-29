@@ -32,3 +32,14 @@ desktop.ini
 
 # Generated Inno Setup output
 *.e32
+
+# Native binaries — large; rebuilt by dotnet publish
+IPXtream/FFmpeg/*.dll
+IPXtream/ffmpeg_unzipped/
+
+# Temp / scratch files
+testFlyleaf.cs
+testFlyleaf.exe
+appicon_32.ico
+*_Chat_History_*.txt
+build_err.txt
