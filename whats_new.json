@@ -1,0 +1,32 @@
+[
+  {
+    "num": 1,
+    "name": "AR-SUBS - Cape Fear (2026) (US)",
+    "stream_icon": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/64gCOK6NKcXVI2amtVKk3Xx7cbC.jpg",
+    "cover": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/64gCOK6NKcXVI2amtVKk3Xx7cbC.jpg",
+    "epg_channel_id": null,
+    "added": null,
+    "category_id": "589",
+    "custom_sid": null,
+    "tv_archive": 0,
+    "direct_source": null,
+    "tv_archive_duration": 0,
+    "stream_id": 0,
+    "container_extension": "ts",
+    "stream_type": "",
+    "rating": "8",
+    "rating_5based": 4.0,
+    "thumbnail": null,
+    "video_id": 0,
+    "series_id": 47037,
+    "plot": "يتبع العمل قصة زوجين سعيدين في زواجهما يواجهان تهديدًا متصاعدًا عندما يُفرج عن قاتل سيئ السمعة من ماضيهما يُدعى (ماكس كادي)، والذي يسعى للانتقام منهما",
+    "cast": "Javier Bardem, Amy Adams, Patrick Wilson, CCH Pounder, Joe Anders, Lily Collias, Jamie Hector, Malia Pyles",
+    "director": "Nick Antosca",
+    "genre": "Drama / Crime",
+    "release_date": "2026-06-04",
+    "last_modified": "1780652368",
+    "youtube_trailer": "FZ3sN5E-mBU",
+    "IsDownloadable": false,
+    "EffectiveStreamId": 0
+  }
+]

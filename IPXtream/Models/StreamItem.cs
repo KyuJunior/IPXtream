@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace IPXtream.Models;
 
@@ -7,7 +8,7 @@ namespace IPXtream.Models;
 /// The same model covers live streams and VOD; use the StreamType discriminator
 /// to tell them apart when building the playback URL.
 /// </summary>
-public class StreamItem
+public class StreamItem : ObservableObject
 {
     // ── Common ──────────────────────────────────────────────────────────────
 
@@ -19,6 +20,13 @@ public class StreamItem
 
     [JsonProperty("stream_icon")]
     public string StreamIcon { get; set; } = string.Empty;
+
+    [JsonProperty("cover")]
+    public string? Cover
+    {
+        get => StreamIcon;
+        set { if (!string.IsNullOrWhiteSpace(value)) StreamIcon = value; }
+    }
 
     [JsonProperty("epg_channel_id")]
     public string? EpgChannelId { get; set; }
@@ -99,6 +107,17 @@ public class StreamItem
 
     public override string ToString() => Name;
 
+    /// <summary>True for VOD movies and series episodes — shows the Download button.</summary>
+    public bool IsDownloadable => StreamType is "movie" or "series";
+
     /// <summary>Effective stream ID, works for both live and VOD.</summary>
     public int EffectiveStreamId => StreamId != 0 ? StreamId : VideoId;
+
+    private bool _isFeatured;
+    [JsonIgnore]
+    public bool IsFeatured
+    {
+        get => _isFeatured;
+        set => SetProperty(ref _isFeatured, value);
+    }
 }

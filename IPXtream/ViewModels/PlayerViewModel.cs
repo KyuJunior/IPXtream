@@ -44,8 +44,19 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     }
 
     // ── Track Collections (populated after stream opens) ───────────────────────
+    public record SubtitleOption(string Name, SubtitlesStream? Value);
+
     public ObservableCollection<AudioStream>     AudioStreams    => Player.Audio.Streams;
-    public ObservableCollection<SubtitlesStream> SubtitleStreams => Player.Subtitles.Streams;
+    public IEnumerable<SubtitleOption> DisplaySubtitleStreams
+    {
+        get
+        {
+            yield return new SubtitleOption("(None)", null);
+            if (Player.Subtitles.Streams != null)
+                foreach (var s in Player.Subtitles.Streams)
+                    yield return new SubtitleOption($"{s.Language} ({s.Codec})", s);
+        }
+    }
 
     public AudioStream? SelectedAudioStream
     {
@@ -68,6 +79,10 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         {
             if (value != null)
                 Task.Run(() => Player.OpenAsync(value));
+            else
+                Task.Run(() => Player.OpenAsync((SubtitlesStream?)null));
+
+            OnPropertyChanged();
         }
     }
 
@@ -101,6 +116,34 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
 
         // Subscribe to Flyleaf's own INPC (fires on its own thread — marshal to UI)
         Player.PropertyChanged += OnPlayerPropertyChanged;
+
+        // Subscribe directly to Audio/Subtitles IsOpened — fires when Flyleaf
+        // has finished populating the Streams collection (more reliable than Status.Playing)
+        Player.Audio.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(Player.Audio.IsOpened) ||
+                e.PropertyName == nameof(Player.Audio.StreamIndex))
+            {
+                Application.Current?.Dispatcher.BeginInvoke(() =>
+                {
+                    OnPropertyChanged(nameof(AudioStreams));
+                    OnPropertyChanged(nameof(SelectedAudioStream));
+                });
+            }
+        };
+
+        Player.Subtitles.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(Player.Subtitles.IsOpened) ||
+                e.PropertyName == nameof(Player.Subtitles.StreamIndex))
+            {
+                Application.Current?.Dispatcher.BeginInvoke(() =>
+                {
+                    OnPropertyChanged(nameof(DisplaySubtitleStreams));
+                    OnPropertyChanged(nameof(SelectedSubtitleStream));
+                });
+            }
+        };
 
         // Timer drives the seekbar; fires every 50ms on the UI thread for a smooth glide
         _positionTimer = new DispatcherTimer(DispatcherPriority.Background)
@@ -150,14 +193,7 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
             ErrorText = "Playback error. Stream may be offline or URL is invalid.";
 
         if (s == Status.Playing)
-        {
             _positionTimer.Start();
-            // Notify the UI that track collections are now populated
-            OnPropertyChanged(nameof(AudioStreams));
-            OnPropertyChanged(nameof(SubtitleStreams));
-            OnPropertyChanged(nameof(SelectedAudioStream));
-            OnPropertyChanged(nameof(SelectedSubtitleStream));
-        }
         else
             _positionTimer.Stop();
 

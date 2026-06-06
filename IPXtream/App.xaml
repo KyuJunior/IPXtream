@@ -14,6 +14,8 @@
             <helpers:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibilityConverter"/>
             <helpers:StringEmptyToVisibilityConverter   x:Key="StringEmptyToVisibilityConverter"/>
             <helpers:SectionToStyleConverter            x:Key="SectionToStyleConverter"/>
+            <helpers:CachedImageConverter               x:Key="CachedImageConverter"/>
+            <helpers:ProgressToWidthMultiConverter      x:Key="ProgressToWidthMultiConverter"/>
 
             <!-- ── Sidebar palette ───────────────────────────────────────────── -->
             <SolidColorBrush x:Key="NavTextMuted" Color="#888899"/>

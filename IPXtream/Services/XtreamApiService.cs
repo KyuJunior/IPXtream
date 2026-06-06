@@ -20,6 +20,7 @@ public class XtreamApiService : IDisposable
     // ── Fields ────────────────────────────────────────────────────────────────
 
     private readonly HttpClient _http;
+    private readonly HttpClient _downloadHttp; // separate client — no timeout for large files
     private UserCredentials? _credentials;
 
     // ── Constructor ───────────────────────────────────────────────────────────
@@ -43,6 +44,10 @@ public class XtreamApiService : IDisposable
 
         _http.DefaultRequestHeaders.UserAgent
              .ParseAdd("IPXtream/1.0 (Windows; WPF)");
+
+        // Separate HttpClient for downloads — user's CancellationToken handles timeouts
+        _downloadHttp = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+        _downloadHttp.DefaultRequestHeaders.UserAgent.ParseAdd("IPXtream/1.0 (Windows; WPF)");
     }
 
     // ── Credential management ─────────────────────────────────────────────────
@@ -335,7 +340,7 @@ public class XtreamApiService : IDisposable
                 "Call SetCredentials() or AuthenticateAsync() before making API requests.");
     }
 
-    // ── Caching Helpers ───────────────────────────────────────────────────────
+    // ── JSON Cache Helpers ────────────────────────────────────────────────────
 
     private string GetCacheFilePath(string url)
     {
@@ -349,9 +354,175 @@ public class XtreamApiService : IDisposable
         return Path.Combine(cacheDir, filename);
     }
 
+    // ── Image Cache ───────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns the on-disk path where an image URL is (or will be) cached.
+    /// This is public+static so the CachedImageConverter can call it without
+    /// holding a reference to the service.
+    /// </summary>
+    public static string GetImageCachePath(string url)
+    {
+        var dir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "IPXtream", "ImageCache");
+        Directory.CreateDirectory(dir);
+
+        using var md5 = MD5.Create();
+        var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(url));
+        var filename = string.Concat(hash.Select(b => b.ToString("x2"))) + ".img";
+        return Path.Combine(dir, filename);
+    }
+
+    /// <summary>
+    /// Downloads one image and saves it to the image cache.
+    /// No-ops if already cached or the URL is blank.
+    /// </summary>
+    public async Task CacheImageAsync(string url, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return;
+        var path = GetImageCachePath(url);
+        if (File.Exists(path)) return;
+
+        try
+        {
+            var bytes = await _http.GetByteArrayAsync(url, ct);
+            await File.WriteAllBytesAsync(path, bytes, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Ignore bad/missing thumbnails — don't fail the whole batch
+        }
+    }
+
+    /// <summary>
+    /// Bulk-downloads a collection of image URLs, max 8 concurrent.
+    /// Already-cached images are skipped instantly.
+    /// Progress reports (done, total) on the caller's SynchronizationContext.
+    /// </summary>
+    public async Task BulkCacheImagesAsync(
+        IEnumerable<string> imageUrls,
+        IProgress<(int done, int total)>? progress = null,
+        CancellationToken ct = default)
+    {
+        var urls = imageUrls
+            .Where(u => !string.IsNullOrWhiteSpace(u))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        int total = urls.Count;
+        int done  = 0;
+
+        await Parallel.ForEachAsync(
+            urls,
+            new ParallelOptions { MaxDegreeOfParallelism = 8, CancellationToken = ct },
+            async (url, token) =>
+            {
+                await CacheImageAsync(url, token);
+                progress?.Report((Interlocked.Increment(ref done), total));
+            });
+    }
+
+    /// <summary>
+    /// Bulk-fetches and caches the episode trees for every series ID, max 4 concurrent.
+    /// Already-cached JSON is returned from disk without hitting the network.
+    /// Progress reports (done, total) on the caller's SynchronizationContext.
+    /// </summary>
+    public async Task BulkCacheSeriesInfoAsync(
+        IEnumerable<int> seriesIds,
+        IProgress<(int done, int total)>? progress = null,
+        CancellationToken ct = default)
+    {
+        var ids = seriesIds.Where(id => id > 0).Distinct().ToList();
+        int total = ids.Count;
+        int done  = 0;
+
+        await Parallel.ForEachAsync(
+            ids,
+            new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct },
+            async (id, token) =>
+            {
+                try   { await GetSeriesInfoAsync(id, token, forceRefresh: false); }
+                catch (Exception ex) when (ex is not OperationCanceledException) { /* skip */ }
+                finally { progress?.Report((Interlocked.Increment(ref done), total)); }
+            });
+    }
+
+    // ── Streaming Download ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Downloads a stream URL to <paramref name="destPath"/> with resume support.
+    /// Progress reports (downloaded, total, bytesPerSec) on the caller's SynchronizationContext.
+    /// </summary>
+    public async Task DownloadStreamAsync(
+        string url,
+        string destPath,
+        IProgress<(long downloaded, long total, double bytesPerSec)>? progress = null,
+        CancellationToken ct = default)
+    {
+        var partPath   = destPath + ".part";
+        long resumeFrom = File.Exists(partPath) ? new FileInfo(partPath).Length : 0;
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        if (resumeFrom > 0)
+            request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(resumeFrom, null);
+
+        using var response = await _downloadHttp.SendAsync(
+            request, HttpCompletionOption.ResponseHeadersRead, ct);
+
+        // 200 = server ignored Range, restart; 206 = partial OK
+        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            resumeFrom = 0;
+
+        response.EnsureSuccessStatusCode();
+
+        long serverLen  = response.Content.Headers.ContentLength ?? 0;
+        long totalBytes = serverLen + resumeFrom;
+
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+
+        await using var fileStream = new FileStream(
+            partPath,
+            resumeFrom > 0 ? FileMode.Append : FileMode.Create,
+            FileAccess.Write, FileShare.None, 65536, useAsync: true);
+
+        await using var netStream = await response.Content.ReadAsStreamAsync(ct);
+
+        var  buffer     = new byte[81920];
+        long downloaded = resumeFrom;
+        long speedBytes = 0;
+        var  sw         = System.Diagnostics.Stopwatch.StartNew();
+
+        int read;
+        while ((read = await netStream.ReadAsync(buffer, ct)) > 0)
+        {
+            await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
+            downloaded  += read;
+            speedBytes  += read;
+
+            if (sw.ElapsedMilliseconds >= 800)
+            {
+                double bps = speedBytes / sw.Elapsed.TotalSeconds;
+                progress?.Report((downloaded, totalBytes, bps));
+                speedBytes = 0;
+                sw.Restart();
+            }
+        }
+
+        progress?.Report((downloaded, totalBytes, 0));
+
+        // Rename .part → final
+        if (File.Exists(destPath)) File.Delete(destPath);
+        File.Move(partPath, destPath);
+    }
+
     // ── IDisposable ───────────────────────────────────────────────────────────
 
-    public void Dispose() => _http.Dispose();
+    public void Dispose()
+    {
+        _http.Dispose();
+        _downloadHttp.Dispose();
+    }
 }
 
 /// <summary>

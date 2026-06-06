@@ -25,6 +25,7 @@
         <SolidColorBrush x:Key="InputBorder"  Color="#2E2E50"/>
         <SolidColorBrush x:Key="DividerColor" Color="#1E1E3A"/>
         <SolidColorBrush x:Key="ErrorRed"     Color="#FF5370"/>
+        <SolidColorBrush x:Key="AccentGreen"  Color="#4EC994"/>
 
         <!-- ── Category list item ──────────────────────────────────────────── -->
         <Style x:Key="CategoryItemStyle" TargetType="ListBoxItem">
@@ -204,7 +205,18 @@
         <Grid x:Name="DashboardGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220"/>
-                <ColumnDefinition Width="230"/>
+                <ColumnDefinition Width="230">
+                    <ColumnDefinition.Style>
+                        <Style TargetType="ColumnDefinition">
+                            <Setter Property="Width" Value="230"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
+                                    <Setter Property="Width" Value="0"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ColumnDefinition.Style>
+                </ColumnDefinition>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -266,14 +278,55 @@
                             </StackPanel>
                         </Button>
 
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="whatsnew"
+                                Style="{Binding ActiveSection,
+                                        Converter={StaticResource SectionToStyleConverter},
+                                        ConverterParameter=WhatsNew}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔥" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="What's new?" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
                         <Border Height="1" Background="{StaticResource DividerColor}" Margin="16,16"/>
 
+                        <!-- Cache / Cancel toggle -->
                         <Button Style="{StaticResource NavBtn}" Command="{Binding CacheAllBackgroundCommand}"
-                                IsEnabled="{Binding IsCachingAll, Converter={StaticResource InverseBoolConverter}}">
+                                Visibility="{Binding IsCachingAll, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="☁️" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Cache Entire Library" VerticalAlignment="Center"/>
                             </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource NavBtn}" Command="{Binding CancelCacheCommand}"
+                                Visibility="{Binding IsCachingAll, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Foreground="#FF5370">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⏹" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="Cancel Caching" VerticalAlignment="Center"
+                                           Foreground="#FF5370"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Downloads toggle with active badge -->
+                        <Button Style="{StaticResource NavBtn}" Command="{Binding ToggleDownloadsTrayCommand}"
+                                Margin="0,4,0,0">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⬇" FontSize="16" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Downloads" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <!-- Active download count badge -->
+                                <Border Background="{StaticResource AccentBlue}" CornerRadius="8"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Padding="5,1" Margin="0,0,8,0"
+                                        Visibility="{Binding HasActiveDownloads,
+                                                     Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Text="{Binding ActiveDownloadCount}"
+                                               FontSize="10" Foreground="White"
+                                               FontWeight="Bold"/>
+                                </Border>
+                            </Grid>
                         </Button>
 
                         <Button Style="{StaticResource NavBtn}" Command="{Binding RefreshCommand}" Margin="0,4,0,0">
@@ -302,14 +355,108 @@
                             <TextBlock Text="{Binding ServerDisplay}"
                                        Foreground="{StaticResource TextMuted}"
                                        FontSize="11" Margin="0,2,0,0"/>
+
+                            <!-- Version + Update row -->
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Version label -->
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding AppVersion}"
+                                           Foreground="{StaticResource TextMuted}"
+                                           FontSize="10" VerticalAlignment="Center"/>
+
+                                <!-- Check for Updates button -->
+                                <Button Grid.Column="1"
+                                        Command="{Binding CheckForUpdatesCommand}"
+                                        IsEnabled="{Binding IsCheckingUpdate,
+                                                    Converter={StaticResource InverseBoolConverter}}"
+                                        Background="Transparent" BorderThickness="0"
+                                        Cursor="Hand" Padding="4,1" ToolTip="Check for updates">
+                                    <TextBlock FontSize="10" Foreground="{StaticResource AccentBlue}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Check"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCheckingUpdate}" Value="True">
+                                                        <Setter Property="Text" Value="…"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Button>
+                            </Grid>
+
+                            <!-- Update status (shown after check) -->
+                            <TextBlock Text="{Binding UpdateStatus}"
+                                       FontSize="10" Margin="0,3,0,0" TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding UpdateStatus}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding UpdateStatus}" Value=""/>
+                                                </MultiDataTrigger.Conditions>
+                                            </MultiDataTrigger>
+                                            <DataTrigger Binding="{Binding UpdateStatus, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" Value="Visible">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <!-- Clickable "open release page" — only shows when update is available -->
+                            <Button Command="{Binding OpenUpdatePageCommand}"
+                                    Background="Transparent" BorderThickness="0"
+                                    Cursor="Hand" Padding="0,2" HorizontalAlignment="Left"
+                                    ToolTip="Open GitHub release page">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding UpdateUrl,
+                                                         Converter={StaticResource StringNotEmptyToVisibilityConverter}}"
+                                                         Value="Visible">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="→ Download now"
+                                           FontSize="10"
+                                           Foreground="{StaticResource AccentGreen}"
+                                           TextDecorations="Underline"/>
+                            </Button>
+
                         </StackPanel>
                     </Border>
+
                 </Grid>
             </Border>
 
             <!-- ══════════ CATEGORIES ════════════════════════════════════════ -->
             <Border x:Name="CategoriesPanel" Grid.Column="1" Background="{StaticResource BgDeep}"
                     BorderBrush="{StaticResource DividerColor}" BorderThickness="0,0,1,0">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -388,8 +535,10 @@
             <Grid x:Name="StreamsPanel" Grid.Column="2" Background="{StaticResource BgDeep}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>  <!-- Seasons tabs -->
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>  <!-- downloads tray -->
                 </Grid.RowDefinitions>
 
                 <!-- Toolbar -->
@@ -422,8 +571,52 @@
                                Foreground="{StaticResource ErrorRed}" FontSize="12"/>
                 </Border>
 
+                <!-- Seasons Tabs -->
+                <ListBox Grid.Row="1" ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                         Background="Transparent" BorderThickness="0,1,0,1" BorderBrush="#1C1C28" Padding="14,0"
+                         Visibility="{Binding IsViewingSeriesInfo, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Padding" Value="16,10"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border BorderThickness="0,0,0,3" BorderBrush="Transparent" x:Name="Bd" Background="{TemplateBinding Background}">
+                                            <ContentPresenter Margin="{TemplateBinding Padding}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}" FontSize="13"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
                 <!-- Stream card grid -->
-                <ListBox Grid.Row="1"
+                <ListBox Grid.Row="2"
                          ItemsSource="{Binding Streams}"
                          SelectedItem="{Binding SelectedStream}"
                          ItemContainerStyle="{StaticResource StreamItemStyle}"
@@ -438,58 +631,147 @@
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border Width="160" Padding="12" CornerRadius="10">
-                                <StackPanel>
-                                    <Border Height="80" CornerRadius="8" Background="{StaticResource BgSidebar}"
-                                            Margin="0,0,0,8">
-                                        <Grid>
-                                            <Image Source="{Binding StreamIcon}" Stretch="Uniform"
-                                                   RenderOptions.BitmapScalingMode="LowQuality">
-                                                <Image.Style>
-                                                    <Style TargetType="Image">
-                                                        <Style.Triggers>
-                                                            <Trigger Property="Source" Value="{x:Null}">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Image.Style>
-                                            </Image>
-                                            <TextBlock Text="📺" FontSize="30"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
+                            <Border Width="150" Height="220" CornerRadius="8" Background="{StaticResource BgSidebar}" ClipToBounds="True">
+                                <Grid>
+                                    <!-- Poster -->
+                                    <Image Source="{Binding StreamIcon, Converter={StaticResource CachedImageConverter}}"
+                                           Stretch="UniformToFill">
+                                        <Image.Style>
+                                            <Style TargetType="Image">
+                                                <Style.Triggers>
+                                                    <Trigger Property="Source" Value="{x:Null}">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding StreamIcon}" Value="">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding StreamIcon}" Value="{x:Null}">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Grid>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Image.Style>
+                                    </Image>
+                                    
+                                    <!-- Fallback empty state icon -->
+                                    <TextBlock Text="📺" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StreamIcon}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding StreamIcon}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <!-- Dark Gradient for Text -->
+                                    <Border VerticalAlignment="Bottom" Height="80">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#00000000" Offset="0"/>
+                                                <GradientStop Color="#E60D0D1A" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
                                     </Border>
+                                    
                                     <TextBlock Text="{Binding Name}"
-                                               Foreground="{StaticResource TextPrimary}"
-                                               FontSize="12" FontWeight="SemiBold"
-                                               TextTrimming="CharacterEllipsis"
-                                               MaxWidth="136" Margin="0,0,0,8"/>
-                                    <Button Style="{StaticResource PlayBtn}" Content="&#x25B6;  PLAY"
-                                            Command="{Binding DataContext.PlayCommand,
-                                                      RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"/>
-                                </StackPanel>
+                                               Foreground="White" FontSize="12" FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="36"
+                                               Margin="10,0,10,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" TextAlignment="Center"/>
+
+                                    <!-- Hover Overlay with Buttons -->
+                                    <Border x:Name="HoverOverlay" Background="#99000000" Opacity="0">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <!-- Play -->
+                                            <Button Style="{StaticResource PlayBtn}" Width="44" Height="44" Padding="0" FontSize="18"
+                                                    Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="PlayBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                                            <TextBlock Text="▶" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="PlayBd" Property="Background" Value="#4F8EF7"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            
+                                            <!-- Download -->
+                                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                                                    Visibility="{Binding IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                    Command="{Binding DataContext.DownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Download to ~/Downloads/IPXtream/&#x0a;(Includes all embedded subtitles automatically)">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="DlBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                                            <TextBlock Text="⬇" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="DlBd" Property="Background" Value="#66FFFFFF"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+
+                                            <!-- Toggle Featured (Star Button) -->
+                                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                                                    Visibility="{Binding DataContext.IsAdminMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                    Command="{Binding DataContext.ToggleFeaturedCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Add / Remove from What's new?">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="StarBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                                            <TextBlock x:Name="StarTxt" Text="☆" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="StarBd" Property="Background" Value="#66FFFFFF"/>
+                                                            </Trigger>
+                                                            <DataTrigger Binding="{Binding IsFeatured}" Value="True">
+                                                                <Setter TargetName="StarTxt" Property="Text" Value="★"/>
+                                                                <Setter TargetName="StarTxt" Property="Foreground" Value="#FFD700"/>
+                                                            </DataTrigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
                             </Border>
+
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <DataTrigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.EnterActions>
+                                    <DataTrigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.ExitActions>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
                 <!-- Empty state -->
-                <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"
                             Visibility="{Binding HasSelectedCategory,
                                          Converter={StaticResource InverseBoolToVisibilityConverter}}">
                     <TextBlock Text="👈" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,12"/>
@@ -509,11 +791,143 @@
                 </Border>
 
                 <!-- Status bar -->
-                <Border Grid.Row="2" Background="{StaticResource BgCard}"
+                <Border Grid.Row="3" Background="{StaticResource BgCard}"
                         BorderBrush="{StaticResource DividerColor}" BorderThickness="0,1,0,0"
                         Padding="16,6">
                     <TextBlock Text="{Binding StatusMessage}"
                                Foreground="{StaticResource TextMuted}" FontSize="12"/>
+                </Border>
+
+                <!-- ── Downloads tray ─────────────────────────────────────── -->
+                <Border Grid.Row="4" Background="#0D0D1E"
+                        BorderBrush="{StaticResource AccentBlue}" BorderThickness="0,1,0,0"
+                        Visibility="{Binding ShowDownloadsTray,
+                                     Converter={StaticResource BoolToVisibilityConverter}}"
+                        MaxHeight="240">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Tray header -->
+                        <Border Grid.Row="0" Padding="14,7" Background="#12122A">
+                            <Grid>
+                                <TextBlock Text="DOWNLOADS" Foreground="{StaticResource TextMuted}"
+                                           FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Command="{Binding ClearCompletedDownloadsCommand}"
+                                            Background="Transparent" BorderThickness="0"
+                                            Foreground="{StaticResource TextMuted}" FontSize="11"
+                                            Cursor="Hand" Padding="8,3" ToolTip="Clear finished downloads">
+                                        <TextBlock Text="Clear done"/>
+                                    </Button>
+                                    <Button Command="{Binding OpenDownloadFolderCommand}"
+                                            Background="Transparent" BorderThickness="0"
+                                            Foreground="{StaticResource AccentBlue}" FontSize="13"
+                                            Cursor="Hand" Padding="6,3" ToolTip="Open Downloads folder">
+                                        <TextBlock Text="📂"/>
+                                    </Button>
+                                    <Button Command="{Binding ToggleDownloadsTrayCommand}"
+                                            Background="Transparent" BorderThickness="0"
+                                            Foreground="{StaticResource TextMuted}" FontSize="14"
+                                            Cursor="Hand" Padding="6,3" ToolTip="Close">
+                                        <TextBlock Text="✕"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Download items list -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Downloads}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="14,8"
+                                                BorderBrush="#1E1E3A" BorderThickness="0,0,0,1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Filename -->
+                                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                                           Text="{Binding Name}"
+                                                           Foreground="{StaticResource TextPrimary}"
+                                                           FontSize="12" FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"/>
+
+                                                <!-- Action Buttons Row -->
+                                                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <!-- Pause -->
+                                                    <Button Command="{Binding DataContext.PauseDownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent" BorderThickness="0" Foreground="#A0A0A0" Cursor="Hand"
+                                                            Padding="4,0" ToolTip="Pause"
+                                                            Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                        <TextBlock Text="॥" FontSize="11" FontWeight="Bold"/>
+                                                    </Button>
+                                                    
+                                                    <!-- Resume -->
+                                                    <Button Command="{Binding DataContext.ResumeDownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent" BorderThickness="0" Foreground="{StaticResource AccentBlue}" Cursor="Hand"
+                                                            Padding="4,0" ToolTip="Resume"
+                                                            Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                        <TextBlock Text="▶" FontSize="11"/>
+                                                    </Button>
+                                                    
+                                                    <!-- Cancel -->
+                                                    <Button Command="{Binding DataContext.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent" BorderThickness="0"
+                                                            Foreground="#FF5370" Cursor="Hand"
+                                                            Padding="6,0" ToolTip="Cancel / Remove">
+                                                        <TextBlock Text="✕" FontSize="12"/>
+                                                    </Button>
+                                                </StackPanel>
+
+                                                <!-- Custom progress bar (Grid-based, avoids Win theme issues) -->
+                                                <Grid Grid.Row="1" Grid.ColumnSpan="2"
+                                                      x:Name="ProgressTrack"
+                                                      Height="4" Margin="0,5,0,0">
+                                                    <Border CornerRadius="2" Background="#1A1A2E"/>
+                                                    <Border CornerRadius="2" Background="#4F8EF7"
+                                                            HorizontalAlignment="Left">
+                                                        <Border.Width>
+                                                            <MultiBinding Converter="{StaticResource ProgressToWidthMultiConverter}">
+                                                                <Binding Path="Progress"/>
+                                                                <Binding ElementName="ProgressTrack" Path="ActualWidth"/>
+                                                            </MultiBinding>
+                                                        </Border.Width>
+                                                    </Border>
+                                                </Grid>
+
+                                                <!-- Speed / size / status row -->
+                                                <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0,4,0,0">
+                                                    <TextBlock Text="{Binding StatusText}"
+                                                               Foreground="{StaticResource TextMuted}"
+                                                               FontSize="11" HorizontalAlignment="Left"/>
+                                                    <TextBlock Text="{Binding SpeedText}"
+                                                               Foreground="{StaticResource AccentBlue}"
+                                                               FontSize="11" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding SizeText}"
+                                                               Foreground="{StaticResource TextMuted}"
+                                                               FontSize="11" HorizontalAlignment="Right"/>
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
                 </Border>
             </Grid>
         </Grid>
@@ -526,7 +940,8 @@
         <Grid x:Name="PlayerPanel"
               Margin="220,0,0,0"
               Visibility="Collapsed"
-              Background="Black">
+              Background="Black"
+              PreviewMouseMove="Player_MouseMove">
 
             <!-- FlyleafHost natively composes into WPF Visual Tree (No HwndHost airspace bugs) -->
             <!-- Player is assigned in code-behind after layout is measured (prevents 0x0 D3D init) -->
@@ -760,18 +1175,12 @@
                                             <TextBlock Text="SUB:" Foreground="{StaticResource TextMuted}"
                                                        FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                             <ComboBox Width="90"
-                                                      ItemsSource="{Binding PlayerVm.SubtitleStreams}"
-                                                      SelectedItem="{Binding PlayerVm.SelectedSubtitleStream, Mode=TwoWay}">
+                                                      ItemsSource="{Binding PlayerVm.DisplaySubtitleStreams}"
+                                                      SelectedValuePath="Value"
+                                                      SelectedValue="{Binding PlayerVm.SelectedSubtitleStream, Mode=TwoWay}">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock>
-                                                            <TextBlock.Text>
-                                                                <MultiBinding StringFormat="{}{0} ({1})">
-                                                                    <Binding Path="Language" />
-                                                                    <Binding Path="Codec" />
-                                                                </MultiBinding>
-                                                            </TextBlock.Text>
-                                                        </TextBlock>
+                                                        <TextBlock Text="{Binding Name}" />
                                                     </DataTemplate>
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>

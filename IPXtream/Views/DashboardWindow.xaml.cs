@@ -39,6 +39,15 @@ public partial class DashboardWindow : Window
             Interval = TimeSpan.FromSeconds(3)
         };
         _hideTimer.Tick += (_, _) => HideBars();
+
+        // Global input hook to pierce through WinForms HwndHost airspace restrictions in Fullscreen
+        InputManager.Current.PreProcessInput += (s, e) =>
+        {
+            if (e.StagingItem.Input.RoutedEvent == Mouse.MouseMoveEvent && _vm?.PlayerVm is not null)
+            {
+                ShowBars();
+            }
+        };
     }
 
     // ── Play: show embedded player ────────────────────────────────────────────

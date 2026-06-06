@@ -29,6 +29,9 @@ public class SeriesInfo
 
     [JsonProperty("plot")]
     public string? Plot { get; set; }
+
+    [JsonProperty("cover")]
+    public string? Cover { get; set; }
 }
 
 public class Episode
@@ -59,4 +62,7 @@ public class EpisodeInfo
 
     [JsonProperty("duration_secs")]
     public int DurationSecs { get; set; }
+
+    [JsonProperty("movie_image")]
+    public string? MovieImage { get; set; }
 }
