@@ -372,10 +372,21 @@
                                 <!-- Check for Updates button -->
                                 <Button Grid.Column="1"
                                         Command="{Binding CheckForUpdatesCommand}"
-                                        IsEnabled="{Binding IsCheckingUpdate,
-                                                    Converter={StaticResource InverseBoolConverter}}"
                                         Background="Transparent" BorderThickness="0"
                                         Cursor="Hand" Padding="4,1" ToolTip="Check for updates">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="IsEnabled" Value="True"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCheckingUpdate}" Value="True">
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsDownloadingUpdate}" Value="True">
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
                                     <TextBlock FontSize="10" Foreground="{StaticResource AccentBlue}">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
@@ -416,19 +427,22 @@
                             </TextBlock>
 
                             <!-- Clickable "open release page" — only shows when update is available -->
-                            <Button Command="{Binding OpenUpdatePageCommand}"
+                            <Button Command="{Binding DownloadAndInstallUpdateCommand}"
                                     Background="Transparent" BorderThickness="0"
                                     Cursor="Hand" Padding="0,2" HorizontalAlignment="Left"
-                                    ToolTip="Open GitHub release page">
+                                    ToolTip="Download and install update">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding UpdateUrl,
-                                                         Converter={StaticResource StringNotEmptyToVisibilityConverter}}"
-                                                         Value="Visible">
+                                            <!-- Show if update URL is present AND not currently downloading -->
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding UpdateUrl, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" Value="Visible"/>
+                                                    <Condition Binding="{Binding IsDownloadingUpdate}" Value="False"/>
+                                                </MultiDataTrigger.Conditions>
                                                 <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
+                                            </MultiDataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
@@ -437,6 +451,17 @@
                                            Foreground="{StaticResource AccentGreen}"
                                            TextDecorations="Underline"/>
                             </Button>
+
+                            <!-- In-app Download Progress Panel -->
+                            <StackPanel Margin="0,4,0,0" Visibility="{Binding IsDownloadingUpdate, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="{Binding UpdateDownloadStatus}"
+                                           FontSize="10" Foreground="{StaticResource AccentBlue}"
+                                           Margin="0,0,0,4"/>
+                                <ProgressBar Height="4" Minimum="0" Maximum="1"
+                                             Value="{Binding UpdateDownloadProgress, Mode=OneWay}"
+                                             Background="#1F1F3D" Foreground="{StaticResource AccentBlue}"
+                                             BorderThickness="0"/>
+                            </StackPanel>
 
                         </StackPanel>
                     </Border>

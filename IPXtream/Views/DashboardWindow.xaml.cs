@@ -74,6 +74,20 @@ public partial class DashboardWindow : Window
             _        => $"{c.BaseUrl}/live/{c.Username}/{c.Password}/{s.EffectiveStreamId}.{s.ContainerExtension}"
         };
 
+        // If the media file has been downloaded locally, play the local path instead
+        var downloadDir = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "Downloads", "IPXtream");
+        var invalid = System.IO.Path.GetInvalidFileNameChars();
+        var safeName = string.Concat(s.Name.Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c))
+                             .Trim().TrimEnd('.');
+        var localPath = System.IO.Path.Combine(downloadDir, $"{safeName}.{s.ContainerExtension}");
+
+        if (System.IO.File.Exists(localPath))
+        {
+            url = localPath;
+        }
+
         // IMPORTANT: Show the player panel and update layout BEFORE opening stream
         // Otherwise FlyleafHost has 0x0 size and falls back to a standalone popout window.
         PlayerPanel.Visibility = Visibility.Visible;

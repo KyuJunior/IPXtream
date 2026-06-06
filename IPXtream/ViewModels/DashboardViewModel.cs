@@ -47,6 +47,10 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private string _updateStatus = string.Empty;
     [ObservableProperty] private bool   _isCheckingUpdate;
     [ObservableProperty] private string _updateUrl = string.Empty;
+    [ObservableProperty] private bool   _isDownloadingUpdate;
+    [ObservableProperty] private double _updateDownloadProgress;
+    [ObservableProperty] private string _updateDownloadStatus = string.Empty;
+    private string _updateDownloadUrl = string.Empty;
 
     // ── Sidebar selection ─────────────────────────────────────────────────────
     [ObservableProperty]
@@ -99,6 +103,7 @@ public partial class DashboardViewModel : ObservableObject
             return;
         }
 
+        var episodesList = new List<StreamItem>();
         foreach (var ep in value.Episodes)
         {
             _ = int.TryParse(ep.Id, out int epId);
@@ -114,9 +119,10 @@ public partial class DashboardViewModel : ObservableObject
                 StreamIcon         = !string.IsNullOrEmpty(ep.Info.MovieImage) ? ep.Info.MovieImage : (CurrentSeries?.Info.Cover ?? string.Empty)
             };
             MarkFeatured(si);
-            _allStreams.Add(si);
-            Streams.Add(si);
+            episodesList.Add(si);
         }
+        _allStreams = episodesList;
+        SetFilteredStreams(episodesList);
 
         StatusMessage = $"{value.Episodes.Count} episodes in {value.DisplayName}";
     }
@@ -125,6 +131,70 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private string _searchText = string.Empty;
 
     private List<StreamItem> _allStreams = new();  // unfiltered master list
+
+    // ── Pagination ────────────────────────────────────────────────────────────
+    public const int PageSize = 32;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TotalPages))]
+    [NotifyPropertyChangedFor(nameof(HasPreviousPage))]
+    [NotifyPropertyChangedFor(nameof(HasNextPage))]
+    [NotifyPropertyChangedFor(nameof(PageStatusText))]
+    private int _currentPage = 1;
+
+    private List<StreamItem> _filteredStreams = new();
+
+    public int TotalPages => _filteredStreams.Count == 0 ? 1 : (int)Math.Ceiling((double)_filteredStreams.Count / PageSize);
+
+    public bool HasPreviousPage => CurrentPage > 1;
+    public bool HasNextPage => CurrentPage < TotalPages;
+
+    public string PageStatusText => $"Page {CurrentPage} of {TotalPages} (Total: {_filteredStreams.Count})";
+
+    private void SetFilteredStreams(IEnumerable<StreamItem> items)
+    {
+        _filteredStreams = items.ToList();
+        CurrentPage = 1;
+        UpdatePage();
+    }
+
+    private void UpdatePage()
+    {
+        Streams.Clear();
+        var pageItems = _filteredStreams
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize);
+
+        foreach (var item in pageItems)
+        {
+            Streams.Add(item);
+        }
+
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(HasPreviousPage));
+        OnPropertyChanged(nameof(HasNextPage));
+        OnPropertyChanged(nameof(PageStatusText));
+    }
+
+    [RelayCommand]
+    private void GoToNextPage()
+    {
+        if (HasNextPage)
+        {
+            CurrentPage++;
+            UpdatePage();
+        }
+    }
+
+    [RelayCommand]
+    private void GoToPreviousPage()
+    {
+        if (HasPreviousPage)
+        {
+            CurrentPage--;
+            UpdatePage();
+        }
+    }
 
     // ── Status / loading ──────────────────────────────────────────────────────
     [ObservableProperty] private bool   _isLoadingCategories;
@@ -193,7 +263,7 @@ public partial class DashboardViewModel : ObservableObject
 
     private async Task RunUpdateCheckAsync(bool silent = false)
     {
-        if (IsCheckingUpdate) return;
+        if (IsCheckingUpdate || IsDownloadingUpdate) return;
         IsCheckingUpdate = true;
         UpdateStatus = "Checking…";
 
@@ -207,6 +277,22 @@ public partial class DashboardViewModel : ObservableObject
             using var doc  = JsonDocument.Parse(json);
             var tagName    = doc.RootElement.GetProperty("tag_name").GetString() ?? string.Empty;
             var htmlUrl    = doc.RootElement.GetProperty("html_url").GetString()  ?? string.Empty;
+
+            // Extract the installer asset download URL
+            string downloadUrl = string.Empty;
+            if (doc.RootElement.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var asset in assets.EnumerateArray())
+                {
+                    var name = asset.GetProperty("name").GetString() ?? string.Empty;
+                    if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    {
+                        downloadUrl = asset.GetProperty("browser_download_url").GetString() ?? string.Empty;
+                        break;
+                    }
+                }
+            }
+            _updateDownloadUrl = downloadUrl;
 
             // Normalise: remove leading 'v' for comparison
             var latestStr  = tagName.TrimStart('v');
@@ -253,6 +339,82 @@ public partial class DashboardViewModel : ObservableObject
             });
     }
 
+    [RelayCommand]
+    private async Task DownloadAndInstallUpdateAsync()
+    {
+        if (string.IsNullOrEmpty(_updateDownloadUrl))
+        {
+            // Fallback to opening the browser release page
+            OpenUpdatePage();
+            return;
+        }
+
+        if (IsDownloadingUpdate) return;
+        IsDownloadingUpdate = true;
+        UpdateDownloadProgress = 0;
+        UpdateDownloadStatus = "Starting download...";
+
+        try
+        {
+            var tempFile = Path.Combine(Path.GetTempPath(), "IPXtream_Installer.exe");
+
+            using (var http = new HttpClient())
+            {
+                http.DefaultRequestHeaders.UserAgent.Add(
+                    new ProductInfoHeaderValue("IPXtream", AppVersion.TrimStart('v')));
+
+                using (var response = await http.GetAsync(_updateDownloadUrl, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    response.EnsureSuccessStatusCode();
+                    var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+
+                    using (var contentStream = await response.Content.ReadAsStreamAsync())
+                    using (var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+                    {
+                        var buffer = new byte[8192];
+                        long totalRead = 0L;
+                        int read;
+
+                        while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        {
+                            await fileStream.WriteAsync(buffer, 0, read);
+                            totalRead += read;
+
+                            if (totalBytes > 0)
+                            {
+                                UpdateDownloadProgress = (double)totalRead / totalBytes;
+                                UpdateDownloadStatus = $"Downloading update... {UpdateDownloadProgress * 100:F0}%";
+                            }
+                            else
+                            {
+                                UpdateDownloadStatus = $"Downloading update... {totalRead / 1_048_576:N0} MB";
+                            }
+                        }
+                    }
+                }
+            }
+
+            UpdateDownloadStatus = "Launching installer...";
+            await Task.Delay(1000);
+
+            // Launch the installer
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = tempFile,
+                UseShellExecute = true
+            });
+
+            // Shutdown the application so the installer can overwrite the files
+            Application.Current?.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            UpdateDownloadStatus = "Download failed";
+            UpdateStatus = $"⚠ Update failed: {ex.Message[..System.Math.Min(ex.Message.Length, 40)]}";
+            IsDownloadingUpdate = false;
+        }
+    }
+
     // ── Sidebar navigation commands ───────────────────────────────────────────
 
     [RelayCommand]
@@ -274,13 +436,14 @@ public partial class DashboardViewModel : ObservableObject
 
         if (ActiveSection == MediaSection.WhatsNew)
         {
-            foreach (var item in _featuredItems)
+            var featured = _featuredItems.ToList();
+            foreach (var item in featured)
             {
                 item.IsFeatured = true;
-                Streams.Add(item);
-                _allStreams.Add(item);
             }
-            StatusMessage = $"{Streams.Count} featured items";
+            _allStreams = featured;
+            SetFilteredStreams(featured);
+            StatusMessage = $"{featured.Count} featured items";
         }
         else
         {
@@ -445,7 +608,9 @@ public partial class DashboardViewModel : ObservableObject
         var invalid = Path.GetInvalidFileNameChars();
         return string.Concat(name.Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c))
                      .Trim().TrimEnd('.');
-    }    [RelayCommand]
+    }
+
+    [RelayCommand]
     private void ToggleFeatured(StreamItem stream)
     {
         if (stream is null) return;
@@ -467,11 +632,12 @@ public partial class DashboardViewModel : ObservableObject
 
         SaveWhatsNew();
 
-        if (ActiveSection == MediaSection.WhatsNew)
+        if (ActiveSection == MediaSection.WhatsNew && CurrentSeries == null)
         {
-            Streams.Remove(stream);
+            _filteredStreams.Remove(stream);
             _allStreams.Remove(stream);
-            StatusMessage = $"{Streams.Count} featured items";
+            UpdatePage();
+            StatusMessage = $"{_filteredStreams.Count} featured items";
         }
     }
 
@@ -494,15 +660,14 @@ public partial class DashboardViewModel : ObservableObject
         {
             Application.Current?.Dispatcher.BeginInvoke(() =>
             {
-                Streams.Clear();
-                _allStreams.Clear();
-                foreach (var item in _featuredItems)
+                var featured = _featuredItems.ToList();
+                foreach (var item in featured)
                 {
                     item.IsFeatured = true;
-                    Streams.Add(item);
-                    _allStreams.Add(item);
                 }
-                StatusMessage = $"{Streams.Count} featured items";
+                _allStreams = featured;
+                SetFilteredStreams(featured);
+                StatusMessage = $"{featured.Count} featured items";
             });
         }
     }
@@ -708,7 +873,7 @@ public partial class DashboardViewModel : ObservableObject
         if (stream is null) return;
 
         // If it's a Series, don't play it — fetch and show its episodes instead.
-        if (ActiveSection == MediaSection.Series && CurrentSeries == null)
+        if (stream.StreamType == "series" && CurrentSeries == null)
         {
             await LoadSeriesEpisodesAsync(stream);
             return;
@@ -722,7 +887,18 @@ public partial class DashboardViewModel : ObservableObject
     private async Task BackToSeriesAsync()
     {
         CurrentSeries = null;
-        if (SelectedCategory is not null)
+        if (ActiveSection == MediaSection.WhatsNew)
+        {
+            var featured = _featuredItems.ToList();
+            foreach (var item in featured)
+            {
+                item.IsFeatured = true;
+            }
+            _allStreams = featured;
+            SetFilteredStreams(featured);
+            StatusMessage = $"{featured.Count} featured items";
+        }
+        else if (SelectedCategory is not null)
         {
             await LoadStreamsAsync(SelectedCategory.CategoryId);
         }
@@ -757,6 +933,12 @@ public partial class DashboardViewModel : ObservableObject
         // If searching the "All" category without text, we don't want to draw everything
         if (string.IsNullOrWhiteSpace(query) && SelectedCategory?.CategoryId == "")
         {
+            _filteredStreams.Clear();
+            CurrentPage = 1;
+            OnPropertyChanged(nameof(TotalPages));
+            OnPropertyChanged(nameof(HasPreviousPage));
+            OnPropertyChanged(nameof(HasNextPage));
+            OnPropertyChanged(nameof(PageStatusText));
             StatusMessage = $"Loaded {_allStreams.Count} items. Type in the search box to find a stream.";
             return;
         }
@@ -771,18 +953,21 @@ public partial class DashboardViewModel : ObservableObject
         {
             lock (_streamsLock)
             {
-                foreach (var s in filtered)
-                {
-                    // Abort loop if typing changed
-                    if (SearchText != query) return;
-                    Streams.Add(s);
-                }
+                // Abort if typing changed
+                if (SearchText != query) return;
             }
         });
 
-        StatusMessage = Streams.Count == 0 && _allStreams.Count > 0
-            ? "No results match your search."
-            : $"{Streams.Count} / {_allStreams.Count} streams";
+        if (SearchText == query)
+        {
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                SetFilteredStreams(filtered);
+                StatusMessage = filtered.Count == 0 && _allStreams.Count > 0
+                    ? "No results match your search."
+                    : $"{filtered.Count} / {_allStreams.Count} streams";
+            });
+        }
     }
 
     // ── Private loaders ───────────────────────────────────────────────────────
@@ -857,26 +1042,18 @@ public partial class DashboardViewModel : ObservableObject
                 MarkFeatured(s);
             }
 
-            Streams.Clear();
             _allStreams = items;
 
             // If this is the "All" category, drawing thousands of items freezes the app.
             // We store them in _allStreams but leave the UI empty until they search.
             if (string.IsNullOrEmpty(categoryId))
             {
+                SetFilteredStreams(new List<StreamItem>());
                 StatusMessage = $"Loaded {items.Count} items. Type in the search box to find a stream.";
             }
             else
             {
-                // Normal category: add items to UI (batched to prevent freezes)
-                int count = 0;
-                foreach (var s in items)
-                {
-                    Streams.Add(s);
-                    count++;
-                    if (count % 100 == 0) await Task.Delay(1); // Yield UI thread
-                }
-
+                SetFilteredStreams(items);
                 StatusMessage = $"{items.Count} streams";
             }
         }
