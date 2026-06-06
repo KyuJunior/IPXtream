@@ -59,6 +59,10 @@ public partial class DashboardViewModel : ObservableObject
 
     // ── Carousel (for What's New Hero) ────────────────────────────────────────
     public ObservableCollection<StreamItem> FeaturedItems { get; } = new();
+    public ObservableCollection<StreamItem> FeaturedLive { get; } = new();
+    public ObservableCollection<StreamItem> FeaturedShows { get; } = new();
+    public ObservableCollection<StreamItem> FeaturedMovies { get; } = new();
+    public ObservableCollection<StreamItem> DevRecommendations { get; } = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
@@ -735,9 +739,31 @@ public partial class DashboardViewModel : ObservableObject
         Application.Current?.Dispatcher.BeginInvoke(() =>
         {
             FeaturedItems.Clear();
+            FeaturedLive.Clear();
+            FeaturedShows.Clear();
+            FeaturedMovies.Clear();
+            DevRecommendations.Clear();
+
             foreach (var item in _featuredItems)
             {
                 FeaturedItems.Add(item);
+
+                if (item.IsDevRecommendation)
+                {
+                    DevRecommendations.Add(item);
+                }
+                else if (item.StreamType == "live")
+                {
+                    FeaturedLive.Add(item);
+                }
+                else if (item.SeriesId > 0 || item.StreamType == "series")
+                {
+                    FeaturedShows.Add(item);
+                }
+                else
+                {
+                    FeaturedMovies.Add(item);
+                }
             }
         });
     }
@@ -769,6 +795,7 @@ public partial class DashboardViewModel : ObservableObject
             var existing = _featuredItems.FirstOrDefault(i => GetFeaturedKey(i) == key);
             if (existing != null)
             {
+                existing.IsDevRecommendation = false;
                 _featuredItems.Remove(existing);
                 SyncFeaturedItemsCollection();
             }
@@ -796,6 +823,47 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private void ToggleDevRecommendation(StreamItem stream)
+    {
+        if (stream is null) return;
+
+        stream.IsDevRecommendation = !stream.IsDevRecommendation;
+
+        var key = GetFeaturedKey(stream);
+        var existing = _featuredItems.FirstOrDefault(i => GetFeaturedKey(i) == key);
+        if (stream.IsDevRecommendation)
+        {
+            if (existing == null)
+            {
+                stream.IsFeatured = true;
+                _featuredKeys.Add(key);
+                _featuredItems.Add(stream);
+
+                if (FeaturedCarouselItem == null)
+                {
+                    _carouselIndex = 0;
+                    FeaturedCarouselItem = stream;
+                    StartCarouselTimer();
+                }
+            }
+            else
+            {
+                existing.IsDevRecommendation = true;
+            }
+        }
+        else
+        {
+            if (existing != null)
+            {
+                existing.IsDevRecommendation = false;
+            }
+        }
+
+        SyncFeaturedItemsCollection();
+        SaveWhatsNew();
+    }
+
     private string GetFeaturedKey(StreamItem stream)
     {
         var isSeries = stream.SeriesId != 0 && stream.StreamId == 0;
@@ -806,7 +874,18 @@ public partial class DashboardViewModel : ObservableObject
 
     private void MarkFeatured(StreamItem stream)
     {
-        stream.IsFeatured = _featuredKeys.Contains(GetFeaturedKey(stream));
+        var key = GetFeaturedKey(stream);
+        var existing = _featuredItems.FirstOrDefault(i => GetFeaturedKey(i) == key);
+        if (existing != null)
+        {
+            stream.IsFeatured = true;
+            stream.IsDevRecommendation = existing.IsDevRecommendation;
+        }
+        else
+        {
+            stream.IsFeatured = false;
+            stream.IsDevRecommendation = false;
+        }
     }
 
     private async Task InitializeWhatsNewAsync()

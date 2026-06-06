@@ -100,6 +100,8 @@
             </Setter>
         </Style>
 
+
+
         <!-- ── Search TextBox ──────────────────────────────────────────────── -->
         <Style x:Key="SearchBox" TargetType="TextBox">
             <Setter Property="Background"      Value="{StaticResource InputBg}"/>
@@ -191,6 +193,169 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- ── Stream Card DataTemplate ────────────────────────────────────── -->
+        <DataTemplate x:Key="StreamCardTemplate">
+            <Border Width="150" Height="220" CornerRadius="8" Background="{StaticResource BgSidebar}" ClipToBounds="True">
+                <Grid>
+                    <!-- Poster -->
+                    <Image Source="{Binding StreamIcon, Converter={StaticResource CachedImageConverter}}"
+                           Stretch="UniformToFill">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Style.Triggers>
+                                    <Trigger Property="Source" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                    
+                    <!-- Fallback empty state icon -->
+                    <TextBlock Text="📺" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding StreamIcon}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding StreamIcon}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <!-- Dark Gradient for Text -->
+                    <Border VerticalAlignment="Bottom" Height="80">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#00000000" Offset="0"/>
+                                <GradientStop Color="#E60D0D1A" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    
+                    <TextBlock Text="{Binding Name}"
+                               Foreground="White" FontSize="12" FontWeight="SemiBold"
+                               TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="36"
+                               Margin="10,0,10,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" TextAlignment="Center"/>
+
+                    <!-- Hover Overlay with Buttons -->
+                    <Border x:Name="HoverOverlay" Background="#99000000" Opacity="0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <!-- Play -->
+                            <Button Style="{StaticResource PlayBtn}" Width="44" Height="44" Padding="0" FontSize="18"
+                                    Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="PlayBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                            <TextBlock Text="▶" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="PlayBd" Property="Background" Value="#4F8EF7"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            
+                            <!-- Download -->
+                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                                    Visibility="{Binding IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Command="{Binding DataContext.DownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip="Download to ~/Downloads/IPXtream/&#x0a;(Includes all embedded subtitles automatically)">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="DlBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                            <TextBlock Text="⬇" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="DlBd" Property="Background" Value="#66FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Toggle Featured (Star Button) -->
+                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                                    Visibility="{Binding DataContext.IsAdminMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Command="{Binding DataContext.ToggleFeaturedCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip="Add / Remove from What's new?">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="StarBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                            <TextBlock x:Name="StarTxt" Text="☆" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="StarBd" Property="Background" Value="#66FFFFFF"/>
+                                            </Trigger>
+                                            <DataTrigger Binding="{Binding IsFeatured}" Value="True">
+                                                <Setter TargetName="StarTxt" Property="Text" Value="★"/>
+                                                <Setter TargetName="StarTxt" Property="Foreground" Value="#FFD700"/>
+                                            </DataTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Toggle Dev Recommendation (Heart Button) -->
+                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                                    Visibility="{Binding DataContext.IsAdminMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Command="{Binding DataContext.ToggleDevRecommendationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip="Mark / Unmark as Dev Recommendation">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="HeartBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                            <TextBlock x:Name="HeartTxt" Text="♡" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="HeartBd" Property="Background" Value="#66FFFFFF"/>
+                                            </Trigger>
+                                            <DataTrigger Binding="{Binding IsDevRecommendation}" Value="True">
+                                                <Setter TargetName="HeartTxt" Property="Text" Value="♥"/>
+                                                <Setter TargetName="HeartTxt" Property="Foreground" Value="#FF4A5A"/>
+                                            </DataTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.ExitActions>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ── Window load animation ──────────────────────────────────────────────── -->
@@ -852,155 +1017,153 @@
                          ItemsSource="{Binding Streams}"
                          SelectedItem="{Binding SelectedStream}"
                          ItemContainerStyle="{StaticResource StreamItemStyle}"
+                         ItemTemplate="{StaticResource StreamCardTemplate}"
                          Background="Transparent" BorderThickness="0" Padding="10"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          VirtualizingPanel.IsVirtualizing="True"
                          VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.Style>
+                        <Style TargetType="ListBox">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.Style>
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel/>
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Width="150" Height="220" CornerRadius="8" Background="{StaticResource BgSidebar}" ClipToBounds="True">
-                                <Grid>
-                                    <!-- Poster -->
-                                    <Image Source="{Binding StreamIcon, Converter={StaticResource CachedImageConverter}}"
-                                           Stretch="UniformToFill">
-                                        <Image.Style>
-                                            <Style TargetType="Image">
-                                                <Style.Triggers>
-                                                    <Trigger Property="Source" Value="{x:Null}">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Image.Style>
-                                    </Image>
-                                    
-                                    <!-- Fallback empty state icon -->
-                                    <TextBlock Text="📺" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding StreamIcon}" Value="">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding StreamIcon}" Value="{x:Null}">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-
-                                    <!-- Dark Gradient for Text -->
-                                    <Border VerticalAlignment="Bottom" Height="80">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#00000000" Offset="0"/>
-                                                <GradientStop Color="#E60D0D1A" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                    </Border>
-                                    
-                                    <TextBlock Text="{Binding Name}"
-                                               Foreground="White" FontSize="12" FontWeight="SemiBold"
-                                               TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="36"
-                                               Margin="10,0,10,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" TextAlignment="Center"/>
-
-                                    <!-- Hover Overlay with Buttons -->
-                                    <Border x:Name="HoverOverlay" Background="#99000000" Opacity="0">
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <!-- Play -->
-                                            <Button Style="{StaticResource PlayBtn}" Width="44" Height="44" Padding="0" FontSize="18"
-                                                    Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}">
-                                                <Button.Template>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border x:Name="PlayBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                                            <TextBlock Text="▶" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0,0,0"/>
-                                                        </Border>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="PlayBd" Property="Background" Value="#4F8EF7"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Button.Template>
-                                            </Button>
-                                            
-                                            <!-- Download -->
-                                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
-                                                    Visibility="{Binding IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
-                                                    Command="{Binding DataContext.DownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"
-                                                    ToolTip="Download to ~/Downloads/IPXtream/&#x0a;(Includes all embedded subtitles automatically)">
-                                                <Button.Template>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border x:Name="DlBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                                            <TextBlock Text="⬇" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                        </Border>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="DlBd" Property="Background" Value="#66FFFFFF"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Button.Template>
-                                            </Button>
-
-                                            <!-- Toggle Featured (Star Button) -->
-                                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
-                                                    Visibility="{Binding DataContext.IsAdminMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"
-                                                    Command="{Binding DataContext.ToggleFeaturedCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"
-                                                    ToolTip="Add / Remove from What's new?">
-                                                <Button.Template>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border x:Name="StarBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                                            <TextBlock x:Name="StarTxt" Text="☆" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                        </Border>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="StarBd" Property="Background" Value="#66FFFFFF"/>
-                                                            </Trigger>
-                                                            <DataTrigger Binding="{Binding IsFeatured}" Value="True">
-                                                                <Setter TargetName="StarTxt" Property="Text" Value="★"/>
-                                                                <Setter TargetName="StarTxt" Property="Foreground" Value="#FFD700"/>
-                                                            </DataTrigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Button.Template>
-                                            </Button>
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-                            </Border>
-
-                            <DataTemplate.Triggers>
-                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                    <DataTrigger.EnterActions>
-                                        <BeginStoryboard>
-                                            <Storyboard>
-                                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </DataTrigger.EnterActions>
-                                    <DataTrigger.ExitActions>
-                                        <BeginStoryboard>
-                                            <Storyboard>
-                                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"/>
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </DataTrigger.ExitActions>
-                                </DataTrigger>
-                            </DataTemplate.Triggers>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
                 </ListBox>
+
+                <!-- What's New Grouped ScrollViewer (only visible when ActiveSection == WhatsNew) -->
+                <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="10">
+                    <ScrollViewer.Style>
+                        <Style TargetType="ScrollViewer">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ScrollViewer.Style>
+                    <StackPanel>
+                        <!-- 1. Dev Recommendations Section -->
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DevRecommendations.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="💖 Dev Recommendations" Foreground="White" FontSize="16" FontWeight="Bold" Margin="10,0,10,10"/>
+                            <ListBox ItemsSource="{Binding DevRecommendations}" SelectedItem="{Binding SelectedStream}"
+                                     ItemContainerStyle="{StaticResource StreamItemStyle}"
+                                     ItemTemplate="{StaticResource StreamCardTemplate}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                     ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- 2. Live TV Section -->
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FeaturedLive.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="📺 Live TV" Foreground="White" FontSize="16" FontWeight="Bold" Margin="10,0,10,10"/>
+                            <ListBox ItemsSource="{Binding FeaturedLive}" SelectedItem="{Binding SelectedStream}"
+                                     ItemContainerStyle="{StaticResource StreamItemStyle}"
+                                     ItemTemplate="{StaticResource StreamCardTemplate}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                     ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- 3. Shows / Series Section -->
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FeaturedShows.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="🎬 TV Shows" Foreground="White" FontSize="16" FontWeight="Bold" Margin="10,0,10,10"/>
+                            <ListBox ItemsSource="{Binding FeaturedShows}" SelectedItem="{Binding SelectedStream}"
+                                     ItemContainerStyle="{StaticResource StreamItemStyle}"
+                                     ItemTemplate="{StaticResource StreamCardTemplate}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                     ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- 4. Movies Section -->
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FeaturedMovies.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="🎥 Movies" Foreground="White" FontSize="16" FontWeight="Bold" Margin="10,0,10,10"/>
+                            <ListBox ItemsSource="{Binding FeaturedMovies}" SelectedItem="{Binding SelectedStream}"
+                                     ItemContainerStyle="{StaticResource StreamItemStyle}"
+                                     ItemTemplate="{StaticResource StreamCardTemplate}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                     ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                            </ListBox>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
 
                 <!-- Empty state -->
                 <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"

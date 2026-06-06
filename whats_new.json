@@ -27,7 +27,8 @@
     "last_modified": "1780652368",
     "youtube_trailer": "FZ3sN5E-mBU",
     "IsDownloadable": false,
-    "EffectiveStreamId": 0
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": false
   },
   {
     "num": 1,
@@ -57,7 +58,8 @@
     "last_modified": "1780572846",
     "youtube_trailer": "3iKFLt9gjAU",
     "IsDownloadable": false,
-    "EffectiveStreamId": 0
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": false
   },
   {
     "num": 3,
@@ -87,7 +89,8 @@
     "last_modified": "1779888874",
     "youtube_trailer": "e5QW457407U",
     "IsDownloadable": false,
-    "EffectiveStreamId": 0
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": false
   },
   {
     "num": 4,
@@ -117,7 +120,8 @@
     "last_modified": "1779786159",
     "youtube_trailer": "6QZfHbpEUpI",
     "IsDownloadable": false,
-    "EffectiveStreamId": 0
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": false
   },
   {
     "num": 6,
@@ -147,7 +151,8 @@
     "last_modified": "1779287865",
     "youtube_trailer": "",
     "IsDownloadable": false,
-    "EffectiveStreamId": 0
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": false
   },
   {
     "num": 7,
@@ -177,7 +182,8 @@
     "last_modified": "1778839631",
     "youtube_trailer": "Ltrc8z4AXKo",
     "IsDownloadable": false,
-    "EffectiveStreamId": 0
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": false
   },
   {
     "num": 25,
@@ -207,7 +213,8 @@
     "last_modified": "1778161131",
     "youtube_trailer": "VWdIl7ofD28",
     "IsDownloadable": false,
-    "EffectiveStreamId": 0
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": false
   },
   {
     "num": 30,
@@ -237,7 +244,8 @@
     "last_modified": "1777542662",
     "youtube_trailer": "OMsF9MP2I8c",
     "IsDownloadable": false,
-    "EffectiveStreamId": 0
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": false
   },
   {
     "num": 22,
@@ -267,7 +275,8 @@
     "last_modified": null,
     "youtube_trailer": null,
     "IsDownloadable": true,
-    "EffectiveStreamId": 895755
+    "EffectiveStreamId": 895755,
+    "is_dev_recommendation": false
   },
   {
     "num": 21,
@@ -297,7 +306,8 @@
     "last_modified": null,
     "youtube_trailer": null,
     "IsDownloadable": true,
-    "EffectiveStreamId": 897732
+    "EffectiveStreamId": 897732,
+    "is_dev_recommendation": false
   },
   {
     "num": 23,
@@ -327,7 +337,8 @@
     "last_modified": null,
     "youtube_trailer": null,
     "IsDownloadable": true,
-    "EffectiveStreamId": 887079
+    "EffectiveStreamId": 887079,
+    "is_dev_recommendation": false
   },
   {
     "num": 24,
@@ -357,7 +368,8 @@
     "last_modified": null,
     "youtube_trailer": null,
     "IsDownloadable": true,
-    "EffectiveStreamId": 736098
+    "EffectiveStreamId": 736098,
+    "is_dev_recommendation": false
   },
   {
     "num": 28,
@@ -387,7 +399,8 @@
     "last_modified": null,
     "youtube_trailer": null,
     "IsDownloadable": true,
-    "EffectiveStreamId": 612074
+    "EffectiveStreamId": 612074,
+    "is_dev_recommendation": false
   },
   {
     "num": 26,
@@ -417,6 +430,193 @@
     "last_modified": null,
     "youtube_trailer": null,
     "IsDownloadable": true,
-    "EffectiveStreamId": 676651
+    "EffectiveStreamId": 676651,
+    "is_dev_recommendation": false
+  },
+  {
+    "num": 2,
+    "name": "F: ALWAN F1 ᴴᴰ",
+    "stream_icon": "http://photo-tmdb.com/stalker_portal/misc/logos/320/14464.png?ver=66992",
+    "cover": "http://photo-tmdb.com/stalker_portal/misc/logos/320/14464.png?ver=66992",
+    "epg_channel_id": "",
+    "added": "1758309576",
+    "category_id": "1743",
+    "custom_sid": null,
+    "tv_archive": 0,
+    "direct_source": "",
+    "tv_archive_duration": 0,
+    "stream_id": 1540621,
+    "container_extension": "ts",
+    "stream_type": "live",
+    "rating": null,
+    "rating_5based": 0.0,
+    "thumbnail": null,
+    "video_id": 0,
+    "series_id": 0,
+    "plot": null,
+    "cast": null,
+    "director": null,
+    "genre": null,
+    "release_date": null,
+    "last_modified": null,
+    "youtube_trailer": null,
+    "IsDownloadable": false,
+    "EffectiveStreamId": 1540621,
+    "is_dev_recommendation": false
+  },
+  {
+    "num": 3,
+    "name": "F: ALWAN WWE ᴴᴰ",
+    "stream_icon": "http://photo-tmdb.com/stalker_portal/misc/logos/320/14464.png?ver=66992",
+    "cover": "http://photo-tmdb.com/stalker_portal/misc/logos/320/14464.png?ver=66992",
+    "epg_channel_id": "",
+    "added": "1758309576",
+    "category_id": "1743",
+    "custom_sid": null,
+    "tv_archive": 0,
+    "direct_source": "",
+    "tv_archive_duration": 0,
+    "stream_id": 1540620,
+    "container_extension": "ts",
+    "stream_type": "live",
+    "rating": null,
+    "rating_5based": 0.0,
+    "thumbnail": null,
+    "video_id": 0,
+    "series_id": 0,
+    "plot": null,
+    "cast": null,
+    "director": null,
+    "genre": null,
+    "release_date": null,
+    "last_modified": null,
+    "youtube_trailer": null,
+    "IsDownloadable": false,
+    "EffectiveStreamId": 1540620,
+    "is_dev_recommendation": false
+  },
+  {
+    "num": 4,
+    "name": "F: ALWAN UFC ᴴᴰ",
+    "stream_icon": "http://photo-tmdb.com/stalker_portal/misc/logos/320/14464.png?ver=66992",
+    "cover": "http://photo-tmdb.com/stalker_portal/misc/logos/320/14464.png?ver=66992",
+    "epg_channel_id": "",
+    "added": "1758309576",
+    "category_id": "1743",
+    "custom_sid": null,
+    "tv_archive": 0,
+    "direct_source": "",
+    "tv_archive_duration": 0,
+    "stream_id": 1540619,
+    "container_extension": "ts",
+    "stream_type": "live",
+    "rating": null,
+    "rating_5based": 0.0,
+    "thumbnail": null,
+    "video_id": 0,
+    "series_id": 0,
+    "plot": null,
+    "cast": null,
+    "director": null,
+    "genre": null,
+    "release_date": null,
+    "last_modified": null,
+    "youtube_trailer": null,
+    "IsDownloadable": false,
+    "EffectiveStreamId": 1540619,
+    "is_dev_recommendation": false
+  },
+  {
+    "num": 5,
+    "name": "F: ALWAN SPORT 1 ᴴᴰ",
+    "stream_icon": "http://photo-tmdb.com/stalker_portal/misc/logos/320/14464.png?ver=66992",
+    "cover": "http://photo-tmdb.com/stalker_portal/misc/logos/320/14464.png?ver=66992",
+    "epg_channel_id": "",
+    "added": "1758309576",
+    "category_id": "1743",
+    "custom_sid": null,
+    "tv_archive": 0,
+    "direct_source": "",
+    "tv_archive_duration": 0,
+    "stream_id": 1540618,
+    "container_extension": "ts",
+    "stream_type": "live",
+    "rating": null,
+    "rating_5based": 0.0,
+    "thumbnail": null,
+    "video_id": 0,
+    "series_id": 0,
+    "plot": null,
+    "cast": null,
+    "director": null,
+    "genre": null,
+    "release_date": null,
+    "last_modified": null,
+    "youtube_trailer": null,
+    "IsDownloadable": false,
+    "EffectiveStreamId": 1540618,
+    "is_dev_recommendation": false
+  },
+  {
+    "num": 153822,
+    "name": "AL - Romance (1999)",
+    "stream_icon": "http://cmc.exchange-cdn.com:8080/images/movies//lcDSXXnZok1qyv4TQ14iZ8g8OHf.jpg",
+    "cover": "http://cmc.exchange-cdn.com:8080/images/movies//lcDSXXnZok1qyv4TQ14iZ8g8OHf.jpg",
+    "epg_channel_id": null,
+    "added": "1599397620",
+    "category_id": "754",
+    "custom_sid": null,
+    "tv_archive": 0,
+    "direct_source": "",
+    "tv_archive_duration": 0,
+    "stream_id": 189258,
+    "container_extension": "mp4",
+    "stream_type": "movie",
+    "rating": "5.3",
+    "rating_5based": 2.7,
+    "thumbnail": null,
+    "video_id": 0,
+    "series_id": 0,
+    "plot": null,
+    "cast": null,
+    "director": null,
+    "genre": null,
+    "release_date": null,
+    "last_modified": null,
+    "youtube_trailer": null,
+    "IsDownloadable": true,
+    "EffectiveStreamId": 189258,
+    "is_dev_recommendation": true
+  },
+  {
+    "num": 14598,
+    "name": "4K-A+ - Cape Fear (2026) (US)",
+    "stream_icon": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/64gCOK6NKcXVI2amtVKk3Xx7cbC.jpg",
+    "cover": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/64gCOK6NKcXVI2amtVKk3Xx7cbC.jpg",
+    "epg_channel_id": null,
+    "added": null,
+    "category_id": "434",
+    "custom_sid": null,
+    "tv_archive": 0,
+    "direct_source": null,
+    "tv_archive_duration": 0,
+    "stream_id": 0,
+    "container_extension": "ts",
+    "stream_type": "",
+    "rating": "8",
+    "rating_5based": 4.0,
+    "thumbnail": null,
+    "video_id": 0,
+    "series_id": 47036,
+    "plot": "A storm is coming for happily married attorneys Anna and Tom Bowden when Max Cady, the notorious killer they are responsible for putting behind bars, is let out of prison and wants revenge.",
+    "cast": "Javier Bardem, Amy Adams, Patrick Wilson, CCH Pounder, Joe Anders, Lily Collias, Jamie Hector, Malia Pyles",
+    "director": "Nick Antosca",
+    "genre": "Drama / Crime",
+    "release_date": "2026-06-04",
+    "last_modified": "1780652366",
+    "youtube_trailer": "FZ3sN5E-mBU",
+    "IsDownloadable": false,
+    "EffectiveStreamId": 0,
+    "is_dev_recommendation": true
   }
 ]

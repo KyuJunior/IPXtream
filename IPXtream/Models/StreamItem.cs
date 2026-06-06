@@ -128,4 +128,12 @@ public class StreamItem : ObservableObject
         get => _isSelectedCarousel;
         set => SetProperty(ref _isSelectedCarousel, value);
     }
+
+    private bool _isDevRecommendation;
+    [JsonProperty("is_dev_recommendation")]
+    public bool IsDevRecommendation
+    {
+        get => _isDevRecommendation;
+        set => SetProperty(ref _isDevRecommendation, value);
+    }
 }
