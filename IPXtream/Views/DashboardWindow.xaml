@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:fl="clr-namespace:FlyleafLib.Controls.WPF;assembly=FlyleafLib"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="IPXtream"
         Width="1200" Height="750"
@@ -13,6 +14,13 @@
         KeyDown="Window_KeyDown">
 
     <Window.Resources>
+        <sys:Int32 x:Key="Limit0">0</sys:Int32>
+        <sys:Int32 x:Key="Limit256">256</sys:Int32>
+        <sys:Int32 x:Key="Limit512">512</sys:Int32>
+        <sys:Int32 x:Key="Limit1024">1024</sys:Int32>
+        <sys:Int32 x:Key="Limit2048">2048</sys:Int32>
+        <sys:Int32 x:Key="Limit5120">5120</sys:Int32>
+        <sys:Int32 x:Key="Limit10240">10240</sys:Int32>
         <SolidColorBrush x:Key="BgDeep"       Color="#0F0F1A"/>
         <SolidColorBrush x:Key="BgSidebar"    Color="#12122A"/>
         <SolidColorBrush x:Key="BgCard"       Color="#1A1A2E"/>
@@ -26,6 +34,12 @@
         <SolidColorBrush x:Key="DividerColor" Color="#1E1E3A"/>
         <SolidColorBrush x:Key="ErrorRed"     Color="#FF5370"/>
         <SolidColorBrush x:Key="AccentGreen"  Color="#4EC994"/>
+
+        <CollectionViewSource x:Key="GroupedDownloads" Source="{Binding Downloads}">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="GroupName" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
 
         <!-- ── Category list item ──────────────────────────────────────────── -->
         <Style x:Key="CategoryItemStyle" TargetType="ListBoxItem">
@@ -213,6 +227,9 @@
                                 <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
                                     <Setter Property="Width" Value="0"/>
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                    <Setter Property="Width" Value="0"/>
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </ColumnDefinition.Style>
@@ -308,8 +325,11 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Downloads toggle with active badge -->
-                        <Button Style="{StaticResource NavBtn}" Command="{Binding ToggleDownloadsTrayCommand}"
+                        <!-- Downloads nav tab with active badge -->
+                        <Button Style="{Binding ActiveSection,
+                                        Converter={StaticResource SectionToStyleConverter},
+                                        ConverterParameter=Downloads}"
+                                Command="{Binding SelectSectionCommand}" CommandParameter="downloads"
                                 Margin="0,4,0,0">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
@@ -479,6 +499,9 @@
                             <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
@@ -558,6 +581,16 @@
 
             <!-- ══════════ STREAMS ═══════════════════════════════════════════ -->
             <Grid x:Name="StreamsPanel" Grid.Column="2" Background="{StaticResource BgDeep}">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>  <!-- Seasons tabs -->
@@ -596,49 +629,65 @@
                                Foreground="{StaticResource ErrorRed}" FontSize="12"/>
                 </Border>
 
-                <!-- Seasons Tabs -->
-                <ListBox Grid.Row="1" ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                         Background="Transparent" BorderThickness="0,1,0,1" BorderBrush="#1C1C28" Padding="14,0"
-                         Visibility="{Binding IsViewingSeriesInfo, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="Padding" Value="16,10"/>
-                            <Setter Property="Cursor" Value="Hand"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border BorderThickness="0,0,0,3" BorderBrush="Transparent" x:Name="Bd" Background="{TemplateBinding Background}">
-                                            <ContentPresenter Margin="{TemplateBinding Padding}"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
-                                            </Trigger>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding DisplayName}" FontSize="13"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <!-- Seasons Tabs & Back Button -->
+                <Border Grid.Row="1" BorderThickness="0,1,0,1" BorderBrush="#1C1C28"
+                        Visibility="{Binding IsViewingSeriesInfo, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Back Button -->
+                        <Button Grid.Column="0" Style="{StaticResource NavBtn}"
+                                Command="{Binding BackToSeriesCommand}"
+                                Content="⬅ Back"
+                                VerticalAlignment="Center" Margin="16,0,0,0" Padding="16,10"/>
+
+                        <!-- Seasons Tabs ListBox -->
+                        <ListBox Grid.Column="1" ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 Background="Transparent" BorderThickness="0" Padding="14,0">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Padding" Value="16,10"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border BorderThickness="0,0,0,3" BorderBrush="Transparent" x:Name="Bd" Background="{TemplateBinding Background}">
+                                                    <ContentPresenter Margin="{TemplateBinding Padding}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" FontSize="13"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
 
                 <!-- Stream card grid -->
                 <ListBox Grid.Row="2"
@@ -954,6 +1003,258 @@
                         </ScrollViewer>
                     </Grid>
                 </Border>
+            </Grid>
+
+            <!-- ══════════ DOWNLOADS PANEL ═══════════════════════════════════ -->
+            <Grid x:Name="DownloadsPanel" Grid.Column="2" Background="{StaticResource BgDeep}">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Toolbar/Settings Header -->
+                <Border Grid.Row="0" Padding="20,16" Background="{StaticResource BgSidebar}"
+                        BorderBrush="{StaticResource DividerColor}" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Vertical">
+                            <TextBlock Text="DOWNLOADS MANAGER" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <TextBlock Text="Download folder: " Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding DownloadFolder}" Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Command="{Binding ChangeDownloadFolderCommand}"
+                                    Background="#1A1A2E" BorderBrush="#2E2E50" BorderThickness="1"
+                                    Foreground="White" Cursor="Hand" Padding="12,6" Height="32">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="📂" FontSize="12" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Change Folder" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <Button Command="{Binding OpenDownloadFolderCommand}"
+                                    Background="#1A1A2E" BorderBrush="#2E2E50" BorderThickness="1"
+                                    Foreground="White" Cursor="Hand" Padding="12,6" Height="32" Margin="8,0,0,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="👁" FontSize="12" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Open Folder" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <Button Command="{Binding ClearCompletedDownloadsCommand}"
+                                    Background="#1A1A2E" BorderBrush="#2E2E50" BorderThickness="1"
+                                    Foreground="White" Cursor="Hand" Padding="12,6" Height="32" Margin="8,0,0,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="🧹" FontSize="12" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Clear Done" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Downloads list -->
+                <ScrollViewer Grid.Row="1" Padding="20,10" VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <!-- List view grouped -->
+                        <ListBox ItemsSource="{Binding Source={StaticResource GroupedDownloads}}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Focusable" Value="False"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#14142B" Padding="14,8" CornerRadius="8" Margin="0,16,0,8"
+                                                    BorderBrush="#1E1E3A" BorderThickness="1">
+                                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource AccentBlue}"
+                                                           FontWeight="Bold" FontSize="13"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource BgCard}" CornerRadius="10" Padding="16,12" Margin="0,0,0,10"
+                                            BorderBrush="#252545" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Left side: Title, status info -->
+                                            <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Vertical" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource TextMuted}" FontSize="12"/>
+                                                    <TextBlock Text=" • " Foreground="{StaticResource DividerColor}" FontSize="12"/>
+                                                    <TextBlock Text="{Binding SizeText}" Foreground="{StaticResource TextMuted}" FontSize="12"/>
+                                                    <TextBlock Text=" • " Foreground="{StaticResource DividerColor}" FontSize="12" Visibility="{Binding SpeedText, Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
+                                                    <TextBlock Text="{Binding SpeedText}" Foreground="{StaticResource AccentGreen}" FontSize="12" FontWeight="SemiBold" Visibility="{Binding SpeedText, Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- Speed Limit ComboBox -->
+                                            <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0">
+                                                <TextBlock Text="Limit: " Foreground="{StaticResource TextMuted}" FontSize="11" VerticalAlignment="Center"/>
+                                                <ComboBox SelectedValue="{Binding SpeedLimitKbps, Mode=TwoWay}" SelectedValuePath="Tag"
+                                                          Background="#12122A" Foreground="White" BorderBrush="#2E2E50"
+                                                          Padding="6,4" Width="90" Height="28" VerticalAlignment="Center" FontSize="11">
+                                                     <ComboBoxItem Content="Unlimited" Tag="{StaticResource Limit0}"/>
+                                                     <ComboBoxItem Content="256 KB/s" Tag="{StaticResource Limit256}"/>
+                                                     <ComboBoxItem Content="512 KB/s" Tag="{StaticResource Limit512}"/>
+                                                     <ComboBoxItem Content="1 MB/s" Tag="{StaticResource Limit1024}"/>
+                                                     <ComboBoxItem Content="2 MB/s" Tag="{StaticResource Limit2048}"/>
+                                                     <ComboBoxItem Content="5 MB/s" Tag="{StaticResource Limit5120}"/>
+                                                     <ComboBoxItem Content="10 MB/s" Tag="{StaticResource Limit10240}"/>
+                                                 </ComboBox>
+                                            </StackPanel>
+
+                                            <!-- Controls -->
+                                            <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <!-- Pause -->
+                                                <Button Command="{Binding DataContext.PauseDownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="#22224A" BorderThickness="0" Foreground="White" Cursor="Hand"
+                                                        Padding="12,6" Height="28" Margin="0,0,6,0" ToolTip="Pause"
+                                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                                <TextBlock Text="⏸ Pause" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+
+                                                <!-- Resume -->
+                                                <Button Command="{Binding DataContext.ResumeDownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="{StaticResource AccentBlue}" BorderThickness="0" Foreground="White" Cursor="Hand"
+                                                        Padding="12,6" Height="28" Margin="0,0,6,0" ToolTip="Resume"
+                                                        Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                                <TextBlock Text="▶ Resume" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+
+                                                <!-- Stop -->
+                                                <Button Command="{Binding DataContext.StopDownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="#3DFF5370" BorderThickness="0" Foreground="White" Cursor="Hand"
+                                                        Padding="12,6" Height="28" Margin="0,0,6,0" ToolTip="Stop and clean up"
+                                                        Visibility="{Binding IsCompleted, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                                <TextBlock Text="⏹ Stop" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource ErrorRed}"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+
+                                                <!-- Remove / Cancel -->
+                                                <Button Command="{Binding DataContext.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="#1E1E3A" BorderThickness="0" Foreground="White" Cursor="Hand"
+                                                        Padding="8,6" Height="28" ToolTip="Remove from list">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                                <TextBlock Text="✕ Remove" FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </StackPanel>
+
+                                            <!-- Progress bar row -->
+                                            <Grid Grid.Row="1" Grid.ColumnSpan="3" x:Name="ProgressTrack" Height="6" Margin="0,10,0,2">
+                                                <Border CornerRadius="3" Background="#12122A"/>
+                                                <Border CornerRadius="3" Background="{StaticResource AccentBlue}" HorizontalAlignment="Left">
+                                                    <Border.Width>
+                                                        <MultiBinding Converter="{StaticResource ProgressToWidthMultiConverter}">
+                                                            <Binding Path="Progress"/>
+                                                            <Binding ElementName="ProgressTrack" Path="ActualWidth"/>
+                                                        </MultiBinding>
+                                                    </Border.Width>
+                                                </Border>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- Empty state when no downloads -->
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,60,0,0"
+                                    Visibility="{Binding HasDownloads, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                            <TextBlock Text="⬇" FontSize="48" HorizontalAlignment="Center" Foreground="{StaticResource TextMuted}" Margin="0,0,0,12"/>
+                            <TextBlock Text="No downloads in progress" Foreground="{StaticResource TextMuted}" FontSize="16" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Go to Movies or Series and click the download icon to start." Foreground="{StaticResource TextMuted}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
             </Grid>
         </Grid>
 

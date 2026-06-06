@@ -75,9 +75,17 @@ public partial class DashboardWindow : Window
         };
 
         // If the media file has been downloaded locally, play the local path instead
-        var downloadDir = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "Downloads", "IPXtream");
+        var downloadDir = string.Empty;
+        if (DataContext is DashboardViewModel vm)
+        {
+            downloadDir = vm.DownloadFolder;
+        }
+        else
+        {
+            downloadDir = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Downloads", "IPXtream");
+        }
         var invalid = System.IO.Path.GetInvalidFileNameChars();
         var safeName = string.Concat(s.Name.Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c))
                              .Trim().TrimEnd('.');

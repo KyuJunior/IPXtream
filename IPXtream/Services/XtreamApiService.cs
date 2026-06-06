@@ -458,6 +458,7 @@ public class XtreamApiService : IDisposable
         string url,
         string destPath,
         IProgress<(long downloaded, long total, double bytesPerSec)>? progress = null,
+        Func<int>? getSpeedLimitKbps = null,
         CancellationToken ct = default)
     {
         var partPath   = destPath + ".part";
@@ -493,12 +494,43 @@ public class XtreamApiService : IDisposable
         long speedBytes = 0;
         var  sw         = System.Diagnostics.Stopwatch.StartNew();
 
+        var throttleSw = System.Diagnostics.Stopwatch.StartNew();
+        long throttleBytes = 0;
+
         int read;
         while ((read = await netStream.ReadAsync(buffer, ct)) > 0)
         {
             await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
             downloaded  += read;
             speedBytes  += read;
+            throttleBytes += read;
+
+            // Dynamic Speed Limiting (Throttling)
+            int limitKbps = getSpeedLimitKbps?.Invoke() ?? 0;
+            if (limitKbps > 0)
+            {
+                double elapsedMs = throttleSw.Elapsed.TotalMilliseconds;
+                double targetMs = (throttleBytes / 1024.0) / limitKbps * 1000.0;
+                if (targetMs > elapsedMs)
+                {
+                    int delayMs = (int)(targetMs - elapsedMs);
+                    if (delayMs > 0)
+                    {
+                        await Task.Delay(delayMs, ct);
+                    }
+                }
+
+                if (throttleSw.ElapsedMilliseconds >= 1000)
+                {
+                    throttleBytes = 0;
+                    throttleSw.Restart();
+                }
+            }
+            else
+            {
+                throttleBytes = 0;
+                throttleSw.Restart();
+            }
 
             if (sw.ElapsedMilliseconds >= 800)
             {

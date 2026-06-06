@@ -21,7 +21,7 @@ namespace IPXtream.ViewModels;
 /// <summary>
 /// Sidebar section identifiers.
 /// </summary>
-public enum MediaSection { LiveTV, VOD, Series, WhatsNew }
+public enum MediaSection { LiveTV, VOD, Series, WhatsNew, Downloads }
 
 /// <summary>
 /// ViewModel for DashboardWindow.
@@ -217,6 +217,7 @@ public partial class DashboardViewModel : ObservableObject
     public ObservableCollection<DownloadItem> Downloads { get; } = new();
 
     [ObservableProperty] private bool _showDownloadsTray;
+    [ObservableProperty] private string _downloadFolder = string.Empty;
 
     public bool HasDownloads        => Downloads.Count > 0;
     public bool HasActiveDownloads  => Downloads.Any(d => d.IsActive);
@@ -232,6 +233,8 @@ public partial class DashboardViewModel : ObservableObject
         _api            = api;
         DisplayUsername = creds.Username;
         ServerDisplay   = new Uri(creds.BaseUrl).Host;
+
+        LoadSettings();
 
         System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Streams, _streamsLock);
         System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Categories, _categoriesLock);
@@ -350,69 +353,41 @@ public partial class DashboardViewModel : ObservableObject
         }
 
         if (IsDownloadingUpdate) return;
+
+        // Check if there is already a System Update in the queue/downloads
+        if (Downloads.Any(d => d.IsAppUpdate && (d.Status == DownloadStatus.Downloading || d.Status == DownloadStatus.Queued)))
+        {
+            ActiveSection = MediaSection.Downloads;
+            return;
+        }
+
         IsDownloadingUpdate = true;
         UpdateDownloadProgress = 0;
         UpdateDownloadStatus = "Starting download...";
 
-        try
+        var destPath = Path.Combine(Path.GetTempPath(), "IPXtream_Installer.exe");
+
+        // If an old update item exists, remove it first
+        var old = Downloads.FirstOrDefault(d => d.IsAppUpdate);
+        if (old != null)
         {
-            var tempFile = Path.Combine(Path.GetTempPath(), "IPXtream_Installer.exe");
-
-            using (var http = new HttpClient())
-            {
-                http.DefaultRequestHeaders.UserAgent.Add(
-                    new ProductInfoHeaderValue("IPXtream", AppVersion.TrimStart('v')));
-
-                using (var response = await http.GetAsync(_updateDownloadUrl, HttpCompletionOption.ResponseHeadersRead))
-                {
-                    response.EnsureSuccessStatusCode();
-                    var totalBytes = response.Content.Headers.ContentLength ?? -1L;
-
-                    using (var contentStream = await response.Content.ReadAsStreamAsync())
-                    using (var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
-                    {
-                        var buffer = new byte[8192];
-                        long totalRead = 0L;
-                        int read;
-
-                        while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                        {
-                            await fileStream.WriteAsync(buffer, 0, read);
-                            totalRead += read;
-
-                            if (totalBytes > 0)
-                            {
-                                UpdateDownloadProgress = (double)totalRead / totalBytes;
-                                UpdateDownloadStatus = $"Downloading update... {UpdateDownloadProgress * 100:F0}%";
-                            }
-                            else
-                            {
-                                UpdateDownloadStatus = $"Downloading update... {totalRead / 1_048_576:N0} MB";
-                            }
-                        }
-                    }
-                }
-            }
-
-            UpdateDownloadStatus = "Launching installer...";
-            await Task.Delay(1000);
-
-            // Launch the installer
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = tempFile,
-                UseShellExecute = true
-            });
-
-            // Shutdown the application so the installer can overwrite the files
-            Application.Current?.Shutdown();
+            Downloads.Remove(old);
         }
-        catch (Exception ex)
+
+        var item = new DownloadItem
         {
-            UpdateDownloadStatus = "Download failed";
-            UpdateStatus = $"⚠ Update failed: {ex.Message[..System.Math.Min(ex.Message.Length, 40)]}";
-            IsDownloadingUpdate = false;
-        }
+            Name        = $"IPXtream Update {UpdateStatus.Replace("⬆ Update available: ", "").Replace("Latest: ", "")}",
+            Url         = _updateDownloadUrl,
+            Extension   = "exe",
+            DestPath    = destPath,
+            GroupName   = "System Updates",
+            IsAppUpdate = true
+        };
+
+        Downloads.Add(item);
+        ActiveSection = MediaSection.Downloads;
+
+        _ = RunDownloadTaskAsync(item);
     }
 
     // ── Sidebar navigation commands ───────────────────────────────────────────
@@ -422,10 +397,11 @@ public partial class DashboardViewModel : ObservableObject
     {
         ActiveSection     = section switch
         {
-            "vod"      => MediaSection.VOD,
-            "series"   => MediaSection.Series,
-            "whatsnew" => MediaSection.WhatsNew,
-            _          => MediaSection.LiveTV
+            "vod"       => MediaSection.VOD,
+            "series"    => MediaSection.Series,
+            "whatsnew"  => MediaSection.WhatsNew,
+            "downloads" => MediaSection.Downloads,
+            _           => MediaSection.LiveTV
         };
 
         SelectedCategory = null;
@@ -444,6 +420,10 @@ public partial class DashboardViewModel : ObservableObject
             _allStreams = featured;
             SetFilteredStreams(featured);
             StatusMessage = $"{featured.Count} featured items";
+        }
+        else if (ActiveSection == MediaSection.Downloads)
+        {
+            StatusMessage = "Manage your downloads and local folder settings";
         }
         else
         {
@@ -473,9 +453,7 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private void OpenDownloadFolder()
     {
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "Downloads", "IPXtream");
+        var dir = DownloadFolder;
         Directory.CreateDirectory(dir);
         System.Diagnostics.Process.Start("explorer.exe", dir);
     }
@@ -492,24 +470,32 @@ public partial class DashboardViewModel : ObservableObject
         };
         if (url is null) return;
 
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "Downloads", "IPXtream");
+        var dir = DownloadFolder;
         Directory.CreateDirectory(dir);
 
         var safeName = SanitizeFileName(stream.Name);
         var destPath = Path.Combine(dir, $"{safeName}.{stream.ContainerExtension}");
+
+        var groupName = "Movies";
+        string? showName = null;
+        if (stream.StreamType == "series" && CurrentSeries != null)
+        {
+            showName = CurrentSeries.Info.Name;
+            groupName = showName;
+        }
 
         var item = new DownloadItem
         {
             Name      = stream.Name,
             Url       = url,
             Extension = stream.ContainerExtension,
-            DestPath  = destPath
+            DestPath  = destPath,
+            GroupName = groupName,
+            ShowName  = showName
         };
 
         Downloads.Add(item);
-        ShowDownloadsTray = true;
+        ActiveSection = MediaSection.Downloads;
 
         _ = RunDownloadTaskAsync(item);
     }
@@ -537,16 +523,40 @@ public partial class DashboardViewModel : ObservableObject
                 item.SizeText  = p.total > 0
                     ? $"{p.dl / 1_048_576:N0} / {p.total / 1_048_576:N0} MB"
                     : $"{p.dl / 1_048_576:N0} MB";
+
+                if (item.IsAppUpdate)
+                {
+                    UpdateDownloadProgress = item.Progress;
+                    UpdateDownloadStatus = p.total > 0
+                        ? $"Downloading update... {UpdateDownloadProgress * 100:F0}%"
+                        : $"Downloading update... {p.dl / 1_048_576:N0} MB";
+                }
+
                 OnPropertyChanged(nameof(ActiveDownloadCount));
                 OnPropertyChanged(nameof(HasActiveDownloads));
             });
 
-            await _api.DownloadStreamAsync(item.Url, item.DestPath, prog, item.Cts.Token);
+            await _api.DownloadStreamAsync(item.Url, item.DestPath, prog, () => item.SpeedLimitKbps, item.Cts.Token);
 
             item.Status     = DownloadStatus.Completed;
             item.StatusText = "✔ Complete";
             item.Progress   = 1.0;
             item.SpeedText  = string.Empty;
+
+            if (item.IsAppUpdate)
+            {
+                item.StatusText = "Launching installer...";
+                UpdateDownloadStatus = "Launching installer...";
+                await Task.Delay(1500);
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = item.DestPath,
+                    UseShellExecute = true
+                });
+
+                Application.Current?.Shutdown();
+            }
         }
         catch (OperationCanceledException)
         {
@@ -554,12 +564,21 @@ public partial class DashboardViewModel : ObservableObject
             {
                 item.StatusText = "॥ Paused";
                 item.SpeedText  = string.Empty;
+                if (item.IsAppUpdate)
+                {
+                    UpdateDownloadStatus = "Update paused";
+                }
             }
             else
             {
                 item.Status     = DownloadStatus.Cancelled;
-                item.StatusText = "✕ Cancelled";
+                item.StatusText = "✕ Stopped";
                 item.SpeedText  = string.Empty;
+                if (item.IsAppUpdate)
+                {
+                    IsDownloadingUpdate = false;
+                    UpdateDownloadStatus = "Update stopped";
+                }
             }
         }
         catch (Exception ex)
@@ -567,6 +586,12 @@ public partial class DashboardViewModel : ObservableObject
             item.Status     = DownloadStatus.Failed;
             item.StatusText = $"Failed: {ex.Message[..Math.Min(ex.Message.Length, 60)]}";
             item.SpeedText  = string.Empty;
+            if (item.IsAppUpdate)
+            {
+                IsDownloadingUpdate = false;
+                UpdateDownloadStatus = "Download failed";
+                UpdateStatus = $"⚠ Update failed: {ex.Message[..System.Math.Min(ex.Message.Length, 40)]}";
+            }
         }
         finally
         {
@@ -596,11 +621,47 @@ public partial class DashboardViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void StopDownload(DownloadItem item)
+    {
+        if (item.Status == DownloadStatus.Completed) return;
+        item.Status = DownloadStatus.Cancelled;
+        item.Cts.Cancel();
+        item.StatusText = "✕ Stopped";
+
+        var partPath = item.DestPath + ".part";
+        try
+        {
+            if (File.Exists(partPath)) File.Delete(partPath);
+        }
+        catch { }
+
+        if (item.IsAppUpdate)
+        {
+            IsDownloadingUpdate = false;
+            UpdateDownloadStatus = "Update stopped";
+        }
+    }
+
+    [RelayCommand]
     private void CancelDownload(DownloadItem item)
     {
         item.Status = DownloadStatus.Cancelled;
         item.Cts.Cancel();
+
+        var partPath = item.DestPath + ".part";
+        try
+        {
+            if (File.Exists(partPath)) File.Delete(partPath);
+        }
+        catch { }
+
         Downloads.Remove(item);
+
+        if (item.IsAppUpdate)
+        {
+            IsDownloadingUpdate = false;
+            UpdateDownloadStatus = "Update stopped";
+        }
     }
 
     private static string SanitizeFileName(string name)
@@ -643,8 +704,10 @@ public partial class DashboardViewModel : ObservableObject
 
     private string GetFeaturedKey(StreamItem stream)
     {
-        var id = stream.StreamType == "series" ? stream.SeriesId : stream.EffectiveStreamId;
-        return $"{stream.StreamType}_{id}";
+        var isSeries = stream.SeriesId != 0 && stream.StreamId == 0;
+        var type = isSeries ? "series" : stream.StreamType;
+        var id = isSeries ? stream.SeriesId : stream.EffectiveStreamId;
+        return $"{type}_{id}";
     }
 
     private void MarkFeatured(StreamItem stream)
@@ -872,8 +935,9 @@ public partial class DashboardViewModel : ObservableObject
     {
         if (stream is null) return;
 
-        // If it's a Series, don't play it — fetch and show its episodes instead.
-        if (stream.StreamType == "series" && CurrentSeries == null)
+        // If it's a Series container (has SeriesId and no StreamId),
+        // don't play it — fetch and show its episodes instead.
+        if (stream.SeriesId != 0 && stream.StreamId == 0)
         {
             await LoadSeriesEpisodesAsync(stream);
             return;
@@ -1104,6 +1168,73 @@ public partial class DashboardViewModel : ObservableObject
         finally
         {
             IsLoadingStreams = false;
+        }
+    }
+
+    // ── Settings persistence ──────────────────────────────────────────────────
+    private void LoadSettings()
+    {
+        var defaultFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "Downloads", "IPXtream");
+
+        try
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IPXtream");
+            var file = Path.Combine(dir, "settings.json");
+            if (File.Exists(file))
+            {
+                var json = File.ReadAllText(file);
+                var dict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                if (dict != null && dict.TryGetValue("DownloadFolder", out var path) && !string.IsNullOrWhiteSpace(path))
+                {
+                    DownloadFolder = path;
+                    return;
+                }
+            }
+        }
+        catch
+        {
+            // Ignore settings load errors
+        }
+
+        DownloadFolder = defaultFolder;
+    }
+
+    private void SaveSettings()
+    {
+        try
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IPXtream");
+            Directory.CreateDirectory(dir);
+            var file = Path.Combine(dir, "settings.json");
+
+            var dict = new Dictionary<string, string>
+            {
+                { "DownloadFolder", DownloadFolder }
+            };
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(dict, Newtonsoft.Json.Formatting.Indented);
+            File.WriteAllText(file, json);
+        }
+        catch
+        {
+            // Ignore settings save errors
+        }
+    }
+
+    [RelayCommand]
+    private void ChangeDownloadFolder()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Select Local Download Location",
+            InitialDirectory = Directory.Exists(DownloadFolder) ? DownloadFolder : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            DownloadFolder = dialog.FolderName;
+            SaveSettings();
         }
     }
 }

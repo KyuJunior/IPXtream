@@ -108,7 +108,7 @@ public class StreamItem : ObservableObject
     public override string ToString() => Name;
 
     /// <summary>True for VOD movies and series episodes — shows the Download button.</summary>
-    public bool IsDownloadable => StreamType is "movie" or "series";
+    public bool IsDownloadable => (StreamType is "movie" or "series") && EffectiveStreamId != 0;
 
     /// <summary>Effective stream ID, works for both live and VOD.</summary>
     public int EffectiveStreamId => StreamId != 0 ? StreamId : VideoId;

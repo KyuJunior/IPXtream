@@ -9,6 +9,11 @@ public partial class DownloadItem : ObservableObject
     public string Name      { get; init; } = string.Empty;
     public string Url       { get; init; } = string.Empty;
     public string Extension { get; init; } = "mp4";
+    
+    // Grouping & settings
+    public string GroupName { get; set; } = string.Empty;
+    public string? ShowName { get; set; }
+    public bool IsAppUpdate { get; set; }
 
     [ObservableProperty] private double         _progress;
     [ObservableProperty] private string         _speedText  = string.Empty;
@@ -16,6 +21,7 @@ public partial class DownloadItem : ObservableObject
     [ObservableProperty] private string         _statusText = "Queued";
     [ObservableProperty] private DownloadStatus _status     = DownloadStatus.Queued;
     [ObservableProperty] private string         _destPath   = string.Empty;
+    [ObservableProperty] private int            _speedLimitKbps = 0; // 0 = no limit
 
     public CancellationTokenSource Cts { get; set; } = new();
 
