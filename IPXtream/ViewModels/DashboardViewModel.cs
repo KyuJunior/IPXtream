@@ -54,7 +54,23 @@ public partial class DashboardViewModel : ObservableObject
 
     // ── Sidebar selection ─────────────────────────────────────────────────────
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
     private MediaSection _activeSection = MediaSection.WhatsNew;
+
+    // ── Carousel (for What's New Hero) ────────────────────────────────────────
+    public ObservableCollection<StreamItem> FeaturedItems { get; } = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
+    private StreamItem? _featuredCarouselItem;
+
+    public bool ShowHeroBanner => ActiveSection == MediaSection.WhatsNew && CurrentSeries == null && FeaturedCarouselItem != null;
+
+    partial void OnFeaturedCarouselItemChanged(StreamItem? oldValue, StreamItem? newValue)
+    {
+        if (oldValue != null) oldValue.IsSelectedCarousel = false;
+        if (newValue != null) newValue.IsSelectedCarousel = true;
+    }
 
     // ── Categories ────────────────────────────────────────────────────────────
     public ObservableCollection<Category> Categories { get; } = new();
@@ -82,6 +98,7 @@ public partial class DashboardViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsViewingSeriesInfo))]
+    [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
     private SeriesInfoResponse? _currentSeries;
 
     public bool IsViewingSeriesInfo => CurrentSeries is not null;
@@ -671,6 +688,60 @@ public partial class DashboardViewModel : ObservableObject
                      .Trim().TrimEnd('.');
     }
 
+    private System.Windows.Threading.DispatcherTimer? _carouselTimer;
+    private int _carouselIndex = 0;
+
+    private void StartCarouselTimer()
+    {
+        if (_carouselTimer == null)
+        {
+            _carouselTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(5)
+            };
+            _carouselTimer.Tick += (s, e) => RotateCarousel();
+        }
+        _carouselTimer.Start();
+    }
+
+    private void StopCarouselTimer()
+    {
+        _carouselTimer?.Stop();
+    }
+
+    private void RotateCarousel()
+    {
+        if (_featuredItems.Count == 0)
+        {
+            FeaturedCarouselItem = null;
+            return;
+        }
+        _carouselIndex = (_carouselIndex + 1) % _featuredItems.Count;
+        FeaturedCarouselItem = _featuredItems[_carouselIndex];
+    }
+
+    [RelayCommand]
+    private void SelectCarouselItem(StreamItem? item)
+    {
+        if (item == null) return;
+        FeaturedCarouselItem = item;
+        _carouselIndex = _featuredItems.IndexOf(item);
+        _carouselTimer?.Stop();
+        _carouselTimer?.Start();
+    }
+
+    private void SyncFeaturedItemsCollection()
+    {
+        Application.Current?.Dispatcher.BeginInvoke(() =>
+        {
+            FeaturedItems.Clear();
+            foreach (var item in _featuredItems)
+            {
+                FeaturedItems.Add(item);
+            }
+        });
+    }
+
     [RelayCommand]
     private void ToggleFeatured(StreamItem stream)
     {
@@ -683,12 +754,35 @@ public partial class DashboardViewModel : ObservableObject
         {
             _featuredKeys.Add(key);
             _featuredItems.Add(stream);
+            SyncFeaturedItemsCollection();
+
+            if (FeaturedCarouselItem == null)
+            {
+                _carouselIndex = 0;
+                FeaturedCarouselItem = stream;
+                StartCarouselTimer();
+            }
         }
         else
         {
             _featuredKeys.Remove(key);
             var existing = _featuredItems.FirstOrDefault(i => GetFeaturedKey(i) == key);
-            if (existing != null) _featuredItems.Remove(existing);
+            if (existing != null)
+            {
+                _featuredItems.Remove(existing);
+                SyncFeaturedItemsCollection();
+            }
+
+            if (_featuredItems.Count == 0)
+            {
+                FeaturedCarouselItem = null;
+                StopCarouselTimer();
+            }
+            else if (FeaturedCarouselItem == existing)
+            {
+                _carouselIndex = 0;
+                FeaturedCarouselItem = _featuredItems[0];
+            }
         }
 
         SaveWhatsNew();
@@ -719,6 +813,14 @@ public partial class DashboardViewModel : ObservableObject
     {
         await LoadWhatsNewAsync();
         
+        SyncFeaturedItemsCollection();
+        if (_featuredItems.Count > 0)
+        {
+            _carouselIndex = 0;
+            FeaturedCarouselItem = _featuredItems[0];
+            Application.Current?.Dispatcher.BeginInvoke(() => StartCarouselTimer());
+        }
+
         if (ActiveSection == MediaSection.WhatsNew)
         {
             Application.Current?.Dispatcher.BeginInvoke(() =>
@@ -813,6 +915,19 @@ public partial class DashboardViewModel : ObservableObject
         if (ActiveSection == MediaSection.WhatsNew)
         {
             await LoadWhatsNewAsync();
+            SyncFeaturedItemsCollection();
+            if (_featuredItems.Count > 0)
+            {
+                _carouselIndex = 0;
+                FeaturedCarouselItem = _featuredItems[0];
+                StartCarouselTimer();
+            }
+            else
+            {
+                FeaturedCarouselItem = null;
+                StopCarouselTimer();
+            }
+
             Streams.Clear();
             _allStreams.Clear();
             foreach (var item in _featuredItems)

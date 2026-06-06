@@ -120,4 +120,12 @@ public class StreamItem : ObservableObject
         get => _isFeatured;
         set => SetProperty(ref _isFeatured, value);
     }
+
+    private bool _isSelectedCarousel;
+    [JsonIgnore]
+    public bool IsSelectedCarousel
+    {
+        get => _isSelectedCarousel;
+        set => SetProperty(ref _isSelectedCarousel, value);
+    }
 }

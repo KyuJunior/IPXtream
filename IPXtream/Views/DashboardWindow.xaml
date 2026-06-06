@@ -594,8 +594,9 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>  <!-- Seasons tabs -->
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>  <!-- Hero Banner -->
+                    <RowDefinition Height="*"/>     <!-- Stream card grid -->
+                    <RowDefinition Height="Auto"/>  <!-- Status bar -->
                     <RowDefinition Height="Auto"/>  <!-- downloads tray -->
                 </Grid.RowDefinitions>
 
@@ -689,8 +690,165 @@
                     </Grid>
                 </Border>
 
+                <!-- 16:9 Hero Banner (Auto-rotating What's New Carousel) -->
+                <Border x:Name="HeroBanner" Grid.Row="2" Height="280" CornerRadius="10" Margin="16,0,16,10" ClipToBounds="True" Background="#121225">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowHeroBanner}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid>
+                        <!-- Cover Background (Stretch to Fill) -->
+                        <Image Source="{Binding FeaturedCarouselItem.Cover}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image.Effect>
+                                <BlurEffect Radius="15" RenderingBias="Quality"/>
+                            </Image.Effect>
+                        </Image>
+                        
+                        <!-- Overlay Dark Grid for Premium Contrast -->
+                        <Border Background="#990F0F1D"/>
+
+                        <!-- Actual 16:9 Poster Image + Details Grid -->
+                        <Grid x:Name="BannerContent" Margin="24">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Style.Triggers>
+                                        <!-- Smooth fade animation when Carousel item changes -->
+                                        <EventTrigger RoutedEvent="BindingOperations.TargetUpdated">
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0.3" To="1.0" Duration="0:0:0.5"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/> <!-- Poster image -->
+                                <ColumnDefinition Width="*"/>    <!-- Text details -->
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Highlighted Poster -->
+                            <Border Grid.Column="0" Width="150" CornerRadius="6" ClipToBounds="True" Background="#0A0A16"
+                                    BorderBrush="#33FFFFFF" BorderThickness="1" Margin="0,0,24,0">
+                                <Image Source="{Binding FeaturedCarouselItem.StreamIcon, Converter={StaticResource CachedImageConverter}, NotifyOnTargetUpdated=True}" 
+                                       Stretch="UniformToFill"/>
+                            </Border>
+
+                            <!-- Text Details -->
+                            <Grid Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/> <!-- Tag / Rating -->
+                                    <RowDefinition Height="Auto"/> <!-- Title -->
+                                    <RowDefinition Height="*"/>    <!-- Plot -->
+                                    <RowDefinition Height="Auto"/> <!-- Play/Download Buttons -->
+                                </Grid.RowDefinitions>
+
+                                <!-- Tag -->
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Background="#FFD700" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                        <TextBlock Text="★ WHAT'S NEW" Foreground="#0F0F1A" FontSize="10" FontWeight="Black" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding FeaturedCarouselItem.ReleaseDate}" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Text="⭐" Foreground="#FFD700" FontSize="12" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding FeaturedCarouselItem.Rating}" Foreground="White" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Title -->
+                                <TextBlock Grid.Row="1" Text="{Binding FeaturedCarouselItem.Name}" Foreground="White" FontSize="24" FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                                <!-- Plot -->
+                                <TextBlock Grid.Row="2" Text="{Binding FeaturedCarouselItem.Plot}" Foreground="{StaticResource TextMuted}" FontSize="13" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="0,0,48,16" LineHeight="18"/>
+
+                                <!-- Buttons -->
+                                <StackPanel Grid.Row="3" Orientation="Horizontal">
+                                    <Button Command="{Binding PlayCommand}" CommandParameter="{Binding FeaturedCarouselItem}"
+                                            Background="#4F8EF7" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="20,8" Margin="0,0,12,0">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="PlayBd" CornerRadius="6" Background="{TemplateBinding Background}">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+                                                        <TextBlock Text="▶  Play" FontWeight="Bold"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="PlayBd" Property="Background" Value="#3B7AE3"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+
+                                    <!-- Download button (Only visible if downloadable) -->
+                                    <Button Command="{Binding DownloadCommand}" CommandParameter="{Binding FeaturedCarouselItem}"
+                                            Visibility="{Binding FeaturedCarouselItem.IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Background="#2C2C3E" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="20,8">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="DlBd" CornerRadius="6" Background="{TemplateBinding Background}">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+                                                        <TextBlock Text="⬇  Download" FontWeight="Bold"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="DlBd" Property="Background" Value="#3D3D52"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+
+                        <!-- Carousel Indicators (Dots) -->
+                        <ItemsControl ItemsSource="{Binding FeaturedItems}" 
+                                      HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                                      Margin="0,0,24,24">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.SelectCarouselItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Margin="4,0" Width="10" Height="10" Cursor="Hand" BorderThickness="0">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Ellipse x:Name="Dot" Fill="#55FFFFFF" Width="8" Height="8"/>
+                                                <ControlTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelectedCarousel}" Value="True">
+                                                        <Setter TargetName="Dot" Property="Fill" Value="#4F8EF7"/>
+                                                        <Setter TargetName="Dot" Property="Width" Value="10"/>
+                                                        <Setter TargetName="Dot" Property="Height" Value="10"/>
+                                                    </DataTrigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Dot" Property="Fill" Value="White"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
                 <!-- Stream card grid -->
-                <ListBox Grid.Row="2"
+                <ListBox Grid.Row="3"
                          ItemsSource="{Binding Streams}"
                          SelectedItem="{Binding SelectedStream}"
                          ItemContainerStyle="{StaticResource StreamItemStyle}"
@@ -845,7 +1003,7 @@
                 </ListBox>
 
                 <!-- Empty state -->
-                <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
                             Visibility="{Binding HasSelectedCategory,
                                          Converter={StaticResource InverseBoolToVisibilityConverter}}">
                     <TextBlock Text="👈" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,12"/>
@@ -865,7 +1023,7 @@
                 </Border>
 
                 <!-- Status bar -->
-                <Border Grid.Row="3" Background="{StaticResource BgCard}"
+                <Border Grid.Row="4" Background="{StaticResource BgCard}"
                         BorderBrush="{StaticResource DividerColor}" BorderThickness="0,1,0,0"
                         Padding="16,4">
                     <Grid>
@@ -929,7 +1087,7 @@
                 </Border>
 
                 <!-- ── Downloads tray ─────────────────────────────────────── -->
-                <Border Grid.Row="4" Background="#0D0D1E"
+                <Border Grid.Row="5" Background="#0D0D1E"
                         BorderBrush="{StaticResource AccentBlue}" BorderThickness="0,1,0,0"
                         Visibility="{Binding ShowDownloadsTray,
                                      Converter={StaticResource BoolToVisibilityConverter}}"
