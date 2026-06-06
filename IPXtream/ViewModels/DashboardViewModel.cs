@@ -745,8 +745,6 @@ public partial class DashboardViewModel : ObservableObject
             _featuredItems.Clear();
             _featuredKeys.Clear();
             string json = string.Empty;
-
-#if !DEBUG
             try
             {
                 using var http = new HttpClient();
@@ -764,13 +762,6 @@ public partial class DashboardViewModel : ObservableObject
                     json = File.ReadAllText(cachePath);
                 }
             }
-#else
-            var path = GetWhatsNewFilePath();
-            if (File.Exists(path))
-            {
-                json = File.ReadAllText(path);
-            }
-#endif
 
             if (!string.IsNullOrEmpty(json))
             {
