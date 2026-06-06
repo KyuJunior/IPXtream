@@ -719,7 +719,7 @@
                                 <Style TargetType="Grid">
                                     <Style.Triggers>
                                         <!-- Smooth fade animation when Carousel item changes -->
-                                        <EventTrigger RoutedEvent="BindingOperations.TargetUpdated">
+                                        <EventTrigger RoutedEvent="Binding.TargetUpdated">
                                             <BeginStoryboard>
                                                 <Storyboard>
                                                     <DoubleAnimation Storyboard.TargetProperty="Opacity"
