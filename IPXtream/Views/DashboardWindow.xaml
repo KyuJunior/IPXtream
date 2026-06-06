@@ -867,9 +867,65 @@
                 <!-- Status bar -->
                 <Border Grid.Row="3" Background="{StaticResource BgCard}"
                         BorderBrush="{StaticResource DividerColor}" BorderThickness="0,1,0,0"
-                        Padding="16,6">
-                    <TextBlock Text="{Binding StatusMessage}"
-                               Foreground="{StaticResource TextMuted}" FontSize="12"/>
+                        Padding="16,4">
+                    <Grid>
+                        <!-- Left side: Status Message -->
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   Foreground="{StaticResource TextMuted}" FontSize="12"
+                                   VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        
+                        <!-- Right side: Pagination Controls -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding PageStatusText}"
+                                       Foreground="{StaticResource TextMuted}" FontSize="12"
+                                       VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            
+                            <!-- Previous button -->
+                            <Button Content="◀" Command="{Binding GoToPreviousPageCommand}"
+                                    IsEnabled="{Binding HasPreviousPage}"
+                                    Width="24" Height="20" Padding="0" FontSize="10" FontWeight="Bold"
+                                    Foreground="White" Background="#2C2C3E" BorderThickness="0" Cursor="Hand"
+                                    Margin="0,0,6,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" CornerRadius="4" Background="{TemplateBinding Background}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Opacity" Value="0.3"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#3D3D52"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            
+                            <!-- Next button -->
+                            <Button Content="▶" Command="{Binding GoToNextPageCommand}"
+                                    IsEnabled="{Binding HasNextPage}"
+                                    Width="24" Height="20" Padding="0" FontSize="10" FontWeight="Bold"
+                                    Foreground="White" Background="#2C2C3E" BorderThickness="0" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" CornerRadius="4" Background="{TemplateBinding Background}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Opacity" Value="0.3"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#3D3D52"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- ── Downloads tray ─────────────────────────────────────── -->
