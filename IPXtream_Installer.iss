@@ -1,22 +1,22 @@
 ; ============================================================
-;  IPXtream v2.0.2 — Inno Setup 6 Installer Script
+;  IPXtream v2.0.11 — Inno Setup 6 Installer Script
 ;
 ;  Step 1 — Publish the app first (run from IPXtream\ folder):
 ;    dotnet publish -c Release -r win-x64 --self-contained true ^
 ;      -p:PublishSingleFile=false ^
-;      -o "bin\publish_v2.0.2"
+;      -o "bin\publish_v2.0.11"
 ;
 ;  Step 2 — Open this file in Inno Setup 6 and press F9.
 ;
-;  Output: Output\IPXtream_Setup_v2.0.2.exe
+;  Output: Output\IPXtream_Setup_v2.0.11.exe
 ; ============================================================
 
 #define MyAppName      "IPXtream"
-#define MyAppVersion   "2.0.2"
+#define MyAppVersion   "2.0.11"
 #define MyAppPublisher "Dr. Yaser"
 #define MyAppURL       "https://github.com/KyuJunior/IPXtream"
 #define MyAppExeName   "IPXtream.exe"
-#define MyPublishDir   "IPXtream\bin\publish_v2.0.2"
+#define MyPublishDir   "IPXtream\bin\publish_v2.0.11"
 
 [Setup]
 AppId={{E7A2C3D4-F8B1-4E5A-9C6D-1234567890AB}
@@ -75,8 +75,8 @@ Source: "{#MyPublishDir}\*.dll";            DestDir: "{app}"; Flags: ignoreversi
 Source: "{#MyPublishDir}\*.json";           DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "{#MyPublishDir}\*.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
-; ── Bundled FFmpeg v7.1 native libraries ─────────────────────────────────────
-Source: "{#MyPublishDir}\FFmpeg\*.dll";     DestDir: "{app}\FFmpeg"; Flags: ignoreversion
+; ── Bundled LibVLC native libraries ─────────────────────────────────────────
+Source: "{#MyPublishDir}\libvlc\*";     DestDir: "{app}\libvlc"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 
 ; ── Localization satellite assemblies ────────────────────────────────────────
 Source: "{#MyPublishDir}\cs\*";   DestDir: "{app}\cs";   Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
@@ -102,3 +102,45 @@ Filename: "{app}\{#MyAppExeName}"; \
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
+
+[Code]
+function VCIsInstalled(): Boolean;
+var
+  InstalledVal: Cardinal;
+begin
+  Result := False;
+  // Check standard x64 VC++ 2015-2022 registry key
+  if RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', InstalledVal) then begin
+    Result := (InstalledVal = 1);
+  end;
+  if not Result then begin
+    if RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', InstalledVal) then begin
+      Result := (InstalledVal = 1);
+    end;
+  end;
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  ErrorCode: Integer;
+begin
+  Result := True;
+  if CurPageID = wpReady then begin
+    if not VCIsInstalled() then begin
+      if MsgBox('IPXtream requires Microsoft Visual C++ Redistributable to play video streams.' + #13#10#13#10 +
+                'Would you like the installer to download and install it now?', mbConfirmation, MB_YESNO) = idYes then begin
+        try
+          DownloadTemporaryFile('https://aka.ms/vs/17/release/vc_redist.x64.exe', 'vc_redist.x64.exe', '', nil);
+          if Exec(ExpandConstant('{tmp}\vc_redist.x64.exe'), '/quiet /norestart', '', SW_SHOW, ewWaitUntilTerminated, ErrorCode) then begin
+            // Success
+          end else begin
+            MsgBox('Visual C++ Redistributable installation failed. Streams may fail to play.', mbError, MB_OK);
+          end;
+        except
+          MsgBox('Failed to download Visual C++ Redistributable. Please ensure you are connected to the internet.', mbError, MB_OK);
+        end;
+      end;
+    end;
+  end;
+end;
+

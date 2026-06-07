@@ -101,6 +101,12 @@ public partial class DashboardViewModel : ObservableObject
     private StreamItem? _selectedStream;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsViewingMovieInfo))]
+    private StreamItem? _selectedMovieForInfo;
+
+    public bool IsViewingMovieInfo => SelectedMovieForInfo is not null;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsViewingSeriesInfo))]
     [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
     private SeriesInfoResponse? _currentSeries;
@@ -120,9 +126,12 @@ public partial class DashboardViewModel : ObservableObject
         
         if (value is null)
         {
+            LogService.Log("OnSelectedSeasonChanged: value is null");
             StatusMessage = string.Empty;
             return;
         }
+
+        LogService.Log($"OnSelectedSeasonChanged: {value.DisplayName}, EpisodesCount={value.Episodes.Count}");
 
         var episodesList = new List<StreamItem>();
         foreach (var ep in value.Episodes)
@@ -145,6 +154,7 @@ public partial class DashboardViewModel : ObservableObject
         _allStreams = episodesList;
         SetFilteredStreams(episodesList);
 
+        LogService.Log($"OnSelectedSeasonChanged: Streams.Count={Streams.Count}, _allStreams.Count={_allStreams.Count}, IsViewingSeriesInfo={IsViewingSeriesInfo}");
         StatusMessage = $"{value.Episodes.Count} episodes in {value.DisplayName}";
     }
 
@@ -427,6 +437,7 @@ public partial class DashboardViewModel : ObservableObject
 
         SelectedCategory = null;
         CurrentSeries    = null;
+        SelectedMovieForInfo = null;
         Streams.Clear();
         _allStreams.Clear();
         SearchText = string.Empty;
@@ -455,6 +466,7 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private void Logout()
     {
+        SelectedMovieForInfo = null;
         Helpers.CredentialStore.Clear();
         LogoutRequested?.Invoke();
     }
@@ -926,21 +938,34 @@ public partial class DashboardViewModel : ObservableObject
             _featuredItems.Clear();
             _featuredKeys.Clear();
             string json = string.Empty;
-            try
+
+#if DEBUG
+            // In DEBUG/Admin mode, load from the repository root whats_new.json if it exists to allow editing
+            var repoPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\whats_new.json"));
+            if (File.Exists(repoPath))
             {
-                using var http = new HttpClient();
-                http.DefaultRequestHeaders.UserAgent.ParseAdd("IPXtream/1.0");
-                json = await http.GetStringAsync(WhatsNewRemoteUrl);
-                
-                var cachePath = GetWhatsNewFilePath();
-                File.WriteAllText(cachePath, json);
+                json = File.ReadAllText(repoPath);
             }
-            catch
+#endif
+
+            if (string.IsNullOrEmpty(json))
             {
-                var cachePath = GetWhatsNewFilePath();
-                if (File.Exists(cachePath))
+                try
                 {
-                    json = File.ReadAllText(cachePath);
+                    using var http = new HttpClient();
+                    http.DefaultRequestHeaders.UserAgent.ParseAdd("IPXtream/1.0");
+                    json = await http.GetStringAsync(WhatsNewRemoteUrl);
+                    
+                    var cachePath = GetWhatsNewFilePath();
+                    File.WriteAllText(cachePath, json);
+                }
+                catch
+                {
+                    var cachePath = GetWhatsNewFilePath();
+                    if (File.Exists(cachePath))
+                    {
+                        json = File.ReadAllText(cachePath);
+                    }
                 }
             }
 
@@ -968,6 +993,16 @@ public partial class DashboardViewModel : ObservableObject
             var path = GetWhatsNewFilePath();
             var json = Newtonsoft.Json.JsonConvert.SerializeObject(_featuredItems, Newtonsoft.Json.Formatting.Indented);
             File.WriteAllText(path, json);
+
+#if DEBUG
+            // In DEBUG/Admin mode, also save to the repository root whats_new.json so changes can be committed
+            var repoPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\whats_new.json"));
+            var repoDir = Path.GetDirectoryName(repoPath);
+            if (repoDir != null && Directory.Exists(repoDir))
+            {
+                File.WriteAllText(repoPath, json);
+            }
+#endif
         }
         catch { }
     }
@@ -1120,6 +1155,8 @@ public partial class DashboardViewModel : ObservableObject
     {
         if (stream is null) return;
 
+        LogService.Log($"PlayAsync: Name={stream.Name}, SeriesId={stream.SeriesId}, StreamId={stream.StreamId}, StreamType={stream.StreamType}, ActiveSection={ActiveSection}");
+
         // If it's a Series container (has SeriesId and no StreamId),
         // don't play it — fetch and show its episodes instead.
         if (stream.SeriesId != 0 && stream.StreamId == 0)
@@ -1136,6 +1173,7 @@ public partial class DashboardViewModel : ObservableObject
     private async Task BackToSeriesAsync()
     {
         CurrentSeries = null;
+        SelectedMovieForInfo = null;
         if (ActiveSection == MediaSection.WhatsNew)
         {
             var featured = _featuredItems.ToList();
@@ -1151,6 +1189,19 @@ public partial class DashboardViewModel : ObservableObject
         {
             await LoadStreamsAsync(SelectedCategory.CategoryId);
         }
+    }
+
+    [RelayCommand]
+    private void ShowMovieInfo(StreamItem? movie)
+    {
+        if (movie is null) return;
+        SelectedMovieForInfo = movie;
+    }
+
+    [RelayCommand]
+    private void CloseMovieInfo()
+    {
+        SelectedMovieForInfo = null;
     }
 
     // ── Search ────────────────────────────────────────────────────────────────
@@ -1321,6 +1372,7 @@ public partial class DashboardViewModel : ObservableObject
     {
         IsLoadingStreams = true;
         ErrorMessage     = string.Empty;
+        SearchText       = string.Empty;
         Streams.Clear();
         _allStreams.Clear();
         Seasons.Clear();
@@ -1344,6 +1396,7 @@ public partial class DashboardViewModel : ObservableObject
 
             // Select first season automatically to populate the episodes list
             SelectedSeason = Seasons.FirstOrDefault();
+            LogService.Log($"LoadSeriesEpisodesAsync: CurrentSeries={info.Info.Name}, SeasonsCount={Seasons.Count}, EpisodesCount={(info.Episodes != null ? info.Episodes.Values.Sum(l => l.Count) : 0)}");
         }
         catch (XtreamApiException ex)
         {

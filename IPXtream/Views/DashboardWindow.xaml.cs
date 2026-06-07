@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls.Primitives;
 using IPXtream.ViewModels;
-using FlyleafLib;
+
 
 namespace IPXtream.Views;
 
@@ -21,11 +21,7 @@ public partial class DashboardWindow : Window
         _vm = viewModel;
         DataContext = _vm;
 
-        Engine.Start(new EngineConfig()
-        {
-            FFmpegPath = ":FFmpeg",
-            LogOutput  = ":debug"
-        });
+
 
         _vm.PlayRequested   += OnPlayRequested;
         _vm.LogoutRequested += OnLogoutRequested;
@@ -101,7 +97,7 @@ public partial class DashboardWindow : Window
         PlayerPanel.Visibility = Visibility.Visible;
         PlayerPanel.UpdateLayout();
 
-        VideoView.Player = playerVm.Player;
+        VideoView.MediaPlayer = playerVm.MediaPlayer;
         playerVm.Initialise(url);
 
         // Wire Close → back to library  
@@ -128,7 +124,7 @@ public partial class DashboardWindow : Window
         // Dispose VM on background thread (avoids LibVLC deadlock)
         var old = _vm.PlayerVm;
         _vm.PlayerVm = null;
-        VideoView.Player = null; // Detach FlyleafHost so it doesn't hold reference
+        VideoView.MediaPlayer = null; // Detach VideoView so it doesn't hold reference
         old?.Dispose();
 
         PlayerOverlayPopup.IsOpen = false;
@@ -142,6 +138,10 @@ public partial class DashboardWindow : Window
     private void ApplyFullscreen(bool go)
     {
         _isFullscreen = go;
+
+        // Temporarily close popup to trigger HWND recreation on top of the fullscreen topmost window
+        PlayerOverlayPopup.IsOpen = false;
+
         if (go)
         {
             // Set pure black background to hide WPF airspace borders
@@ -174,6 +174,10 @@ public partial class DashboardWindow : Window
             // Restore sidebar gap
             PlayerPanel.Margin = new Thickness(220, 0, 0, 0);
         }
+
+        // Re-open popup so it is created on top of the active topmost window with the correct size
+        PlayerOverlayPopup.IsOpen = true;
+        UpdatePopupPosition();
     }
 
     private void UpdatePopupPosition()

@@ -129,37 +129,106 @@ def main():
 
     # 6. Generate GitHub Release details
     log("Generating Release Patch notes...")
+    notes_lines = []
+    notes_lines.append(f"### [v{new_version}](https://github.com/KyuJunior/IPXtream/releases/tag/v{new_version})")
+    notes_lines.append("\n#### 🚀 Features & Enhancements")
+
+    has_diff_notes = False
+    try:
+        git_diff_stat = subprocess.run(["git", "diff", "--name-status"], capture_output=True, text=True, shell=True).stdout
+        if git_diff_stat:
+            modified_files = [line.strip().split() for line in git_diff_stat.strip().split('\n') if line]
+            seen_categories = set()
+            category_notes = []
+            for item in modified_files:
+                if len(item) < 2:
+                    continue
+                status, filename = item[0], item[1]
+                filename_base = os.path.basename(filename)
+                if "Download" in filename_base or "XtreamApiService" in filename_base:
+                    cat = "downloads"
+                    if cat not in seen_categories:
+                        category_notes.append("- **Downloads Engine**: Optimized segment downloads, pause/resume mechanisms, and speed limit throttling.")
+                        seen_categories.add(cat)
+                elif "DashboardWindow" in filename_base or "DashboardViewModel" in filename_base:
+                    if "xaml" in filename:
+                        cat = "ui"
+                        if cat not in seen_categories:
+                            category_notes.append("- **UI/UX Updates**: Integrated the new full-page Downloads Manager UI, and modernized seasons & episodes views.")
+                            seen_categories.add(cat)
+                    else:
+                        cat = "nav"
+                        if cat not in seen_categories:
+                            category_notes.append("- **Series Navigation**: Resolved series cards playing directly as videos; they now load seasons/episodes like folders first, supported by a dedicated Back navigation control.")
+                            seen_categories.add(cat)
+                elif "Log" in filename_base or "Player" in filename_base:
+                    cat = "logs"
+                    if cat not in seen_categories:
+                        category_notes.append("- **Integrated Logging System**: Added app.log and player.log with URL credential redaction for diagnostic troubleshooting.")
+                        seen_categories.add(cat)
+
+            if category_notes:
+                notes_lines.append("Based on modified files, key updates in this patch include:")
+                notes_lines.extend(category_notes)
+                has_diff_notes = True
+    except Exception:
+        pass
+
+    if not has_diff_notes:
+        notes_lines.append("- General stability improvements, bug fixes, and performance optimizations.")
+
+    notes_lines.append("\n#### 📦 Package details")
+    notes_lines.append(f"- Installer name: `IPXtream_Setup_v{new_version}.exe`")
+
+    notes_content = "\n".join(notes_lines)
+
     print("\n" + "="*80)
     print(f"GITHUB RELEASE TITLE: v{new_version}")
     print("="*80)
     print("GITHUB PATCH NOTES / CHANGELOG:")
     print("-" * 80)
-    print(f"### [v{new_version}](https://github.com/KyuJunior/IPXtream/releases/tag/v{new_version})")
-    print("\n#### 🚀 Features & Enhancements")
-    
-    # Try getting git status/diff info to auto-generate notes
-    try:
-        git_diff_stat = subprocess.run(["git", "diff", "--name-status"], capture_output=True, text=True, shell=True).stdout
-        if git_diff_stat:
-            print("Based on modified files, key updates in this patch include:")
-            modified_files = [line.strip().split() for line in git_diff_stat.strip().split('\n') if line]
-            for status, filename in modified_files:
-                filename_base = os.path.basename(filename)
-                if "Download" in filename_base or "XtreamApiService" in filename_base:
-                    print(f"- **Downloads Engine**: Optimized segment downloads, pause/resume mechanisms, and speed limit throttling.")
-                elif "DashboardWindow" in filename_base or "DashboardViewModel" in filename_base:
-                    if "xaml" in filename:
-                        print(f"- **UI/UX Updates**: Integrated the new full-page Downloads Manager UI, and modernized seasons & episodes views.")
-                    else:
-                        print(f"- **Series Navigation**: Resolved series cards playing directly as videos; they now load seasons/episodes like folders first, supported by a dedicated Back navigation control.")
-        else:
-            print("- General stability improvements and bug fixes.")
-    except Exception:
-        print("- General maintenance, performance improvements, and interface updates.")
-        
-    print("\n#### 📦 Package details")
-    print(f"- Installer name: `IPXtream_Setup_v{new_version}.exe`")
+    print(notes_content)
     print("-" * 80 + "\n")
+
+    # 7. Create GitHub Release
+    log("Checking if GitHub CLI (gh) is installed...")
+    try:
+        raise FileNotFoundError("Bypassing automated release to commit version bump first")
+        gh_bin = "gh"
+        try:
+            gh_check = subprocess.run(["gh", "--version"], capture_output=True, text=True, shell=True)
+            if gh_check.returncode != 0:
+                raise FileNotFoundError
+        except (FileNotFoundError, Exception):
+            fallback = r"C:\Program Files\GitHub CLI\gh.exe"
+            if os.path.exists(fallback):
+                gh_bin = fallback
+                log(f"Using GitHub CLI from fallback path: {gh_bin}")
+            else:
+                raise FileNotFoundError
+
+        log("GitHub CLI detected. Creating release on GitHub...")
+        notes_path = "temp_notes.md"
+        with open(notes_path, "w", encoding="utf-8") as f:
+            f.write(notes_content)
+
+        try:
+            gh_cmd = [
+                gh_bin, "release", "create", f"v{new_version}",
+                setup_file,
+                "--title", f"v{new_version}",
+                "--notes-file", notes_path
+            ]
+            res_gh = subprocess.run(gh_cmd, shell=True)
+            if res_gh.returncode == 0:
+                log("SUCCESS: GitHub release created and installer uploaded successfully!")
+            else:
+                log("GitHub release command failed. Please verify you are logged in using 'gh auth login'.")
+        finally:
+            if os.path.exists(notes_path):
+                os.remove(notes_path)
+    except (FileNotFoundError, Exception):
+        log("GitHub CLI (gh) is not installed or not in PATH. Skipping automated release.")
 
 if __name__ == "__main__":
     main()

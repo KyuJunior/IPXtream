@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:fl="clr-namespace:FlyleafLib.Controls.WPF;assembly=FlyleafLib"
+        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="IPXtream"
@@ -248,17 +248,23 @@
                     <Border x:Name="HoverOverlay" Background="#99000000" Opacity="0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <!-- Play -->
-                            <Button Style="{StaticResource PlayBtn}" Width="44" Height="44" Padding="0" FontSize="18"
+                            <Button Width="44" Height="44" Padding="0" FontSize="18" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand"
                                     Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="PlayBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                        <Border x:Name="PlayBd" CornerRadius="22">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                    <GradientStop Color="#4F8EF7" Offset="0"/>
+                                                    <GradientStop Color="#7C5CBF" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
                                             <TextBlock Text="▶" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0,0,0"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="PlayBd" Property="Background" Value="#4F8EF7"/>
+                                                <Setter TargetName="PlayBd" Property="Opacity" Value="0.85"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -279,6 +285,26 @@
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter TargetName="DlBd" Property="Background" Value="#66FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- About Movie Info Button -->
+                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                                    Visibility="{Binding IsMovie, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Command="{Binding DataContext.ShowMovieInfoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip="About Movie">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="InfoBd" CornerRadius="22" Background="{TemplateBinding Background}">
+                                            <TextBlock Text="ℹ" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="InfoBd" Property="Background" Value="#66FFFFFF"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -757,12 +783,13 @@
                     </Style>
                 </Grid.Style>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>  <!-- Seasons tabs -->
-                    <RowDefinition Height="Auto"/>  <!-- Hero Banner -->
-                    <RowDefinition Height="*"/>     <!-- Stream card grid -->
-                    <RowDefinition Height="Auto"/>  <!-- Status bar -->
-                    <RowDefinition Height="Auto"/>  <!-- downloads tray -->
+                    <RowDefinition Height="Auto"/>  <!-- 0: Toolbar -->
+                    <RowDefinition Height="Auto"/>  <!-- 1: Series Details Banner -->
+                    <RowDefinition Height="Auto"/>  <!-- 2: Seasons tabs -->
+                    <RowDefinition Height="Auto"/>  <!-- 3: Hero Banner -->
+                    <RowDefinition Height="*"/>     <!-- 4: Stream card grid -->
+                    <RowDefinition Height="Auto"/>  <!-- 5: Status bar -->
+                    <RowDefinition Height="Auto"/>  <!-- 6: Downloads tray -->
                 </Grid.RowDefinitions>
 
                 <!-- Toolbar -->
@@ -795,68 +822,117 @@
                                Foreground="{StaticResource ErrorRed}" FontSize="12"/>
                 </Border>
 
-                <!-- Seasons Tabs & Back Button -->
-                <Border Grid.Row="1" BorderThickness="0,1,0,1" BorderBrush="#1C1C28"
+                <!-- Series Details Banner -->
+                <Border Grid.Row="1" Background="#121225" CornerRadius="10" Margin="16,0,16,10" Padding="16" ClipToBounds="True"
                         Visibility="{Binding IsViewingSeriesInfo, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                        <!-- Blur Background cover -->
+                        <Image Source="{Binding CurrentSeries.Info.Cover}" Stretch="UniformToFill" Opacity="0.15">
+                            <Image.Effect>
+                                <BlurEffect Radius="20"/>
+                            </Image.Effect>
+                        </Image>
 
-                        <!-- Back Button -->
-                        <Button Grid.Column="0" Style="{StaticResource NavBtn}"
-                                Command="{Binding BackToSeriesCommand}"
-                                Content="⬅ Back"
-                                VerticalAlignment="Center" Margin="16,0,0,0" Padding="16,10"/>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/> <!-- Back button and title -->
+                                <RowDefinition Height="*"/>    <!-- Content grid (Cover + Info) -->
+                            </Grid.RowDefinitions>
 
-                        <!-- Seasons Tabs ListBox -->
-                        <ListBox Grid.Column="1" ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                 Background="Transparent" BorderThickness="0" Padding="14,0">
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="Padding" Value="16,10"/>
-                                    <Setter Property="Cursor" Value="Hand"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="ListBoxItem">
-                                                <Border BorderThickness="0,0,0,3" BorderBrush="Transparent" x:Name="Bd" Background="{TemplateBinding Background}">
-                                                    <ContentPresenter Margin="{TemplateBinding Padding}"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
-                                                    </Trigger>
-                                                    <Trigger Property="IsSelected" Value="True">
-                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
-                                                        <Setter Property="Foreground" Value="White"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayName}" FontSize="13"/>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                            <!-- Header: Back button + Title -->
+                            <Grid Grid.Row="0" Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Style="{StaticResource NavBtn}"
+                                        Command="{Binding BackToSeriesCommand}"
+                                        Content="⬅ Back" Padding="12,6" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CurrentSeries.Info.Name}" 
+                                           Foreground="White" FontSize="20" FontWeight="Bold" 
+                                           VerticalAlignment="Center" Margin="16,0,0,0"/>
+                            </Grid>
+
+                            <!-- Content Grid -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/> <!-- Cover image -->
+                                    <ColumnDefinition Width="*"/>    <!-- Info text -->
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Cover Image -->
+                                <Border Grid.Column="0" Width="100" Height="150" CornerRadius="6" ClipToBounds="True"
+                                        BorderBrush="#33FFFFFF" BorderThickness="1" Margin="0,0,16,0" VerticalAlignment="Top">
+                                    <Image Source="{Binding CurrentSeries.Info.Cover, Converter={StaticResource CachedImageConverter}}" Stretch="UniformToFill"/>
+                                </Border>
+
+                                <!-- Info Text -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                                    <!-- Director / Cast -->
+                                    <WrapPanel Margin="0,0,0,8">
+                                        <TextBlock Text="Director: " Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding CurrentSeries.Info.Director}" Foreground="White" FontSize="12" Margin="0,0,16,0"/>
+                                        <TextBlock Text="Cast: " Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding CurrentSeries.Info.Cast}" Foreground="White" FontSize="12" TextWrapping="Wrap"/>
+                                    </WrapPanel>
+
+                                    <!-- Plot -->
+                                    <TextBlock Text="Overview" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="{Binding CurrentSeries.Info.Plot}" Foreground="{StaticResource TextMuted}" FontSize="12" TextWrapping="Wrap" LineHeight="16"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Border>
 
+                <!-- Seasons Tabs -->
+                <Border Grid.Row="2" BorderThickness="0,1,0,1" BorderBrush="#1C1C28" Margin="0,0,0,10"
+                        Visibility="{Binding IsViewingSeriesInfo, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ListBox ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                             Background="Transparent" BorderThickness="0" Padding="14,0">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Padding" Value="16,10"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border BorderThickness="0,0,0,3" BorderBrush="Transparent" x:Name="Bd" Background="{TemplateBinding Background}">
+                                                <ContentPresenter Margin="{TemplateBinding Padding}"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}" FontSize="13"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+
                 <!-- 16:9 Hero Banner (Auto-rotating What's New Carousel) -->
-                <Border x:Name="HeroBanner" Grid.Row="2" Height="280" CornerRadius="10" Margin="16,0,16,10" ClipToBounds="True" Background="#121225">
+                <Border x:Name="HeroBanner" Grid.Row="3" Height="280" CornerRadius="10" Margin="16,0,16,10" ClipToBounds="True" Background="#121225">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -1013,7 +1089,7 @@
                 </Border>
 
                 <!-- Stream card grid -->
-                <ListBox Grid.Row="3"
+                <ListBox Grid.Row="4"
                          ItemsSource="{Binding Streams}"
                          SelectedItem="{Binding SelectedStream}"
                          ItemContainerStyle="{StaticResource StreamItemStyle}"
@@ -1022,15 +1098,37 @@
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          VirtualizingPanel.IsVirtualizing="True"
                          VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding PlayCommand}"
+                                      CommandParameter="{Binding SelectedStream}"/>
+                    </ListBox.InputBindings>
                     <ListBox.Style>
                         <Style TargetType="ListBox">
-                            <Setter Property="Visibility" Value="Visible"/>
+                            <Setter Property="Visibility" Value="Collapsed"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                <!-- Show when browsing a normal category (not WhatsNew, not Downloads) -->
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding ActiveSection}" Value="LiveTV"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding ActiveSection}" Value="VOD"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding ActiveSection}" Value="Series"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                                <!-- Always show when viewing series episodes, regardless of ActiveSection -->
+                                <DataTrigger Binding="{Binding IsViewingSeriesInfo}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -1043,13 +1141,16 @@
                 </ListBox>
 
                 <!-- What's New Grouped ScrollViewer (only visible when ActiveSection == WhatsNew) -->
-                <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="10">
+                <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="10">
                     <ScrollViewer.Style>
                         <Style TargetType="ScrollViewer">
                             <Setter Property="Visibility" Value="Collapsed"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
                                     <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsViewingSeriesInfo}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -1074,6 +1175,11 @@
                                      Background="Transparent" BorderThickness="0"
                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                      ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding PlayCommand}"
+                                                  CommandParameter="{Binding SelectedStream}"/>
+                                </ListBox.InputBindings>
                                 <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Horizontal"/>
@@ -1101,6 +1207,11 @@
                                      Background="Transparent" BorderThickness="0"
                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                      ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding PlayCommand}"
+                                                  CommandParameter="{Binding SelectedStream}"/>
+                                </ListBox.InputBindings>
                                 <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Horizontal"/>
@@ -1128,6 +1239,11 @@
                                      Background="Transparent" BorderThickness="0"
                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                      ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding PlayCommand}"
+                                                  CommandParameter="{Binding SelectedStream}"/>
+                                </ListBox.InputBindings>
                                 <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Horizontal"/>
@@ -1155,6 +1271,11 @@
                                      Background="Transparent" BorderThickness="0"
                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                      ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding PlayCommand}"
+                                                  CommandParameter="{Binding SelectedStream}"/>
+                                </ListBox.InputBindings>
                                 <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Horizontal"/>
@@ -1166,9 +1287,27 @@
                 </ScrollViewer>
 
                 <!-- Empty state -->
-                <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Visibility="{Binding HasSelectedCategory,
-                                         Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="{Binding HasSelectedCategory,
+                                     Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                            <Style.Triggers>
+                                <!-- Hide empty state when viewing series episodes -->
+                                <DataTrigger Binding="{Binding IsViewingSeriesInfo}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <!-- Hide empty state when in What's New section -->
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <!-- Hide empty state when in Downloads section -->
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
                     <TextBlock Text="👈" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,12"/>
                     <TextBlock Text="Select a category to browse"
                                Foreground="{StaticResource TextMuted}"
@@ -1176,7 +1315,7 @@
                 </StackPanel>
 
                 <!-- Loading overlay -->
-                <Border Grid.Row="1" Background="#88000000"
+                <Border Grid.Row="1" Grid.RowSpan="4" Background="#88000000"
                         Visibility="{Binding IsLoadingStreams,
                                      Converter={StaticResource BoolToVisibilityConverter}}">
                     <TextBlock Text="Loading streams…"
@@ -1186,7 +1325,7 @@
                 </Border>
 
                 <!-- Status bar -->
-                <Border Grid.Row="4" Background="{StaticResource BgCard}"
+                <Border Grid.Row="5" Background="{StaticResource BgCard}"
                         BorderBrush="{StaticResource DividerColor}" BorderThickness="0,1,0,0"
                         Padding="16,4">
                     <Grid>
@@ -1250,7 +1389,7 @@
                 </Border>
 
                 <!-- ── Downloads tray ─────────────────────────────────────── -->
-                <Border Grid.Row="5" Background="#0D0D1E"
+                <Border Grid.Row="6" Background="#0D0D1E"
                         BorderBrush="{StaticResource AccentBlue}" BorderThickness="0,1,0,0"
                         Visibility="{Binding ShowDownloadsTray,
                                      Converter={StaticResource BoolToVisibilityConverter}}"
@@ -1633,7 +1772,127 @@
                     </Grid>
                 </ScrollViewer>
             </Grid>
-        </Grid>
+
+            <!-- Movie Details Modal Overlay -->
+            <Grid Grid.Column="0" Grid.ColumnSpan="3" Panel.ZIndex="100"
+                  Visibility="{Binding IsViewingMovieInfo, Converter={StaticResource BoolToVisibilityConverter}}">
+                <!-- Clickable background to close -->
+                <Button Command="{Binding CloseMovieInfoCommand}" Background="#CC000000" BorderThickness="0" Focusable="False">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}"/>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <!-- Details Card -->
+                <Border Width="650" Height="420" CornerRadius="12" Background="#121225" BorderBrush="#33FFFFFF" BorderThickness="1"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" ClipToBounds="True">
+                    <Grid>
+                        <!-- Close Button -->
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Top" Width="32" Height="32" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                Command="{Binding CloseMovieInfoCommand}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border CornerRadius="16" Background="#2C2C3E">
+                                        <TextBlock Text="✕" Foreground="White" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- Content Layout -->
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/> <!-- Poster -->
+                                <ColumnDefinition Width="*"/>   <!-- Info -->
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Movie Poster -->
+                            <Border Grid.Column="0" CornerRadius="8" ClipToBounds="True" BorderBrush="#33FFFFFF" BorderThickness="1" Height="300" VerticalAlignment="Top" Margin="0,0,24,0">
+                                <Image Source="{Binding SelectedMovieForInfo.Cover, Converter={StaticResource CachedImageConverter}}" Stretch="UniformToFill"/>
+                            </Border>
+
+                            <!-- Movie Info Details -->
+                            <Grid Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/> <!-- Title -->
+                                    <RowDefinition Height="Auto"/> <!-- Genre / Release date / Rating -->
+                                    <RowDefinition Height="Auto"/> <!-- Director / Cast -->
+                                    <RowDefinition Height="*"/>    <!-- Plot description -->
+                                    <RowDefinition Height="Auto"/> <!-- Action Buttons (Play / Download) -->
+                                </Grid.RowDefinitions>
+
+                                <!-- Title -->
+                                <TextBlock Grid.Row="0" Text="{Binding SelectedMovieForInfo.Name}" Foreground="White" FontSize="22" FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,32,10"/>
+
+                                <!-- Metadata info -->
+                                <WrapPanel Grid.Row="1" Margin="0,0,0,14">
+                                    <Border Background="#FFD700" CornerRadius="4" Padding="5,2" Margin="0,0,10,0">
+                                        <TextBlock Text="{Binding SelectedMovieForInfo.Rating, StringFormat='⭐ {0}'}" Foreground="#0F0F1A" FontSize="10" FontWeight="Bold"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding SelectedMovieForInfo.ReleaseDate}" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding SelectedMovieForInfo.Genre}" Foreground="{StaticResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
+                                </WrapPanel>
+
+                                <!-- Director & Cast -->
+                                <StackPanel Grid.Row="2" Margin="0,0,0,14">
+                                    <WrapPanel Margin="0,0,0,4">
+                                        <TextBlock Text="Director: " Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding SelectedMovieForInfo.Director}" Foreground="White" FontSize="12"/>
+                                    </WrapPanel>
+                                    <TextBlock Text="Cast:" Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding SelectedMovieForInfo.Cast}" Foreground="White" FontSize="12" TextWrapping="Wrap" MaxHeight="48" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+
+                                <!-- Plot -->
+                                <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
+                                    <TextBlock Text="{Binding SelectedMovieForInfo.Plot}" Foreground="{StaticResource TextMuted}" FontSize="13" TextWrapping="Wrap" LineHeight="18"/>
+                                </ScrollViewer>
+
+                                <!-- Action Buttons -->
+                                <StackPanel Grid.Row="4" Orientation="Horizontal">
+                                    <!-- Play Button -->
+                                    <Button Command="{Binding PlayCommand}" CommandParameter="{Binding SelectedMovieForInfo}"
+                                            Background="#4F8EF7" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="20,8" Margin="0,0,12,0">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="PlayBd" CornerRadius="6" Background="{TemplateBinding Background}">
+                                                    <TextBlock Text="▶  Play" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="PlayBd" Property="Background" Value="#3B7AE3"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+
+                                    <!-- Download Button -->
+                                    <Button Command="{Binding DownloadCommand}" CommandParameter="{Binding SelectedMovieForInfo}"
+                                            Visibility="{Binding SelectedMovieForInfo.IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Background="#2C2C3E" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="20,8">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="DlBd" CornerRadius="6" Background="{TemplateBinding Background}">
+                                                    <TextBlock Text="⬇  Download" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="DlBd" Property="Background" Value="#3D3D52"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </StackPanel>
+                             </Grid>
+                         </Grid>
+                     </Grid>
+                 </Border>
+             </Grid>
+         </Grid>
 
         <!-- ══════════════════════════════════════════════════════════════════
              LAYER 1 — EMBEDDED PLAYER
@@ -1646,12 +1905,11 @@
               Background="Black"
               PreviewMouseMove="Player_MouseMove">
 
-            <!-- FlyleafHost natively composes into WPF Visual Tree (No HwndHost airspace bugs) -->
-            <!-- Player is assigned in code-behind after layout is measured (prevents 0x0 D3D init) -->
-            <fl:FlyleafHost x:Name="VideoView"
-                            Background="Black"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch" />
+            <!-- VideoView natively composes into WPF Visual Tree -->
+            <vlc:VideoView x:Name="VideoView"
+                           Background="Black"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch" />
 
             <!-- Airspace-safe Popup Overlay for HwndHost -->
             <Popup x:Name="PlayerOverlayPopup"

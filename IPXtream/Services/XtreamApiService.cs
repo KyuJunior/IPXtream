@@ -118,6 +118,8 @@ public class XtreamApiService : IDisposable
         }
         catch (JsonException ex)
         {
+            var preview = !string.IsNullOrEmpty(json) && json.Length > 200 ? json.Substring(0, 200) + "..." : json;
+            LogService.Log($"JSON Deserialization failed in AuthenticateAsync. Raw response preview: {preview}", ex);
             throw new XtreamApiException(
                 "Could not parse server response. Verify your server URL, username and password.",
                 ex);
@@ -205,6 +207,8 @@ public class XtreamApiService : IDisposable
         }
         catch (JsonException ex)
         {
+            var preview = !string.IsNullOrEmpty(json) && json.Length > 200 ? json.Substring(0, 200) + "..." : json;
+            LogService.Log($"JSON Deserialization failed for series info (URL: {url}). Raw response preview: {preview}", ex);
             throw new XtreamApiException(
                 $"Failed to parse series info: {ex.Message}", ex);
         }
@@ -305,11 +309,22 @@ public class XtreamApiService : IDisposable
         }
         catch (HttpRequestException ex)
         {
+            LogService.Log($"HTTP Request error for URL: {url}", ex);
+            
+            // Check for DNS resolution error (SocketError 11001 / HostNotFound)
+            if (ex.InnerException is System.Net.Sockets.SocketException sex && sex.ErrorCode == 11001)
+            {
+                throw new XtreamApiException(
+                    "Connection failed: The server domain could not be resolved. " +
+                    "Your ISP may be blocking this IPTV service. Try enabling a VPN or changing your system DNS to Google (8.8.8.8).", ex);
+            }
+            
             throw new XtreamApiException(
                 $"Network error while contacting server: {ex.Message}", ex);
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
+            LogService.Log($"HTTP Timeout for URL: {url}", ex);
             throw new XtreamApiException(
                 "Request timed out. Check your server URL and connection.", ex);
         }
@@ -328,6 +343,8 @@ public class XtreamApiService : IDisposable
         }
         catch (JsonException ex)
         {
+            var preview = !string.IsNullOrEmpty(json) && json.Length > 200 ? json.Substring(0, 200) + "..." : json;
+            LogService.Log($"JSON Deserialization failed for URL: {url}. Raw response preview: {preview}", ex);
             throw new XtreamApiException(
                 $"Failed to parse server response: {ex.Message}", ex);
         }
@@ -482,62 +499,65 @@ public class XtreamApiService : IDisposable
 
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
-        await using var fileStream = new FileStream(
-            partPath,
-            resumeFrom > 0 ? FileMode.Append : FileMode.Create,
-            FileAccess.Write, FileShare.None, 65536, useAsync: true);
-
-        await using var netStream = await response.Content.ReadAsStreamAsync(ct);
-
-        var  buffer     = new byte[81920];
         long downloaded = resumeFrom;
-        long speedBytes = 0;
-        var  sw         = System.Diagnostics.Stopwatch.StartNew();
 
-        var throttleSw = System.Diagnostics.Stopwatch.StartNew();
-        long throttleBytes = 0;
-
-        int read;
-        while ((read = await netStream.ReadAsync(buffer, ct)) > 0)
         {
-            await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
-            downloaded  += read;
-            speedBytes  += read;
-            throttleBytes += read;
+            await using var fileStream = new FileStream(
+                partPath,
+                resumeFrom > 0 ? FileMode.Append : FileMode.Create,
+                FileAccess.Write, FileShare.None, 65536, useAsync: true);
 
-            // Dynamic Speed Limiting (Throttling)
-            int limitKbps = getSpeedLimitKbps?.Invoke() ?? 0;
-            if (limitKbps > 0)
+            await using var netStream = await response.Content.ReadAsStreamAsync(ct);
+
+            var  buffer     = new byte[81920];
+            long speedBytes = 0;
+            var  sw         = System.Diagnostics.Stopwatch.StartNew();
+
+            var throttleSw = System.Diagnostics.Stopwatch.StartNew();
+            long throttleBytes = 0;
+
+            int read;
+            while ((read = await netStream.ReadAsync(buffer, ct)) > 0)
             {
-                double elapsedMs = throttleSw.Elapsed.TotalMilliseconds;
-                double targetMs = (throttleBytes / 1024.0) / limitKbps * 1000.0;
-                if (targetMs > elapsedMs)
+                await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
+                downloaded  += read;
+                speedBytes  += read;
+                throttleBytes += read;
+
+                // Dynamic Speed Limiting (Throttling)
+                int limitKbps = getSpeedLimitKbps?.Invoke() ?? 0;
+                if (limitKbps > 0)
                 {
-                    int delayMs = (int)(targetMs - elapsedMs);
-                    if (delayMs > 0)
+                    double elapsedMs = throttleSw.Elapsed.TotalMilliseconds;
+                    double targetMs = (throttleBytes / 1024.0) / limitKbps * 1000.0;
+                    if (targetMs > elapsedMs)
                     {
-                        await Task.Delay(delayMs, ct);
+                        int delayMs = (int)(targetMs - elapsedMs);
+                        if (delayMs > 0)
+                        {
+                            await Task.Delay(delayMs, ct);
+                        }
+                    }
+
+                    if (throttleSw.ElapsedMilliseconds >= 1000)
+                    {
+                        throttleBytes = 0;
+                        throttleSw.Restart();
                     }
                 }
-
-                if (throttleSw.ElapsedMilliseconds >= 1000)
+                else
                 {
                     throttleBytes = 0;
                     throttleSw.Restart();
                 }
-            }
-            else
-            {
-                throttleBytes = 0;
-                throttleSw.Restart();
-            }
 
-            if (sw.ElapsedMilliseconds >= 800)
-            {
-                double bps = speedBytes / sw.Elapsed.TotalSeconds;
-                progress?.Report((downloaded, totalBytes, bps));
-                speedBytes = 0;
-                sw.Restart();
+                if (sw.ElapsedMilliseconds >= 800)
+                {
+                    double bps = speedBytes / sw.Elapsed.TotalSeconds;
+                    progress?.Report((downloaded, totalBytes, bps));
+                    speedBytes = 0;
+                    sw.Restart();
+                }
             }
         }
 

@@ -136,4 +136,7 @@ public class StreamItem : ObservableObject
         get => _isDevRecommendation;
         set => SetProperty(ref _isDevRecommendation, value);
     }
+
+    [JsonIgnore]
+    public bool IsMovie => StreamType == "movie";
 }
