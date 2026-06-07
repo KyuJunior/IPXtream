@@ -1231,7 +1231,7 @@ public partial class DashboardViewModel : ObservableObject
         Streams.Clear();
 
         // If searching the "All" category without text, we don't want to draw everything
-        if (string.IsNullOrWhiteSpace(query) && SelectedCategory?.CategoryId == "")
+        if (string.IsNullOrWhiteSpace(query) && SelectedCategory?.CategoryId == "" && !IsViewingSeriesInfo)
         {
             _filteredStreams.Clear();
             CurrentPage = 1;
