@@ -827,13 +827,15 @@
                         Visibility="{Binding IsViewingSeriesInfo, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid>
                         <!-- Blur Background cover -->
-                        <Image Source="{Binding CurrentSeries.Info.Cover}" Stretch="UniformToFill" Opacity="0.15">
+                        <Image Source="{Binding CurrentSeries.Info.Cover}" Stretch="UniformToFill" Opacity="0.15"
+                               Width="{Binding ElementName=SeriesDetailsContentGrid, Path=ActualWidth}"
+                               Height="{Binding ElementName=SeriesDetailsContentGrid, Path=ActualHeight}">
                             <Image.Effect>
                                 <BlurEffect Radius="20"/>
                             </Image.Effect>
                         </Image>
 
-                        <Grid>
+                        <Grid x:Name="SeriesDetailsContentGrid">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/> <!-- Back button and title -->
                                 <RowDefinition Height="*"/>    <!-- Content grid (Cover + Info) -->
