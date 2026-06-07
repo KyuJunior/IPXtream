@@ -193,7 +193,6 @@ def main():
     # 7. Create GitHub Release
     log("Checking if GitHub CLI (gh) is installed...")
     try:
-        raise FileNotFoundError("Bypassing automated release to commit version bump first")
         gh_bin = "gh"
         try:
             gh_check = subprocess.run(["gh", "--version"], capture_output=True, text=True, shell=True)
