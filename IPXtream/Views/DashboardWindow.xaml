@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="IPXtream"
@@ -1907,24 +1906,18 @@
               Background="Black"
               PreviewMouseMove="Player_MouseMove">
 
-            <!-- VideoView natively composes into WPF Visual Tree -->
-            <vlc:VideoView x:Name="VideoView"
-                           Background="Black"
-                           HorizontalAlignment="Stretch"
-                           VerticalAlignment="Stretch" />
+            <!-- Native WPF MediaElement -->
+            <MediaElement x:Name="PlayerMediaElement"
+                          LoadedBehavior="Manual"
+                          UnloadedBehavior="Close"
+                          Stretch="Uniform"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch" />
 
-            <!-- Airspace-safe Popup Overlay for HwndHost -->
-            <Popup x:Name="PlayerOverlayPopup"
-                   PlacementTarget="{Binding ElementName=VideoView}"
-                   Placement="Center"
-                   AllowsTransparency="True"
-                   Width="{Binding ActualWidth, ElementName=VideoView}"
-                   Height="{Binding ActualHeight, ElementName=VideoView}">
-                
-                <!-- Overlay Background -->
-                <Grid Background="#01000000"
-                      PreviewMouseMove="Player_MouseMove"
-                      MouseLeftButtonDown="Player_MouseLeftButtonDown">
+            <!-- Overlay Background (rendered directly on top of MediaElement) -->
+            <Grid Background="#01000000"
+                  PreviewMouseMove="Player_MouseMove"
+                  MouseLeftButtonDown="Player_MouseLeftButtonDown">
 
                     <!-- Buffering -->
                     <Border HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -2117,10 +2110,12 @@
                                             </ComboBox>
                                             
                                             <TextBlock Text="DUB:" Foreground="{StaticResource TextMuted}"
-                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"
+                                                       Visibility="Collapsed"/>
                                             <ComboBox Width="90" Margin="0,0,8,0"
                                                       ItemsSource="{Binding PlayerVm.AudioStreams}"
-                                                      SelectedItem="{Binding PlayerVm.SelectedAudioStream, Mode=TwoWay}">
+                                                      SelectedItem="{Binding PlayerVm.SelectedAudioStream, Mode=TwoWay}"
+                                                      Visibility="Collapsed">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <TextBlock>
@@ -2136,11 +2131,13 @@
                                             </ComboBox>
                                             
                                             <TextBlock Text="SUB:" Foreground="{StaticResource TextMuted}"
-                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"
+                                                       Visibility="Collapsed"/>
                                             <ComboBox Width="90"
                                                       ItemsSource="{Binding PlayerVm.DisplaySubtitleStreams}"
                                                       SelectedValuePath="Value"
-                                                      SelectedValue="{Binding PlayerVm.SelectedSubtitleStream, Mode=TwoWay}">
+                                                      SelectedValue="{Binding PlayerVm.SelectedSubtitleStream, Mode=TwoWay}"
+                                                      Visibility="Collapsed">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <TextBlock Text="{Binding Name}" />
@@ -2169,7 +2166,6 @@
                         </Grid>
                     </Border>
                 </Grid>
-            </Popup>
         </Grid>
         <!-- end PlayerPanel -->
 

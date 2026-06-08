@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>IPXtream</AssemblyName>
-    <Version>2.0.15</Version>
+    <Version>2.0.16</Version>
     <RootNamespace>IPXtream</RootNamespace>
     <ApplicationIcon>appicon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -23,10 +23,7 @@
     <!-- JSON -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
-    <!-- VLC Player -->
-    <PackageReference Include="LibVLCSharp" Version="3.8.2" />
-    <PackageReference Include="LibVLCSharp.WPF" Version="3.8.2" />
-    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
+
 
     <!-- XAML Behaviors (for Interaction.Triggers, EventTrigger etc.) -->
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />

@@ -7,14 +7,12 @@ using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LibVLCSharp.Shared;
 using IPXtream.Models;
 using IPXtream.Services;
 
 namespace IPXtream.ViewModels;
 
-public record VLCSubtitleTrackProxy(int Id);
-public record SubtitleOption(string Name, VLCSubtitleTrackProxy? Value);
+public record SubtitleOption(string Name, object? Value);
 
 public class VLCAudioTrackProxy
 {
@@ -24,14 +22,10 @@ public class VLCAudioTrackProxy
 }
 
 /// <summary>
-/// ViewModel for the embedded VLC player.
+/// ViewModel for the embedded MediaElement player.
 /// </summary>
 public partial class PlayerViewModel : ObservableObject, IDisposable
 {
-    // ── LibVLC Player ────────────────────────────────────────────────────────
-    private readonly LibVLC _libVLC;
-    public MediaPlayer MediaPlayer { get; }
-
     // ── Observable playback state ─────────────────────────────────────────────
     [ObservableProperty] private bool   _isPlaying;
     [ObservableProperty] private bool   _isBuffering;
@@ -45,53 +39,35 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _lengthText   = "00:00:00";
 
     // ── Volume ────────────────────────────────────────────────────────────────
+    private int _volume = 100;
     public int Volume
     {
-        get => MediaPlayer?.Volume ?? 100;
+        get => _volume;
         set 
         { 
-            if (MediaPlayer != null)
+            if (_volume != value)
             {
-                MediaPlayer.Volume = value; 
+                _volume = value; 
                 OnPropertyChanged(); 
+                SetVolumeAction?.Invoke(value / 100.0);
             }
         }
     }
 
-    // ── Track Collections (populated after stream opens) ───────────────────────
+    // ── Track Collections (empty placeholders for compatibility) ──────────────
     public ObservableCollection<VLCAudioTrackProxy> AudioStreams { get; } = new();
     public ObservableCollection<SubtitleOption> DisplaySubtitleStreams { get; } = new();
 
     public VLCAudioTrackProxy? SelectedAudioStream
     {
-        get => AudioStreams.FirstOrDefault(s => s.Id == MediaPlayer.AudioTrack);
-        set
-        {
-            if (value != null && MediaPlayer.AudioTrack != value.Id)
-            {
-                MediaPlayer.SetAudioTrack(value.Id);
-                OnPropertyChanged();
-            }
-        }
+        get => null;
+        set { }
     }
 
-    public VLCSubtitleTrackProxy? SelectedSubtitleStream
+    public object? SelectedSubtitleStream
     {
-        get
-        {
-            var spu = MediaPlayer.Spu;
-            if (spu == -1) return null;
-            return new VLCSubtitleTrackProxy(spu);
-        }
-        set
-        {
-            int targetId = value?.Id ?? -1;
-            if (MediaPlayer.Spu != targetId)
-            {
-                MediaPlayer.SetSpu(targetId);
-                OnPropertyChanged();
-            }
-        }
+        get => null;
+        set { }
     }
 
     // ── UI state ──────────────────────────────────────────────────────────────
@@ -110,6 +86,19 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     // ── Internals ─────────────────────────────────────────────────────────────
     private readonly DispatcherTimer _positionTimer;
 
+    // ── Delegates for View Interaction ────────────────────────────────────────
+    public Action? PlayAction;
+    public Action? PauseAction;
+    public Action? StopAction;
+    public Action<TimeSpan>? SeekAction;
+    public Action<double>? SetVolumeAction; // 0.0 to 1.0
+    public Action<bool>? SetMuteAction;
+    public Action<double>? SetSpeedAction;
+    public Action<string>? OpenUrlAction;
+
+    public Func<TimeSpan>? GetCurrentPositionFunc;
+    public Func<TimeSpan>? GetDurationFunc;
+
     public PlayerViewModel(
         XtreamApiService   api,
         StreamItem         stream,
@@ -117,20 +106,6 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     {
         StreamTitle   = stream.Name;
         StreamIconUrl = stream.StreamIcon;
-
-        // Initialize LibVLC
-        Core.Initialize();
-        _libVLC = new LibVLC("--quiet", "--no-video-title-show");
-        MediaPlayer = new MediaPlayer(_libVLC);
-
-        // Attach events
-        MediaPlayer.Opening += (s, e) => SyncStatus(VLCState.Opening);
-        MediaPlayer.Buffering += (s, e) => SyncStatus(VLCState.Buffering, e.Cache);
-        MediaPlayer.Playing += (s, e) => SyncStatus(VLCState.Playing, 100f);
-        MediaPlayer.Paused += (s, e) => SyncStatus(VLCState.Paused);
-        MediaPlayer.Stopped += (s, e) => SyncStatus(VLCState.Stopped);
-        MediaPlayer.EndReached += (s, e) => SyncStatus(VLCState.Ended);
-        MediaPlayer.EncounteredError += (s, e) => SyncStatus(VLCState.Error);
 
         // Default item for subtitles
         DisplaySubtitleStreams.Add(new SubtitleOption("(None)", null));
@@ -146,60 +121,70 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     public void Initialise(string streamUrl)
     {
         ErrorText = string.Empty;
+        IsBuffering = true;
+        StatusText = "Connecting…";
         LogService.Log($"Player Initialise: Opening stream: {streamUrl}");
 
-        Media media;
-        if (streamUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-        {
-            media = new Media(_libVLC, new Uri(streamUrl));
-            media.AddOption("http-user-agent=IPXtream/1.0 (Windows; WPF)");
-        }
-        else
-        {
-            media = new Media(_libVLC, streamUrl, FromType.FromPath);
-        }
-
-        MediaPlayer.Play(media);
+        OpenUrlAction?.Invoke(streamUrl);
     }
 
-    private void SyncStatus(VLCState state, float bufferPercent = 0f)
+    public void OnMediaOpened()
     {
-        LogService.Log($"Player SyncStatus: {StreamTitle} state changed to {state} (Percent={bufferPercent})");
-
         Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
         {
-            IsPlaying   = state == VLCState.Playing;
-            IsBuffering = state == VLCState.Opening || (state == VLCState.Buffering && bufferPercent < 100f);
-            IsSeekable  = MediaPlayer.Length > 0;
+            IsPlaying = true;
+            IsBuffering = false;
+            StatusText = string.Empty;
+            ErrorText = string.Empty;
 
-            StatusText = state switch
-            {
-                VLCState.Opening   => "Connecting…",
-                VLCState.Buffering => $"Buffering… {(int)bufferPercent}%",
-                VLCState.Paused    => "Paused",
-                VLCState.Ended     => "Ended",
-                _                  => string.Empty
-            };
+            var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
+            IsSeekable = dur > TimeSpan.Zero;
 
-            if (state == VLCState.Buffering && bufferPercent >= 100f)
-            {
-                StatusText = string.Empty;
-            }
-
-            if (state == VLCState.Playing || state == VLCState.Paused || state == VLCState.Opening || state == VLCState.Buffering)
-                ErrorText = string.Empty;
-            else if (state == VLCState.Error)
-            {
-                ErrorText = "Playback error. Stream may be offline or URL is invalid.";
-                LogService.Log($"Player Playback Error: {StreamTitle} failed to load.");
-            }
-
-            if (state == VLCState.Playing)
-                _positionTimer.Start();
-            else
-                _positionTimer.Stop();
-
+            _positionTimer.Start();
             RefreshTimeline();
+        });
+    }
+
+    public void OnMediaFailed(string errorMsg)
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsPlaying = false;
+            IsBuffering = false;
+            _positionTimer.Stop();
+            ErrorText = errorMsg;
+            StatusText = string.Empty;
+            LogService.Log($"Player Playback Error: {StreamTitle} failed to load. Reason: {errorMsg}");
+        });
+    }
+
+    public void OnMediaEnded()
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsPlaying = false;
+            IsBuffering = false;
+            _positionTimer.Stop();
+            StatusText = "Ended";
+            CloseRequested?.Invoke();
+        });
+    }
+
+    public void OnBufferingStarted()
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsBuffering = true;
+            StatusText = "Buffering…";
+        });
+    }
+
+    public void OnBufferingEnded()
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsBuffering = false;
+            StatusText = string.Empty;
         });
     }
 
@@ -207,104 +192,63 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     {
         if (IsUserSeeking) return;
 
-        long cur = MediaPlayer.Time;
-        long dur = MediaPlayer.Length;
+        var cur = GetCurrentPositionFunc?.Invoke() ?? TimeSpan.Zero;
+        var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
 
-        IsSeekable   = dur > 0;
-        Position     = dur > 0 ? (float)((double)cur / dur) : 0f;
-        PositionText = TimeSpan.FromMilliseconds(cur).ToString(@"hh\:mm\:ss");
-        LengthText   = TimeSpan.FromMilliseconds(dur).ToString(@"hh\:mm\:ss");
-
-        // Lazy load streams if they are empty
-        if (AudioStreams.Count == 0 && MediaPlayer.AudioTrackDescription?.Length > 0)
-        {
-            UpdateAudioStreams();
-        }
-        if (DisplaySubtitleStreams.Count <= 1 && MediaPlayer.SpuDescription?.Length > 0)
-        {
-            UpdateSubtitleStreams();
-        }
-    }
-
-    private void UpdateAudioStreams()
-    {
-        Application.Current?.Dispatcher.BeginInvoke(() =>
-        {
-            AudioStreams.Clear();
-            foreach (var track in MediaPlayer.AudioTrackDescription)
-            {
-                if (track.Id == -1) continue;
-                AudioStreams.Add(new VLCAudioTrackProxy
-                {
-                    Id = track.Id,
-                    Language = track.Name,
-                    Codec = "Track"
-                });
-            }
-            OnPropertyChanged(nameof(AudioStreams));
-            OnPropertyChanged(nameof(SelectedAudioStream));
-        });
-    }
-
-    private void UpdateSubtitleStreams()
-    {
-        Application.Current?.Dispatcher.BeginInvoke(() =>
-        {
-            DisplaySubtitleStreams.Clear();
-            DisplaySubtitleStreams.Add(new SubtitleOption("(None)", null));
-            foreach (var track in MediaPlayer.SpuDescription)
-            {
-                if (track.Id == -1) continue;
-                DisplaySubtitleStreams.Add(new SubtitleOption(track.Name, new VLCSubtitleTrackProxy(track.Id)));
-            }
-            OnPropertyChanged(nameof(DisplaySubtitleStreams));
-            OnPropertyChanged(nameof(SelectedSubtitleStream));
-        });
+        IsSeekable   = dur > TimeSpan.Zero;
+        Position     = dur > TimeSpan.Zero ? (float)(cur.TotalMilliseconds / dur.TotalMilliseconds) : 0f;
+        PositionText = cur.ToString(@"hh\:mm\:ss");
+        LengthText   = dur.ToString(@"hh\:mm\:ss");
     }
 
     public void CommitSeek(float targetPosition)
     {
-        if (MediaPlayer.Length > 0)
+        var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
+        if (dur > TimeSpan.Zero)
         {
-            MediaPlayer.Position = targetPosition;
+            var targetTime = TimeSpan.FromMilliseconds(dur.TotalMilliseconds * targetPosition);
+            SeekAction?.Invoke(targetTime);
         }
     }
 
     [RelayCommand]
     private void SkipForward()
     {
-        if (MediaPlayer.Length > 0)
+        var cur = GetCurrentPositionFunc?.Invoke() ?? TimeSpan.Zero;
+        var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
+        if (dur > TimeSpan.Zero)
         {
-            long currentMs = MediaPlayer.Time;
-            long maxMs = MediaPlayer.Length;
-            long stepMs = 5000; // 5 seconds
-            MediaPlayer.Time = Math.Min(currentMs + stepMs, maxMs);
+            var targetTime = TimeSpan.FromMilliseconds(Math.Min(cur.TotalMilliseconds + 5000, dur.TotalMilliseconds));
+            SeekAction?.Invoke(targetTime);
         }
     }
 
     [RelayCommand]
     private void SkipBackward()
     {
-        if (MediaPlayer.Length > 0)
+        var cur = GetCurrentPositionFunc?.Invoke() ?? TimeSpan.Zero;
+        var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
+        if (dur > TimeSpan.Zero)
         {
-            long currentMs = MediaPlayer.Time;
-            long stepMs = 5000; // 5 seconds
-            MediaPlayer.Time = Math.Max(currentMs - stepMs, 0);
+            var targetTime = TimeSpan.FromMilliseconds(Math.Max(cur.TotalMilliseconds - 5000, 0));
+            SeekAction?.Invoke(targetTime);
         }
     }
 
     // ── Speeds ────────────────────────────────────────────────────────────────
     public double[] PlaybackSpeeds { get; } = new[] { 0.5, 0.75, 1.0, 1.25, 1.5, 2.0 };
 
+    private double _selectedSpeed = 1.0;
     public double SelectedSpeed
     {
-        get => MediaPlayer != null ? MediaPlayer.Rate : 1.0;
+        get => _selectedSpeed;
         set
         {
-            if (MediaPlayer != null)
+            if (Math.Abs(_selectedSpeed - value) > 0.001)
             {
-                MediaPlayer.SetRate((float)value);
+                _selectedSpeed = value;
                 OnPropertyChanged();
+                SetSpeedAction?.Invoke(value);
             }
         }
     }
@@ -313,16 +257,23 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void TogglePlay()
     {
-        if (MediaPlayer.IsPlaying)
-            MediaPlayer.Pause();
+        if (IsPlaying)
+        {
+            PauseAction?.Invoke();
+            IsPlaying = false;
+        }
         else
-            MediaPlayer.Play();
+        {
+            PlayAction?.Invoke();
+            IsPlaying = true;
+        }
     }
 
     [RelayCommand]
     private void Stop()
     {
-        MediaPlayer.Stop();
+        StopAction?.Invoke();
+        IsPlaying = false;
         CloseRequested?.Invoke();
     }
 
@@ -332,17 +283,17 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ToggleMute()
     {
-        if (MediaPlayer != null)
-        {
-            MediaPlayer.Mute = !MediaPlayer.Mute;
-            OnPropertyChanged(nameof(Volume));
-        }
+        IsMuted = !IsMuted;
+        SetMuteAction?.Invoke(IsMuted);
     }
+
+    [ObservableProperty] private bool _isMuted;
 
     [RelayCommand]
     private void Close()
     {
-        MediaPlayer.Stop();
+        StopAction?.Invoke();
+        IsPlaying = false;
         CloseRequested?.Invoke();
     }
 
@@ -350,12 +301,6 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _positionTimer.Stop();
-
-        System.Threading.Tasks.Task.Run(() =>
-        {
-            MediaPlayer.Stop();
-            MediaPlayer.Dispose();
-            _libVLC.Dispose();
-        });
+        StopAction?.Invoke();
     }
 }

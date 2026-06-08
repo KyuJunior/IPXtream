@@ -1,8 +1,9 @@
+using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls.Primitives;
 using IPXtream.ViewModels;
-
 
 namespace IPXtream.Views;
 
@@ -21,14 +22,8 @@ public partial class DashboardWindow : Window
         _vm = viewModel;
         DataContext = _vm;
 
-
-
         _vm.PlayRequested   += OnPlayRequested;
         _vm.LogoutRequested += OnLogoutRequested;
-
-        // Force popup position update on resize/move since WPF popups don't track inherently
-        this.LocationChanged += (_, _) => UpdatePopupPosition();
-        this.SizeChanged     += (_, _) => UpdatePopupPosition();
 
         _hideTimer = new System.Windows.Threading.DispatcherTimer
         {
@@ -36,7 +31,7 @@ public partial class DashboardWindow : Window
         };
         _hideTimer.Tick += (_, _) => HideBars();
 
-        // Global input hook to pierce through WinForms HwndHost airspace restrictions in Fullscreen
+        // Global input hook to track MouseMove
         InputManager.Current.PreProcessInput += (s, e) =>
         {
             if (e.StagingItem.Input.RoutedEvent == Mouse.MouseMoveEvent && _vm?.PlayerVm is not null)
@@ -52,8 +47,7 @@ public partial class DashboardWindow : Window
         // Clean up any previous session
         if (_vm.PlayerVm is not null)
         {
-            _vm.PlayerVm.Dispose();
-            _vm.PlayerVm = null;
+            ClosePlayer();
         }
 
         // Build new PlayerViewModel and attach to the dashboard VM
@@ -83,7 +77,7 @@ public partial class DashboardWindow : Window
                 "Downloads", "IPXtream");
         }
         var invalid = System.IO.Path.GetInvalidFileNameChars();
-        var safeName = string.Concat(s.Name.Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c))
+        var safeName = string.Concat(s.Name.Select(ch => Array.IndexOf(invalid, ch) >= 0 ? '_' : ch))
                              .Trim().TrimEnd('.');
         var localPath = System.IO.Path.Combine(downloadDir, $"{safeName}.{s.ContainerExtension}");
 
@@ -92,12 +86,37 @@ public partial class DashboardWindow : Window
             url = localPath;
         }
 
-        // IMPORTANT: Show the player panel and update layout BEFORE opening stream
-        // Otherwise FlyleafHost has 0x0 size and falls back to a standalone popout window.
+        // Show the player panel and update layout
         PlayerPanel.Visibility = Visibility.Visible;
         PlayerPanel.UpdateLayout();
 
-        VideoView.MediaPlayer = playerVm.MediaPlayer;
+        // Wire VM actions/funcs to native MediaElement
+        playerVm.PlayAction = () => PlayerMediaElement.Play();
+        playerVm.PauseAction = () => PlayerMediaElement.Pause();
+        playerVm.StopAction = () => PlayerMediaElement.Stop();
+        playerVm.SeekAction = (time) => PlayerMediaElement.Position = time;
+        playerVm.SetVolumeAction = (vol) => PlayerMediaElement.Volume = vol;
+        playerVm.SetMuteAction = (mute) => PlayerMediaElement.IsMuted = mute;
+        playerVm.SetSpeedAction = (speed) => PlayerMediaElement.SpeedRatio = speed;
+        playerVm.OpenUrlAction = (u) =>
+        {
+            PlayerMediaElement.Source = new Uri(u, UriKind.RelativeOrAbsolute);
+            PlayerMediaElement.Play();
+        };
+
+        playerVm.GetCurrentPositionFunc = () => PlayerMediaElement.Position;
+        playerVm.GetDurationFunc = () => PlayerMediaElement.NaturalDuration.HasTimeSpan ? PlayerMediaElement.NaturalDuration.TimeSpan : TimeSpan.Zero;
+
+        // Initialize state on MediaElement
+        PlayerMediaElement.Volume = playerVm.Volume / 100.0;
+        PlayerMediaElement.SpeedRatio = playerVm.SelectedSpeed;
+        PlayerMediaElement.IsMuted = playerVm.IsMuted;
+
+        // Subscribe to events
+        PlayerMediaElement.MediaOpened += OnMediaOpened;
+        PlayerMediaElement.MediaFailed += OnMediaFailed;
+        PlayerMediaElement.MediaEnded += OnMediaEnded;
+
         playerVm.Initialise(url);
 
         // Wire Close → back to library  
@@ -110,8 +129,22 @@ public partial class DashboardWindow : Window
                 ApplyFullscreen(playerVm.IsFullscreen);
         };
 
-        PlayerOverlayPopup.IsOpen = true;
         _hideTimer.Start();
+    }
+
+    private void OnMediaOpened(object sender, RoutedEventArgs e)
+    {
+        _vm.PlayerVm?.OnMediaOpened();
+    }
+
+    private void OnMediaFailed(object? sender, ExceptionRoutedEventArgs e)
+    {
+        _vm.PlayerVm?.OnMediaFailed(e.ErrorException?.Message ?? "Media playback failed");
+    }
+
+    private void OnMediaEnded(object sender, RoutedEventArgs e)
+    {
+        _vm.PlayerVm?.OnMediaEnded();
     }
 
     private void ClosePlayer()
@@ -121,13 +154,20 @@ public partial class DashboardWindow : Window
         // Exit fullscreen if active
         if (_isFullscreen) ApplyFullscreen(false);
 
-        // Dispose VM on background thread (avoids LibVLC deadlock)
+        // Unsubscribe events
+        PlayerMediaElement.MediaOpened -= OnMediaOpened;
+        PlayerMediaElement.MediaFailed -= OnMediaFailed;
+        PlayerMediaElement.MediaEnded -= OnMediaEnded;
+
+        // Stop and clear MediaElement source
+        PlayerMediaElement.Stop();
+        PlayerMediaElement.Source = null;
+
+        // Dispose VM
         var old = _vm.PlayerVm;
         _vm.PlayerVm = null;
-        VideoView.MediaPlayer = null; // Detach VideoView so it doesn't hold reference
         old?.Dispose();
 
-        PlayerOverlayPopup.IsOpen = false;
         PlayerPanel.Visibility = Visibility.Collapsed;
     }
 
@@ -139,17 +179,12 @@ public partial class DashboardWindow : Window
     {
         _isFullscreen = go;
 
-        // Temporarily close popup to trigger HWND recreation on top of the fullscreen topmost window
-        PlayerOverlayPopup.IsOpen = false;
-
         if (go)
         {
-            // Set pure black background to hide WPF airspace borders
+            // Set pure black background
             Background = System.Windows.Media.Brushes.Black;
             
             WindowStyle = WindowStyle.None;
-            // Intentionally keeping ResizeMode.CanResize — setting NoResize 
-            // causes a known WPF bug on Win11 where it leaves white margins.
             
             // Force layout refresh
             if (WindowState == WindowState.Maximized)
@@ -173,21 +208,6 @@ public partial class DashboardWindow : Window
             
             // Restore sidebar gap
             PlayerPanel.Margin = new Thickness(220, 0, 0, 0);
-        }
-
-        // Re-open popup so it is created on top of the active topmost window with the correct size
-        PlayerOverlayPopup.IsOpen = true;
-        UpdatePopupPosition();
-    }
-
-    private void UpdatePopupPosition()
-    {
-        if (PlayerOverlayPopup.IsOpen)
-        {
-            // Toggle placement explicitly forces WPF rendering layout recalculation
-            var offset = PlayerOverlayPopup.HorizontalOffset;
-            PlayerOverlayPopup.HorizontalOffset = offset + 0.1;
-            PlayerOverlayPopup.HorizontalOffset = offset;
         }
     }
 
