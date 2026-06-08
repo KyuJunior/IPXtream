@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>IPXtream</AssemblyName>
-    <Version>2.0.18</Version>
+    <Version>2.0.19</Version>
     <RootNamespace>IPXtream</RootNamespace>
     <ApplicationIcon>appicon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -35,6 +35,11 @@
   <ItemGroup>
     <!-- Copy locally bundled FFmpeg native binaries -->
     <None Update="FFmpeg\*.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Copy locally bundled VC++ redistributable native binaries to root output folder for self-contained execution -->
+    <None Include="VCRuntime\*.dll">
+      <Link>%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
