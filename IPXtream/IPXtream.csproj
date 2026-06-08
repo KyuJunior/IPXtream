@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>IPXtream</AssemblyName>
-    <Version>2.0.16</Version>
+    <Version>2.0.17</Version>
     <RootNamespace>IPXtream</RootNamespace>
     <ApplicationIcon>appicon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -23,10 +23,20 @@
     <!-- JSON -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
-
+    <!-- Flyleaf Player -->
+    <PackageReference Include="Flyleaf.FFmpeg" Version="8.0.0.1" />
+    <PackageReference Include="FlyleafLib" Version="3.10.3" />
+    <PackageReference Include="FlyleafLib.Controls.WPF" Version="1.6.3" />
 
     <!-- XAML Behaviors (for Interaction.Triggers, EventTrigger etc.) -->
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Copy locally bundled FFmpeg native binaries -->
+    <None Update="FFmpeg\*.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -1,22 +1,22 @@
 ; ============================================================
-;  IPXtream v2.0.16 — Inno Setup 6 Installer Script
+;  IPXtream v2.0.17 — Inno Setup 6 Installer Script
 ;
 ;  Step 1 — Publish the app first (run from IPXtream\ folder):
 ;    dotnet publish -c Release -r win-x64 --self-contained true ^
 ;      -p:PublishSingleFile=false ^
-;      -o "bin\publish_v2.0.16"
+;      -o "bin\publish_v2.0.17"
 ;
 ;  Step 2 — Open this file in Inno Setup 6 and press F9.
 ;
-;  Output: Output\IPXtream_Setup_v2.0.16.exe
+;  Output: Output\IPXtream_Setup_v2.0.17.exe
 ; ============================================================
 
 #define MyAppName      "IPXtream"
-#define MyAppVersion   "2.0.16"
+#define MyAppVersion   "2.0.17"
 #define MyAppPublisher "Dr. Yaser"
 #define MyAppURL       "https://github.com/KyuJunior/IPXtream"
 #define MyAppExeName   "IPXtream.exe"
-#define MyPublishDir   "IPXtream\bin\publish_v2.0.16"
+#define MyPublishDir   "IPXtream\bin\publish_v2.0.17"
 
 [Setup]
 AppId={{E7A2C3D4-F8B1-4E5A-9C6D-1234567890AB}
@@ -75,8 +75,8 @@ Source: "{#MyPublishDir}\*.dll";            DestDir: "{app}"; Flags: ignoreversi
 Source: "{#MyPublishDir}\*.json";           DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "{#MyPublishDir}\*.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
-; ── Bundled LibVLC native libraries ─────────────────────────────────────────
-Source: "{#MyPublishDir}\libvlc\*";     DestDir: "{app}\libvlc"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+; ── Bundled FFmpeg v7.1 native libraries ─────────────────────────────────────
+Source: "{#MyPublishDir}\FFmpeg\*.dll";     DestDir: "{app}\FFmpeg"; Flags: ignoreversion
 
 ; ── Localization satellite assemblies ────────────────────────────────────────
 Source: "{#MyPublishDir}\cs\*";   DestDir: "{app}\cs";   Flags: ignoreversion recursesubdirs skipifsourcedoesntexist

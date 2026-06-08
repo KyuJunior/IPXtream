@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls.Primitives;
 using IPXtream.ViewModels;
+using FlyleafLib;
 
 namespace IPXtream.Views;
 
@@ -21,6 +22,13 @@ public partial class DashboardWindow : Window
         InitializeComponent();
         _vm = viewModel;
         DataContext = _vm;
+
+        // Start Flyleaf Engine
+        Engine.Start(new EngineConfig()
+        {
+            FFmpegPath = ":FFmpeg",
+            LogOutput  = ":debug"
+        });
 
         _vm.PlayRequested   += OnPlayRequested;
         _vm.LogoutRequested += OnLogoutRequested;
@@ -86,37 +94,12 @@ public partial class DashboardWindow : Window
             url = localPath;
         }
 
-        // Show the player panel and update layout
+        // IMPORTANT: Show the player panel and update layout BEFORE opening stream
+        // Otherwise FlyleafHost has 0x0 size and falls back to a standalone popout window.
         PlayerPanel.Visibility = Visibility.Visible;
         PlayerPanel.UpdateLayout();
 
-        // Wire VM actions/funcs to native MediaElement
-        playerVm.PlayAction = () => PlayerMediaElement.Play();
-        playerVm.PauseAction = () => PlayerMediaElement.Pause();
-        playerVm.StopAction = () => PlayerMediaElement.Stop();
-        playerVm.SeekAction = (time) => PlayerMediaElement.Position = time;
-        playerVm.SetVolumeAction = (vol) => PlayerMediaElement.Volume = vol;
-        playerVm.SetMuteAction = (mute) => PlayerMediaElement.IsMuted = mute;
-        playerVm.SetSpeedAction = (speed) => PlayerMediaElement.SpeedRatio = speed;
-        playerVm.OpenUrlAction = (u) =>
-        {
-            PlayerMediaElement.Source = new Uri(u, UriKind.RelativeOrAbsolute);
-            PlayerMediaElement.Play();
-        };
-
-        playerVm.GetCurrentPositionFunc = () => PlayerMediaElement.Position;
-        playerVm.GetDurationFunc = () => PlayerMediaElement.NaturalDuration.HasTimeSpan ? PlayerMediaElement.NaturalDuration.TimeSpan : TimeSpan.Zero;
-
-        // Initialize state on MediaElement
-        PlayerMediaElement.Volume = playerVm.Volume / 100.0;
-        PlayerMediaElement.SpeedRatio = playerVm.SelectedSpeed;
-        PlayerMediaElement.IsMuted = playerVm.IsMuted;
-
-        // Subscribe to events
-        PlayerMediaElement.MediaOpened += OnMediaOpened;
-        PlayerMediaElement.MediaFailed += OnMediaFailed;
-        PlayerMediaElement.MediaEnded += OnMediaEnded;
-
+        VideoView.Player = playerVm.Player;
         playerVm.Initialise(url);
 
         // Wire Close → back to library  
@@ -132,21 +115,6 @@ public partial class DashboardWindow : Window
         _hideTimer.Start();
     }
 
-    private void OnMediaOpened(object sender, RoutedEventArgs e)
-    {
-        _vm.PlayerVm?.OnMediaOpened();
-    }
-
-    private void OnMediaFailed(object? sender, ExceptionRoutedEventArgs e)
-    {
-        _vm.PlayerVm?.OnMediaFailed(e.ErrorException?.Message ?? "Media playback failed");
-    }
-
-    private void OnMediaEnded(object sender, RoutedEventArgs e)
-    {
-        _vm.PlayerVm?.OnMediaEnded();
-    }
-
     private void ClosePlayer()
     {
         _hideTimer.Stop();
@@ -154,19 +122,15 @@ public partial class DashboardWindow : Window
         // Exit fullscreen if active
         if (_isFullscreen) ApplyFullscreen(false);
 
-        // Unsubscribe events
-        PlayerMediaElement.MediaOpened -= OnMediaOpened;
-        PlayerMediaElement.MediaFailed -= OnMediaFailed;
-        PlayerMediaElement.MediaEnded -= OnMediaEnded;
-
-        // Stop and clear MediaElement source
-        PlayerMediaElement.Stop();
-        PlayerMediaElement.Source = null;
-
-        // Dispose VM
+        // Dispose VM on background thread (avoids UI thread locks/deadlocks)
         var old = _vm.PlayerVm;
         _vm.PlayerVm = null;
-        old?.Dispose();
+        VideoView.Player = null; // Detach FlyleafHost so it doesn't hold reference
+        
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            old?.Dispose();
+        });
 
         PlayerPanel.Visibility = Visibility.Collapsed;
     }
