@@ -33,6 +33,10 @@ public partial class DashboardWindow : Window
         _vm.PlayRequested   += OnPlayRequested;
         _vm.LogoutRequested += OnLogoutRequested;
 
+        // Force popup position update on resize/move since WPF popups don't track inherently
+        this.LocationChanged += (_, _) => UpdatePopupPosition();
+        this.SizeChanged     += (_, _) => UpdatePopupPosition();
+
         _hideTimer = new System.Windows.Threading.DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(3)
@@ -112,6 +116,7 @@ public partial class DashboardWindow : Window
                 ApplyFullscreen(playerVm.IsFullscreen);
         };
 
+        PlayerOverlayPopup.IsOpen = true;
         _hideTimer.Start();
     }
 
@@ -132,6 +137,7 @@ public partial class DashboardWindow : Window
             old?.Dispose();
         });
 
+        PlayerOverlayPopup.IsOpen = false;
         PlayerPanel.Visibility = Visibility.Collapsed;
     }
 
@@ -143,12 +149,17 @@ public partial class DashboardWindow : Window
     {
         _isFullscreen = go;
 
+        // Temporarily close popup to trigger HWND recreation on top of the fullscreen topmost window
+        PlayerOverlayPopup.IsOpen = false;
+
         if (go)
         {
-            // Set pure black background
+            // Set pure black background to hide WPF airspace borders
             Background = System.Windows.Media.Brushes.Black;
             
             WindowStyle = WindowStyle.None;
+            // Intentionally keeping ResizeMode.CanResize — setting NoResize 
+            // causes a known WPF bug on Win11 where it leaves white margins.
             
             // Force layout refresh
             if (WindowState == WindowState.Maximized)
@@ -172,6 +183,21 @@ public partial class DashboardWindow : Window
             
             // Restore sidebar gap
             PlayerPanel.Margin = new Thickness(220, 0, 0, 0);
+        }
+
+        // Re-open popup so it is created on top of the active topmost window with the correct size
+        PlayerOverlayPopup.IsOpen = true;
+        UpdatePopupPosition();
+    }
+
+    private void UpdatePopupPosition()
+    {
+        if (PlayerOverlayPopup.IsOpen)
+        {
+            // Toggle placement explicitly forces WPF rendering layout recalculation
+            var offset = PlayerOverlayPopup.HorizontalOffset;
+            PlayerOverlayPopup.HorizontalOffset = offset + 0.1;
+            PlayerOverlayPopup.HorizontalOffset = offset;
         }
     }
 

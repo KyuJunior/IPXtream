@@ -1914,10 +1914,18 @@
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch" />
 
-            <!-- Overlay Background (rendered directly on top of MediaElement) -->
-            <Grid Background="#01000000"
-                  PreviewMouseMove="Player_MouseMove"
-                  MouseLeftButtonDown="Player_MouseLeftButtonDown">
+            <!-- Airspace-safe Popup Overlay for HwndHost -->
+            <Popup x:Name="PlayerOverlayPopup"
+                   PlacementTarget="{Binding ElementName=VideoView}"
+                   Placement="Center"
+                   AllowsTransparency="True"
+                   Width="{Binding ActualWidth, ElementName=VideoView}"
+                   Height="{Binding ActualHeight, ElementName=VideoView}">
+                
+                <!-- Overlay Background -->
+                <Grid Background="#01000000"
+                      PreviewMouseMove="Player_MouseMove"
+                      MouseLeftButtonDown="Player_MouseLeftButtonDown">
 
                     <!-- Buffering -->
                     <Border HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -2162,6 +2170,7 @@
                         </Grid>
                     </Border>
                 </Grid>
+            </Popup>
         </Grid>
         <!-- end PlayerPanel -->
 
