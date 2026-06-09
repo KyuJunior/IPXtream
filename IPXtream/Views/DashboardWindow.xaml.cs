@@ -23,12 +23,47 @@ public partial class DashboardWindow : Window
         _vm = viewModel;
         DataContext = _vm;
 
-        // Start Flyleaf Engine
-        Engine.Start(new EngineConfig()
+        // Start Flyleaf Engine safely
+        if (!Engine.IsLoaded)
         {
-            FFmpegPath = ":FFmpeg",
-            LogOutput  = ":debug"
-        });
+            try
+            {
+                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string logDir = System.IO.Path.Combine(localAppData, "IPXtream");
+                System.IO.Directory.CreateDirectory(logDir);
+                string playerLogPath = System.IO.Path.Combine(logDir, "player.log");
+
+                Services.LogService.Log($"Starting Flyleaf Engine. App Version: {typeof(DashboardWindow).Assembly.GetName().Version}");
+
+                var config = new EngineConfig()
+                {
+                    FFmpegPath     = ":FFmpeg",
+                    LogOutput      = playerLogPath,
+                    LogLevel       = FlyleafLib.LogLevel.Debug
+                };
+
+                var ffmpegLogProp = typeof(EngineConfig).GetProperty("FFmpegLogLevel");
+                if (ffmpegLogProp != null)
+                {
+                    var debugValue = Enum.Parse(ffmpegLogProp.PropertyType, "Debug");
+                    ffmpegLogProp.SetValue(config, debugValue);
+                }
+
+                Engine.Start(config);
+            }
+            catch (Exception ex)
+            {
+                Services.LogService.Log("Failed to start Flyleaf Engine", ex);
+                MessageBox.Show(
+                    "Failed to initialize the Flyleaf media player engine.\n\n" +
+                    "This usually happens because Microsoft Visual C++ Redistributable components or FFmpeg libraries are missing or corrupt.\n\n" +
+                    "Details: " + ex.Message,
+                    "Player Engine Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+            }
+        }
 
         _vm.PlayRequested   += OnPlayRequested;
         _vm.LogoutRequested += OnLogoutRequested;
@@ -295,6 +330,7 @@ public partial class DashboardWindow : Window
     private void OnLogoutRequested()
     {
         ClosePlayer();
+        App.BypassAutoLogin = true;
         var login = new LoginWindow(new LoginViewModel(App.ApiService));
         login.Show();
         Close();

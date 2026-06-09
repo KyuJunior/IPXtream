@@ -21,7 +21,7 @@ namespace IPXtream.ViewModels;
 /// <summary>
 /// Sidebar section identifiers.
 /// </summary>
-public enum MediaSection { LiveTV, VOD, Series, WhatsNew, Downloads }
+public enum MediaSection { LiveTV, VOD, Series, WhatsNew, Downloads, Settings }
 
 /// <summary>
 /// ViewModel for DashboardWindow.
@@ -32,7 +32,7 @@ public partial class DashboardViewModel : ObservableObject
     private readonly XtreamApiService _api;
     private DispatcherTimer? _searchTimer;
     private CancellationTokenSource? _cacheCts;
-    private readonly SemaphoreSlim _downloadSemaphore = new(2); // max 2 concurrent downloads
+    private SemaphoreSlim _downloadSemaphore = new(2); // max concurrent downloads
     private readonly List<StreamItem> _featuredItems = new();
     private readonly HashSet<string> _featuredKeys = new();
 
@@ -432,6 +432,7 @@ public partial class DashboardViewModel : ObservableObject
             "series"    => MediaSection.Series,
             "whatsnew"  => MediaSection.WhatsNew,
             "downloads" => MediaSection.Downloads,
+            "settings"  => MediaSection.Settings,
             _           => MediaSection.LiveTV
         };
 
@@ -457,6 +458,10 @@ public partial class DashboardViewModel : ObservableObject
         {
             StatusMessage = "Manage your downloads and local folder settings";
         }
+        else if (ActiveSection == MediaSection.Settings)
+        {
+            StatusMessage = "App-wide settings & accounts management";
+        }
         else
         {
             await LoadCategoriesAsync();
@@ -467,7 +472,6 @@ public partial class DashboardViewModel : ObservableObject
     private void Logout()
     {
         SelectedMovieForInfo = null;
-        Helpers.CredentialStore.Clear();
         LogoutRequested?.Invoke();
     }
 
@@ -535,9 +539,10 @@ public partial class DashboardViewModel : ObservableObject
 
     private async Task RunDownloadTaskAsync(DownloadItem item)
     {
+        var sem = _downloadSemaphore;
         try
         {
-            await _downloadSemaphore.WaitAsync(item.Cts.Token).ConfigureAwait(false);
+            await sem.WaitAsync(item.Cts.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -628,7 +633,7 @@ public partial class DashboardViewModel : ObservableObject
         }
         finally
         {
-            _downloadSemaphore.Release();
+            sem.Release();
             OnPropertyChanged(nameof(ActiveDownloadCount));
             OnPropertyChanged(nameof(HasActiveDownloads));
         }
@@ -1410,49 +1415,70 @@ public partial class DashboardViewModel : ObservableObject
     }
 
     // ── Settings persistence ──────────────────────────────────────────────────
+
+    private AppSettings _appSettings = new();
+
+    [ObservableProperty]
+    private bool _autoLogin;
+
+    [ObservableProperty]
+    private int _maxConcurrentDownloads;
+
+    [ObservableProperty]
+    private string _defaultContainerExtension = "ts";
+
+    public System.Collections.ObjectModel.ObservableCollection<UserCredentials> SavedAccounts { get; } = new();
+
     private void LoadSettings()
     {
-        var defaultFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "Downloads", "IPXtream");
-
         try
         {
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IPXtream");
-            var file = Path.Combine(dir, "settings.json");
-            if (File.Exists(file))
+            _appSettings = Helpers.CredentialStore.Load();
+            DownloadFolder = _appSettings.DownloadFolder;
+            AutoLogin = _appSettings.AutoLogin;
+            MaxConcurrentDownloads = _appSettings.MaxConcurrentDownloads;
+            DefaultContainerExtension = _appSettings.DefaultContainerExtension;
+
+            SavedAccounts.Clear();
+            foreach (var account in _appSettings.SavedAccounts)
             {
-                var json = File.ReadAllText(file);
-                var dict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-                if (dict != null && dict.TryGetValue("DownloadFolder", out var path) && !string.IsNullOrWhiteSpace(path))
-                {
-                    DownloadFolder = path;
-                    return;
-                }
+                // Determine if this is the default account
+                account.IsDefault = (account.Username == _appSettings.DefaultAccountUsername && 
+                                     account.ServerUrl == _appSettings.DefaultAccountServerUrl);
+                SavedAccounts.Add(account);
             }
+
+            // Sync semaphore limit
+            _downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
         }
         catch
         {
-            // Ignore settings load errors
+            DownloadFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Downloads", "IPXtream");
+            AutoLogin = true;
+            MaxConcurrentDownloads = 2;
+            DefaultContainerExtension = "ts";
         }
-
-        DownloadFolder = defaultFolder;
     }
 
     private void SaveSettings()
     {
         try
         {
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IPXtream");
-            Directory.CreateDirectory(dir);
-            var file = Path.Combine(dir, "settings.json");
-
-            var dict = new Dictionary<string, string>
+            _appSettings.DownloadFolder = DownloadFolder;
+            _appSettings.AutoLogin = AutoLogin;
+            
+            // If MaxConcurrentDownloads changed, re-create the semaphore
+            if (_appSettings.MaxConcurrentDownloads != MaxConcurrentDownloads)
             {
-                { "DownloadFolder", DownloadFolder }
-            };
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(dict, Newtonsoft.Json.Formatting.Indented);
-            File.WriteAllText(file, json);
+                _appSettings.MaxConcurrentDownloads = MaxConcurrentDownloads;
+                _downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
+            }
+
+            _appSettings.DefaultContainerExtension = DefaultContainerExtension;
+
+            Helpers.CredentialStore.Save(_appSettings);
         }
         catch
         {
@@ -1474,5 +1500,61 @@ public partial class DashboardViewModel : ObservableObject
             DownloadFolder = dialog.FolderName;
             SaveSettings();
         }
+    }
+
+    [RelayCommand]
+    private void SetDefaultAccount(UserCredentials creds)
+    {
+        if (creds == null) return;
+
+        _appSettings.DefaultAccountUsername = creds.Username;
+        _appSettings.DefaultAccountServerUrl = creds.ServerUrl;
+        
+        Helpers.CredentialStore.Save(_appSettings);
+        
+        // Refresh IsDefault property on accounts list
+        foreach (var account in SavedAccounts)
+        {
+            account.IsDefault = (account.Username == _appSettings.DefaultAccountUsername && 
+                                 account.ServerUrl == _appSettings.DefaultAccountServerUrl);
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveAccount(UserCredentials creds)
+    {
+        if (creds == null) return;
+
+        var existing = _appSettings.SavedAccounts.FirstOrDefault(a => 
+            a.Username.Equals(creds.Username, StringComparison.OrdinalIgnoreCase) && 
+            a.ServerUrl.TrimEnd('/').Equals(creds.ServerUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
+            
+        if (existing != null)
+        {
+            _appSettings.SavedAccounts.Remove(existing);
+            SavedAccounts.Remove(creds);
+
+            if (creds.Username == _appSettings.DefaultAccountUsername && creds.ServerUrl == _appSettings.DefaultAccountServerUrl)
+            {
+                var nextDefault = _appSettings.SavedAccounts.FirstOrDefault();
+                _appSettings.DefaultAccountUsername = nextDefault?.Username;
+                _appSettings.DefaultAccountServerUrl = nextDefault?.ServerUrl;
+            }
+
+            Helpers.CredentialStore.Save(_appSettings);
+            
+            // Refresh IsDefault property on remaining accounts
+            foreach (var account in SavedAccounts)
+            {
+                account.IsDefault = (account.Username == _appSettings.DefaultAccountUsername && 
+                                     account.ServerUrl == _appSettings.DefaultAccountServerUrl);
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void ApplyGeneralSettings()
+    {
+        SaveSettings();
     }
 }

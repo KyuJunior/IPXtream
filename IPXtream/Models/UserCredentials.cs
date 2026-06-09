@@ -4,7 +4,7 @@ namespace IPXtream.Models;
 /// Stores the credentials the user enters on the Login screen.
 /// This object is also persisted locally (encrypted) when "Remember Me" is checked.
 /// </summary>
-public class UserCredentials
+public class UserCredentials : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
 {
     public string ServerUrl { get; set; } = string.Empty;
     public string Username  { get; set; } = string.Empty;
@@ -12,6 +12,15 @@ public class UserCredentials
 
     /// <summary>Indicates the user wants credentials saved between sessions.</summary>
     public bool RememberMe { get; set; }
+
+    private bool _isDefault;
+    /// <summary>Runtime only: Indicates this is the default account.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool IsDefault
+    {
+        get => _isDefault;
+        set => SetProperty(ref _isDefault, value);
+    }
 
     // ── Derived helpers ──────────────────────────────────────────────────────
 

@@ -40,6 +40,21 @@ public partial class LoginViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
+    // ── Multi-account support properties ──────────────────────────────────────
+    [ObservableProperty]
+    private System.Collections.ObjectModel.ObservableCollection<UserCredentials> _savedAccounts = new();
+
+    [ObservableProperty]
+    private UserCredentials? _selectedAccount;
+
+    [ObservableProperty]
+    private bool _hasSavedAccounts;
+
+    [ObservableProperty]
+    private bool _isAutoLoggingIn;
+
+    private AppSettings _settings = new();
+
     // ── Event: signals the View to navigate to the Dashboard ─────────────────
 
     public event Action<AuthResponse, UserCredentials>? LoginSucceeded;
@@ -52,6 +67,18 @@ public partial class LoginViewModel : ObservableObject
         TryAutoFill();
     }
 
+    // ── Selection changed behavior ────────────────────────────────────────────
+    partial void OnSelectedAccountChanged(UserCredentials? value)
+    {
+        if (value != null)
+        {
+            ServerUrl  = value.ServerUrl;
+            Username   = value.Username;
+            Password   = value.Password;
+            RememberMe = true;
+        }
+    }
+
     // ── Commands ──────────────────────────────────────────────────────────────
 
     [RelayCommand(CanExecute = nameof(CanLogin))]
@@ -62,9 +89,19 @@ public partial class LoginViewModel : ObservableObject
 
         try
         {
+            string rawUrl = ServerUrl.Trim();
+            if (rawUrl.StartsWith("HTTP://", StringComparison.OrdinalIgnoreCase))
+            {
+                rawUrl = "http://" + rawUrl.Substring(7);
+            }
+            else if (rawUrl.StartsWith("HTTPS://", StringComparison.OrdinalIgnoreCase))
+            {
+                rawUrl = "https://" + rawUrl.Substring(8);
+            }
+
             var creds = new UserCredentials
             {
-                ServerUrl  = ServerUrl.Trim(),
+                ServerUrl  = rawUrl,
                 Username   = Username.Trim(),
                 Password   = Password,
                 RememberMe = RememberMe
@@ -74,6 +111,7 @@ public partial class LoginViewModel : ObservableObject
             if (!Uri.TryCreate(creds.ServerUrl, UriKind.Absolute, out _))
             {
                 ErrorMessage = "Server URL is not valid. Example: http://domain.com:8080";
+                IsAutoLoggingIn = false;
                 return;
             }
 
@@ -82,24 +120,62 @@ public partial class LoginViewModel : ObservableObject
             if (!auth.IsAuthenticated)
             {
                 ErrorMessage = "Login failed. Check your username, password, or subscription status.";
+                IsAutoLoggingIn = false;
                 return;
             }
 
-            // Persist credentials if requested
+            // Update AppSettings SavedAccounts list
+            var existing = _settings.SavedAccounts.FirstOrDefault(a => 
+                a.Username.Equals(creds.Username, StringComparison.OrdinalIgnoreCase) && 
+                a.ServerUrl.TrimEnd('/').Equals(creds.ServerUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
+
             if (RememberMe)
-                CredentialStore.Save(creds);
+            {
+                if (existing != null)
+                {
+                    existing.Password = creds.Password;
+                }
+                else
+                {
+                    _settings.SavedAccounts.Add(creds);
+                }
+
+                // If no default account is set, set this one
+                if (string.IsNullOrEmpty(_settings.DefaultAccountUsername))
+                {
+                    _settings.DefaultAccountUsername = creds.Username;
+                    _settings.DefaultAccountServerUrl = creds.ServerUrl;
+                }
+            }
             else
-                CredentialStore.Clear();
+            {
+                if (existing != null)
+                {
+                    _settings.SavedAccounts.Remove(existing);
+                    if (creds.Username == _settings.DefaultAccountUsername && creds.ServerUrl == _settings.DefaultAccountServerUrl)
+                    {
+                        _settings.DefaultAccountUsername = null;
+                        _settings.DefaultAccountServerUrl = null;
+                    }
+                }
+            }
+
+            CredentialStore.Save(_settings);
+
+            // Clear login bypass for subsequent startups
+            App.BypassAutoLogin = false;
 
             LoginSucceeded?.Invoke(auth, creds);
         }
         catch (XtreamApiException ex)
         {
             ErrorMessage = ex.Message;
+            IsAutoLoggingIn = false;
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Unexpected error: {ex.Message}";
+            IsAutoLoggingIn = false;
         }
         finally
         {
@@ -112,16 +188,52 @@ public partial class LoginViewModel : ObservableObject
         !string.IsNullOrWhiteSpace(Username)  &&
         !string.IsNullOrWhiteSpace(Password);
 
-    // ── Auto-fill from saved credentials ─────────────────────────────────────
+    // ── Auto-fill and auto-login from saved settings ─────────────────────────
 
     private void TryAutoFill()
     {
-        var saved = CredentialStore.Load();
-        if (saved is null) return;
+        _settings = CredentialStore.Load();
+        if (_settings.SavedAccounts == null || _settings.SavedAccounts.Count == 0)
+        {
+            HasSavedAccounts = false;
+            return;
+        }
 
-        ServerUrl  = saved.ServerUrl;
-        Username   = saved.Username;
-        Password   = saved.Password;
-        RememberMe = true;          // checkbox reflects that creds were saved
+        SavedAccounts = new System.Collections.ObjectModel.ObservableCollection<UserCredentials>(_settings.SavedAccounts);
+        HasSavedAccounts = true;
+
+        // Try to find default account
+        var defaultAccount = _settings.SavedAccounts.FirstOrDefault(a => 
+            a.Username == _settings.DefaultAccountUsername && 
+            a.ServerUrl == _settings.DefaultAccountServerUrl);
+
+        // Fall back to first account if default not set or not found
+        if (defaultAccount == null)
+        {
+            defaultAccount = _settings.SavedAccounts.First();
+        }
+
+        SelectedAccount = defaultAccount;
+
+        // Auto-login logic if enabled and not bypassed
+        if (_settings.AutoLogin && defaultAccount != null && !App.BypassAutoLogin)
+        {
+            IsAutoLoggingIn = true;
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(300); // Allow UI to initialize
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    if (LoginCommand.CanExecute(null))
+                    {
+                        LoginCommand.Execute(null);
+                    }
+                    else
+                    {
+                        IsAutoLoggingIn = false;
+                    }
+                });
+            });
+        }
     }
 }

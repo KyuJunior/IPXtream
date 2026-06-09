@@ -19,6 +19,18 @@ public partial class LoginWindow : Window
         PbPassword.Password = _vm.Password;
 
         _vm.LoginSucceeded += OnLoginSucceeded;
+
+        // Sync PasswordBox when SelectedAccount changes the Password property in the VM
+        _vm.PropertyChanged += (sender, e) =>
+        {
+            if (e.PropertyName == nameof(LoginViewModel.Password))
+            {
+                if (PbPassword.Password != _vm.Password)
+                {
+                    PbPassword.Password = _vm.Password;
+                }
+            }
+        };
     }
 
     // ── PasswordBox workaround ────────────────────────────────────────────────

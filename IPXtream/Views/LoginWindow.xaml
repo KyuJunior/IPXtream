@@ -137,6 +137,124 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- ── ComboBox item style ───────────────────────────────────────── -->
+        <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="{StaticResource InputBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderThickness="0"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2E2E50"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#4F8EF7"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── ComboBox style ────────────────────────────────────────────── -->
+        <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background"      Value="{StaticResource InputBg}"/>
+            <Setter Property="Foreground"      Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderBrush"     Value="{StaticResource InputBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize"        Value="14"/>
+            <Setter Property="Height"          Value="44"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource ComboBoxItemStyle}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Background="{TemplateBinding Background}"
+                                          Grid.Column="2"
+                                          Focusable="false"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Bd"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="8">
+                                            <Grid HorizontalAlignment="Right" Width="30">
+                                                <Path x:Name="Arrow"
+                                                      Fill="{StaticResource TextMuted}"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ContentSite"
+                                              IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="12,0,30,0"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left"/>
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Grid x:Name="DropDown"
+                                      SnapsToDevicePixels="True"
+                                      MinWidth="{TemplateBinding ActualWidth}"
+                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder"
+                                            Background="{StaticResource InputBg}"
+                                            BorderBrush="{StaticResource InputBorder}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Margin="0,2,0,0">
+                                        <ScrollViewer SnapsToDevicePixels="True">
+                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasItems" Value="false">
+                                <Setter TargetName="DropDownBorder" Property="MinHeight" Value="95"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="ToggleButton" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <!-- ── Window load animation ────────────────────────────────────────────── -->
@@ -194,6 +312,15 @@
                           VerticalScrollBarVisibility="Disabled"
                           HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
+                    <TextBlock Text="SAVED ACCOUNTS" Style="{StaticResource FieldLabel}"
+                               Visibility="{Binding HasSavedAccounts, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <ComboBox x:Name="CbSavedAccounts"
+                              Style="{StaticResource ComboBoxStyle}"
+                              ItemsSource="{Binding SavedAccounts}"
+                              SelectedItem="{Binding SelectedAccount}"
+                              Visibility="{Binding HasSavedAccounts, Converter={StaticResource BoolToVisibilityConverter}}"
+                              Margin="0,0,0,12"/>
+
                     <TextBlock Text="SERVER URL" Style="{StaticResource FieldLabel}"/>
                     <TextBox x:Name="TbServer"
                              Style="{StaticResource TextBoxStyle}"
@@ -239,20 +366,51 @@
 
             <!-- ── Login button / spinner ────────────────────────────────── -->
             <Grid Grid.Row="3" Margin="0,20,0,0">
-                <Button Style="{StaticResource PrimaryBtn}"
-                        Command="{Binding LoginCommand}"
-                        Visibility="{Binding IsLoading,
-                                     Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <Button Command="{Binding LoginCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource PrimaryBtn}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsAutoLoggingIn}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
                     <TextBlock Text="SIGN IN" FontWeight="Bold" FontSize="14"/>
                 </Button>
 
                 <!-- Simple loading indicator -->
-                <Border Background="#7C5CBF" CornerRadius="10" Height="48"
-                        Visibility="{Binding IsLoading,
-                                     Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock Text="Connecting…"
-                               Foreground="White" FontSize="14" FontWeight="SemiBold"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border Background="#7C5CBF" CornerRadius="10" Height="48">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsAutoLoggingIn}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Foreground="White" FontSize="14" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Connecting…"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAutoLoggingIn}" Value="True">
+                                        <Setter Property="Text" Value="Auto-logging in…"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </Border>
             </Grid>
         </Grid>

@@ -16,29 +16,22 @@ public partial class App : Application
     /// </summary>
     public static IPXtream.Models.UserCredentials? CurrentCredentials { get; set; }
 
+    /// <summary>
+    /// Set to true when logging out to prevent immediate auto-login loop.
+    /// </summary>
+    public static bool BypassAutoLogin { get; set; }
+
     // ── Entry point ───────────────────────────────────────────────────────────
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        // Attempt auto-login if credentials were previously saved
-        var saved = CredentialStore.Load();
-
-        if (saved is { RememberMe: true })
-        {
-            // Show the login window with credentials pre-filled;
-            // the user can review and press Sign In, or edit if needed.
-            ShowLoginWindow(saved);
-        }
-        else
-        {
-            ShowLoginWindow(null);
-        }
+        ShowLoginWindow();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
 
-    private static void ShowLoginWindow(IPXtream.Models.UserCredentials? prefill)
+    private static void ShowLoginWindow()
     {
         var vm     = new LoginViewModel(ApiService);
         var window = new LoginWindow(vm);
