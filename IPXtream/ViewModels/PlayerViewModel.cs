@@ -21,8 +21,25 @@ namespace IPXtream.ViewModels;
 /// </summary>
 public partial class PlayerViewModel : ObservableObject, IDisposable
 {
-    // ── Flyleaf Player ────────────────────────────────────────────────────────
-    public Player Player { get; }
+    // ── Player Engine ─────────────────────────────────────────────────────────
+    public Player? Player { get; }
+    public string SelectedPlayerEngine { get; }
+
+    // ── Delegates for other player engines ────────────────────────────────────
+    public Action? PlayAction { get; set; }
+    public Action? PauseAction { get; set; }
+    public Action? StopAction { get; set; }
+    public Action<TimeSpan>? SeekAction { get; set; }
+    public Action<double>? SetVolumeAction { get; set; }
+    public Action<bool>? SetMuteAction { get; set; }
+    public Action<double>? SetSpeedAction { get; set; }
+    public Action<string>? OpenUrlAction { get; set; }
+    public Func<TimeSpan>? GetCurrentPositionFunc { get; set; }
+    public Func<TimeSpan>? GetDurationFunc { get; set; }
+
+    [ObservableProperty] private bool _isMuted;
+    private int _mediaElementVolume = 80;
+    private double _selectedSpeed = 1.0;
 
     // ── Observable playback state ─────────────────────────────────────────────
     [ObservableProperty] private bool   _isPlaying;
@@ -39,20 +56,32 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     // ── Volume ────────────────────────────────────────────────────────────────
     public int Volume
     {
-        get => Player.Audio.Volume;
-        set { Player.Audio.Volume = value; OnPropertyChanged(); }
+        get => Player != null ? Player.Audio.Volume : _mediaElementVolume;
+        set
+        {
+            if (Player != null)
+            {
+                Player.Audio.Volume = value;
+            }
+            else
+            {
+                _mediaElementVolume = value;
+                SetVolumeAction?.Invoke(value);
+            }
+            OnPropertyChanged();
+        }
     }
 
     // ── Track Collections (populated after stream opens) ───────────────────────
     public record SubtitleOption(string Name, SubtitlesStream? Value);
 
-    public ObservableCollection<AudioStream>     AudioStreams    => Player.Audio.Streams;
+    public ObservableCollection<AudioStream> AudioStreams => Player?.Audio?.Streams ?? new();
     public IEnumerable<SubtitleOption> DisplaySubtitleStreams
     {
         get
         {
             yield return new SubtitleOption("(None)", null);
-            if (Player.Subtitles.Streams != null)
+            if (Player?.Subtitles?.Streams != null)
                 foreach (var s in Player.Subtitles.Streams)
                     yield return new SubtitleOption($"{s.Language} ({s.Codec})", s);
         }
@@ -60,27 +89,30 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
 
     public AudioStream? SelectedAudioStream
     {
-        get => Player.Audio.Streams?.Count > 0
+        get => Player?.Audio?.Streams?.Count > 0
                 ? Player.Audio.Streams.FirstOrDefault(s => s.StreamIndex == Player.Audio.StreamIndex)
                 : null;
         set
         {
-            if (value != null)
+            if (Player != null && value != null)
                 Task.Run(() => Player.OpenAsync(value));
         }
     }
 
     public SubtitlesStream? SelectedSubtitleStream
     {
-        get => Player.Subtitles.Streams?.Count > 0
+        get => Player?.Subtitles?.Streams?.Count > 0
                 ? Player.Subtitles.Streams.FirstOrDefault(s => s.StreamIndex == Player.Subtitles.StreamIndex)
                 : null;
         set
         {
-            if (value != null)
-                Task.Run(() => Player.OpenAsync(value));
-            else
-                Task.Run(() => Player.OpenAsync((SubtitlesStream?)null));
+            if (Player != null)
+            {
+                if (value != null)
+                    Task.Run(() => Player.OpenAsync(value));
+                else
+                    Task.Run(() => Player.OpenAsync((SubtitlesStream?)null));
+            }
 
             OnPropertyChanged();
         }
@@ -105,45 +137,12 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     public PlayerViewModel(
         XtreamApiService   api,
         StreamItem         stream,
-        DashboardViewModel dashboardVm)
+        DashboardViewModel dashboardVm,
+        string             playerEngine)
     {
-        StreamTitle   = stream.Name;
-        StreamIconUrl = stream.StreamIcon;
-
-        // Create player with a config that prevents it opening its own window
-        var cfg = new Config();
-        Player = new Player(cfg);
-
-        // Subscribe to Flyleaf's own INPC (fires on its own thread — marshal to UI)
-        Player.PropertyChanged += OnPlayerPropertyChanged;
-
-        // Subscribe directly to Audio/Subtitles IsOpened — fires when Flyleaf
-        // has finished populating the Streams collection (more reliable than Status.Playing)
-        Player.Audio.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(Player.Audio.IsOpened) ||
-                e.PropertyName == nameof(Player.Audio.StreamIndex))
-            {
-                Application.Current?.Dispatcher.BeginInvoke(() =>
-                {
-                    OnPropertyChanged(nameof(AudioStreams));
-                    OnPropertyChanged(nameof(SelectedAudioStream));
-                });
-            }
-        };
-
-        Player.Subtitles.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(Player.Subtitles.IsOpened) ||
-                e.PropertyName == nameof(Player.Subtitles.StreamIndex))
-            {
-                Application.Current?.Dispatcher.BeginInvoke(() =>
-                {
-                    OnPropertyChanged(nameof(DisplaySubtitleStreams));
-                    OnPropertyChanged(nameof(SelectedSubtitleStream));
-                });
-            }
-        };
+        StreamTitle          = stream.Name;
+        StreamIconUrl        = stream.StreamIcon;
+        SelectedPlayerEngine = playerEngine;
 
         // Timer drives the seekbar; fires every 50ms on the UI thread for a smooth glide
         _positionTimer = new DispatcherTimer(DispatcherPriority.Background)
@@ -151,12 +150,116 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromMilliseconds(50)
         };
         _positionTimer.Tick += (_, _) => RefreshTimeline();
+
+        if (SelectedPlayerEngine == "Flyleaf")
+        {
+            // Create player with a config that prevents it opening its own window
+            var cfg = new Config();
+            Player = new Player(cfg);
+
+            // Subscribe to Flyleaf's own INPC (fires on its own thread — marshal to UI)
+            Player.PropertyChanged += OnPlayerPropertyChanged;
+
+            // Subscribe directly to Audio/Subtitles IsOpened — fires when Flyleaf
+            // has finished populating the Streams collection (more reliable than Status.Playing)
+            Player.Audio.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(Player.Audio.IsOpened) ||
+                    e.PropertyName == nameof(Player.Audio.StreamIndex))
+                {
+                    Application.Current?.Dispatcher.BeginInvoke(() =>
+                    {
+                        OnPropertyChanged(nameof(AudioStreams));
+                        OnPropertyChanged(nameof(SelectedAudioStream));
+                    });
+                }
+            };
+
+            Player.Subtitles.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(Player.Subtitles.IsOpened) ||
+                    e.PropertyName == nameof(Player.Subtitles.StreamIndex))
+                {
+                    Application.Current?.Dispatcher.BeginInvoke(() =>
+                    {
+                        OnPropertyChanged(nameof(DisplaySubtitleStreams));
+                        OnPropertyChanged(nameof(SelectedSubtitleStream));
+                    });
+                }
+            };
+        }
     }
 
     public void Initialise(string streamUrl)
     {
         ErrorText = string.Empty;
-        Player.OpenAsync(streamUrl);
+        if (Player != null)
+        {
+            Player.OpenAsync(streamUrl);
+        }
+        else
+        {
+            IsBuffering = true;
+            StatusText = "Connecting…";
+            OpenUrlAction?.Invoke(streamUrl);
+        }
+    }
+
+    // ── Dynamic event callbacks for non-Flyleaf player engines ────────────────
+    public void OnMediaOpened()
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsPlaying = true;
+            IsBuffering = false;
+            StatusText = string.Empty;
+            ErrorText = string.Empty;
+            _positionTimer.Start();
+            RefreshTimeline();
+        });
+    }
+
+    public void OnMediaFailed(string errorMsg)
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsPlaying = false;
+            IsBuffering = false;
+            _positionTimer.Stop();
+            ErrorText = errorMsg;
+            StatusText = string.Empty;
+            LogService.Log($"Player Playback Error: {StreamTitle} failed to load. Reason: {errorMsg}");
+        });
+    }
+
+    public void OnMediaEnded()
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsPlaying = false;
+            IsBuffering = false;
+            _positionTimer.Stop();
+            StatusText = "Ended";
+            CloseRequested?.Invoke();
+        });
+    }
+
+    public void OnBufferingStarted()
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsBuffering = true;
+            StatusText = "Buffering…";
+        });
+    }
+
+    public void OnBufferingEnded()
+    {
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+        {
+            IsBuffering = false;
+            StatusText = string.Empty;
+        });
     }
 
     // ── Flyleaf INPC handler ──────────────────────────────────────────────────
@@ -164,15 +267,19 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     {
         Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
         {
-            if (e.PropertyName == nameof(Player.Status))
-                SyncStatus();
-            else if (e.PropertyName == nameof(Player.Speed))
-                OnPropertyChanged(nameof(SelectedSpeed));
+            if (Player != null)
+            {
+                if (e.PropertyName == nameof(Player.Status))
+                    SyncStatus();
+                else if (e.PropertyName == nameof(Player.Speed))
+                    OnPropertyChanged(nameof(SelectedSpeed));
+            }
         });
     }
 
     private void SyncStatus()
     {
+        if (Player == null) return;
         var s = Player.Status;
 
         IsPlaying   = s == Status.Playing;
@@ -204,46 +311,97 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     {
         if (IsUserSeeking) return;
 
-        long cur = Player.CurTime;
-        long dur = Player.Duration;
+        if (Player != null)
+        {
+            long cur = Player.CurTime;
+            long dur = Player.Duration;
 
-        IsSeekable   = dur > 0;
-        Position     = dur > 0 ? (float)((double)cur / dur) : 0f;
-        PositionText = TimeSpan.FromTicks(cur).ToString(@"hh\:mm\:ss");
-        LengthText   = TimeSpan.FromTicks(dur).ToString(@"hh\:mm\:ss");
+            IsSeekable   = dur > 0;
+            Position     = dur > 0 ? (float)((double)cur / dur) : 0f;
+            PositionText = TimeSpan.FromTicks(cur).ToString(@"hh\:mm\:ss");
+            LengthText   = TimeSpan.FromTicks(dur).ToString(@"hh\:mm\:ss");
+        }
+        else
+        {
+            var cur = GetCurrentPositionFunc?.Invoke() ?? TimeSpan.Zero;
+            var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
+
+            IsSeekable   = dur > TimeSpan.Zero;
+            Position     = dur > TimeSpan.Zero ? (float)(cur.TotalMilliseconds / dur.TotalMilliseconds) : 0f;
+            PositionText = cur.ToString(@"hh\:mm\:ss");
+            LengthText   = dur.ToString(@"hh\:mm\:ss");
+        }
     }
 
     public void CommitSeek(float targetPosition)
     {
-        if (Player.Duration > 0)
+        if (Player != null)
         {
-            long targetTicks = (long)(Player.Duration * targetPosition);
-            Player.Seek((int)(targetTicks / TimeSpan.TicksPerMillisecond));
+            if (Player.Duration > 0)
+            {
+                long targetTicks = (long)(Player.Duration * targetPosition);
+                Player.Seek((int)(targetTicks / TimeSpan.TicksPerMillisecond));
+            }
+        }
+        else
+        {
+            var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
+            if (dur > TimeSpan.Zero)
+            {
+                var targetTime = TimeSpan.FromMilliseconds(dur.TotalMilliseconds * targetPosition);
+                SeekAction?.Invoke(targetTime);
+            }
         }
     }
 
     [RelayCommand]
     private void SkipForward()
     {
-        if (Player.Duration > 0)
+        if (Player != null)
         {
-            long currentTicks = Player.CurTime;
-            long maxTicks = Player.Duration;
-            long stepTicks = 50000000; // 5 seconds (10,000 * 5,000)
-            long targetTicks = Math.Min(currentTicks + stepTicks, maxTicks);
-            Player.Seek((int)(targetTicks / TimeSpan.TicksPerMillisecond));
+            if (Player.Duration > 0)
+            {
+                long currentTicks = Player.CurTime;
+                long maxTicks = Player.Duration;
+                long stepTicks = 50000000; // 5 seconds (10,000 * 5,000)
+                long targetTicks = Math.Min(currentTicks + stepTicks, maxTicks);
+                Player.Seek((int)(targetTicks / TimeSpan.TicksPerMillisecond));
+            }
+        }
+        else
+        {
+            var cur = GetCurrentPositionFunc?.Invoke() ?? TimeSpan.Zero;
+            var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
+            if (dur > TimeSpan.Zero)
+            {
+                var targetTime = TimeSpan.FromMilliseconds(Math.Min(cur.TotalMilliseconds + 5000, dur.TotalMilliseconds));
+                SeekAction?.Invoke(targetTime);
+            }
         }
     }
 
     [RelayCommand]
     private void SkipBackward()
     {
-        if (Player.Duration > 0)
+        if (Player != null)
         {
-            long currentTicks = Player.CurTime;
-            long stepTicks = 50000000; // 5 seconds
-            long targetTicks = Math.Max(currentTicks - stepTicks, 0);
-            Player.Seek((int)(targetTicks / TimeSpan.TicksPerMillisecond));
+            if (Player.Duration > 0)
+            {
+                long currentTicks = Player.CurTime;
+                long stepTicks = 50000000; // 5 seconds
+                long targetTicks = Math.Max(currentTicks - stepTicks, 0);
+                Player.Seek((int)(targetTicks / TimeSpan.TicksPerMillisecond));
+            }
+        }
+        else
+        {
+            var cur = GetCurrentPositionFunc?.Invoke() ?? TimeSpan.Zero;
+            var dur = GetDurationFunc?.Invoke() ?? TimeSpan.Zero;
+            if (dur > TimeSpan.Zero)
+            {
+                var targetTime = TimeSpan.FromMilliseconds(Math.Max(cur.TotalMilliseconds - 5000, 0));
+                SeekAction?.Invoke(targetTime);
+            }
         }
     }
 
@@ -252,10 +410,18 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
 
     public double SelectedSpeed
     {
-        get => Player.Speed;
+        get => Player != null ? Player.Speed : _selectedSpeed;
         set
         {
-            Player.Speed = value;
+            if (Player != null)
+            {
+                Player.Speed = value;
+            }
+            else
+            {
+                _selectedSpeed = value;
+                SetSpeedAction?.Invoke(value);
+            }
             OnPropertyChanged();
         }
     }
@@ -264,16 +430,43 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void TogglePlay()
     {
-        if (Player.IsPlaying)
-            Player.Pause();
+        if (Player != null)
+        {
+            if (Player.IsPlaying)
+                Player.Pause();
+            else
+                Player.Play();
+        }
         else
-            Player.Play();
+        {
+            if (IsPlaying)
+            {
+                PauseAction?.Invoke();
+                IsPlaying = false;
+                StatusText = "Paused";
+            }
+            else
+            {
+                PlayAction?.Invoke();
+                IsPlaying = true;
+                StatusText = string.Empty;
+                _positionTimer.Start();
+            }
+        }
     }
 
     [RelayCommand]
     private void Stop()
     {
-        Player.Stop();
+        if (Player != null)
+        {
+            Player.Stop();
+        }
+        else
+        {
+            StopAction?.Invoke();
+            IsPlaying = false;
+        }
         CloseRequested?.Invoke();
     }
 
@@ -281,12 +474,32 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     private void ToggleFullscreen() => IsFullscreen = !IsFullscreen;
 
     [RelayCommand]
-    private void ToggleMute() => Player.Audio.Mute = !Player.Audio.Mute;
+    private void ToggleMute()
+    {
+        if (Player != null)
+        {
+            Player.Audio.Mute = !Player.Audio.Mute;
+            OnPropertyChanged(nameof(Volume));
+        }
+        else
+        {
+            IsMuted = !IsMuted;
+            SetMuteAction?.Invoke(IsMuted);
+        }
+    }
 
     [RelayCommand]
     private void Close()
     {
-        Player.Stop();
+        if (Player != null)
+        {
+            Player.Stop();
+        }
+        else
+        {
+            StopAction?.Invoke();
+            IsPlaying = false;
+        }
         CloseRequested?.Invoke();
     }
 
@@ -294,12 +507,19 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _positionTimer.Stop();
-        Player.PropertyChanged -= OnPlayerPropertyChanged;
-
-        System.Threading.Tasks.Task.Run(() =>
+        if (Player != null)
         {
-            Player.Stop();
-            Player.Dispose();
-        });
+            Player.PropertyChanged -= OnPlayerPropertyChanged;
+
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                Player.Stop();
+                Player.Dispose();
+            });
+        }
+        else
+        {
+            StopAction?.Invoke();
+        }
     }
 }

@@ -52,6 +52,8 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private string _updateDownloadStatus = string.Empty;
     private string _updateDownloadUrl = string.Empty;
 
+    [ObservableProperty] private bool _isAdminMode;
+
     // ── Sidebar selection ─────────────────────────────────────────────────────
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
@@ -264,6 +266,12 @@ public partial class DashboardViewModel : ObservableObject
         _api            = api;
         DisplayUsername = creds.Username;
         ServerDisplay   = new Uri(creds.BaseUrl).Host;
+
+#if DEBUG
+        _isAdminMode = true;
+#else
+        _isAdminMode = false;
+#endif
 
         LoadSettings();
 
@@ -1012,11 +1020,99 @@ public partial class DashboardViewModel : ObservableObject
         catch { }
     }
 
-#if DEBUG
-    public bool IsAdminMode => true;
-#else
-    public bool IsAdminMode => false;
-#endif
+    public event Action<TaskCompletionSource<string?>>? RequestGithubToken;
+
+    public void ToggleAdminMode()
+    {
+        IsAdminMode = !IsAdminMode;
+    }
+
+    [RelayCommand]
+    private async Task PushWhatsNewAsync()
+    {
+        try
+        {
+            var settings = Helpers.CredentialStore.Load();
+            string? token = settings.GithubToken;
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                var tcs = new TaskCompletionSource<string?>();
+                RequestGithubToken?.Invoke(tcs);
+                token = await tcs.Task;
+
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    StatusMessage = "Push cancelled. GitHub token is required.";
+                    return;
+                }
+
+                settings.GithubToken = token;
+                Helpers.CredentialStore.Save(settings);
+            }
+
+            StatusMessage = "Syncing with GitHub...";
+
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(_featuredItems, Newtonsoft.Json.Formatting.Indented);
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            string base64Content = Convert.ToBase64String(bytes);
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("IPXtream/1.0");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github.v3+json");
+
+            string apiUrl = "https://api.github.com/repos/KyuJunior/IPXtream/contents/whats_new.json";
+            
+            StatusMessage = "Fetching existing What's New SHA...";
+            var response = await client.GetAsync(apiUrl);
+            
+            string? sha = null;
+            if (response.IsSuccessStatusCode)
+            {
+                string resBody = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(resBody);
+                if (doc.RootElement.TryGetProperty("sha", out var shaProp))
+                {
+                    sha = shaProp.GetString();
+                }
+            }
+
+            StatusMessage = "Pushing updates to GitHub...";
+            var commitBody = new
+            {
+                message = "Update What's New from in-app admin panel",
+                content = base64Content,
+                sha = sha
+            };
+
+            string commitJson = Newtonsoft.Json.JsonConvert.SerializeObject(commitBody);
+            using var content = new StringContent(commitJson, System.Text.Encoding.UTF8, "application/json");
+            
+            var putResponse = await client.PutAsync(apiUrl, content);
+            if (putResponse.IsSuccessStatusCode)
+            {
+                StatusMessage = "Push successful! What's New updated for all users.";
+                MessageBox.Show("Successfully pushed What's New updates to GitHub! Changes will be live for all users in a few minutes.", "Push Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                string err = await putResponse.Content.ReadAsStringAsync();
+                StatusMessage = $"Push failed: {putResponse.StatusCode}";
+                if (putResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    settings.GithubToken = null;
+                    Helpers.CredentialStore.Save(settings);
+                }
+                MessageBox.Show($"Failed to push changes to GitHub.\n\nStatus: {putResponse.StatusCode}\nDetails: {err}", "Push Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Error pushing to GitHub.";
+            MessageBox.Show($"An error occurred during push:\n\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
     private string GetWhatsNewFilePath()
     {
@@ -1427,6 +1523,9 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string _defaultContainerExtension = "ts";
 
+    [ObservableProperty]
+    private string _selectedPlayerEngine = "Flyleaf";
+
     public System.Collections.ObjectModel.ObservableCollection<UserCredentials> SavedAccounts { get; } = new();
 
     private void LoadSettings()
@@ -1438,6 +1537,7 @@ public partial class DashboardViewModel : ObservableObject
             AutoLogin = _appSettings.AutoLogin;
             MaxConcurrentDownloads = _appSettings.MaxConcurrentDownloads;
             DefaultContainerExtension = _appSettings.DefaultContainerExtension;
+            SelectedPlayerEngine = _appSettings.SelectedPlayerEngine ?? "Flyleaf";
 
             SavedAccounts.Clear();
             foreach (var account in _appSettings.SavedAccounts)
@@ -1459,6 +1559,7 @@ public partial class DashboardViewModel : ObservableObject
             AutoLogin = true;
             MaxConcurrentDownloads = 2;
             DefaultContainerExtension = "ts";
+            SelectedPlayerEngine = "Flyleaf";
         }
     }
 
@@ -1477,6 +1578,7 @@ public partial class DashboardViewModel : ObservableObject
             }
 
             _appSettings.DefaultContainerExtension = DefaultContainerExtension;
+            _appSettings.SelectedPlayerEngine = SelectedPlayerEngine;
 
             Helpers.CredentialStore.Save(_appSettings);
         }

@@ -4,6 +4,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:fl="clr-namespace:FlyleafLib.Controls.WPF;assembly=FlyleafLib"
+        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="IPXtream"
@@ -756,7 +758,8 @@
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding AppVersion}"
                                            Foreground="{StaticResource TextMuted}"
-                                           FontSize="10" VerticalAlignment="Center"/>
+                                           FontSize="10" VerticalAlignment="Center"
+                                           Cursor="Hand" MouseDown="Version_MouseDown"/>
 
                                 <!-- Check for Updates button -->
                                 <Button Grid.Column="1"
@@ -1342,6 +1345,38 @@
                         </Style>
                     </ScrollViewer.Style>
                     <StackPanel>
+                        <!-- Admin Control Panel for What's New -->
+                        <Border Background="#1C1C28" CornerRadius="8" Padding="16,12" Margin="10,0,10,20"
+                                Visibility="{Binding IsAdminMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="🛠️ WHAT'S NEW EDITOR (ADMIN MODE)" Foreground="{StaticResource AccentBlue}" FontSize="11" FontWeight="Black" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Add or remove items using Star (Whats New) and Heart (Dev Recommendation) buttons on any stream card." Foreground="{StaticResource TextMuted}" FontSize="12" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding PushWhatsNewCommand}"
+                                        Background="#4F8EF7" Foreground="White" FontWeight="Bold" FontSize="12"
+                                        Padding="16,8" Cursor="Hand" VerticalAlignment="Center">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="BtnBd" CornerRadius="6" Background="{TemplateBinding Background}">
+                                                <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="BtnBd" Property="Background" Value="#668EF7"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                    Push to All Users
+                                </Button>
+                            </Grid>
+                        </Border>
+
                         <!-- 1. Dev Recommendations Section -->
                         <StackPanel Margin="0,0,0,24">
                             <StackPanel.Style>
@@ -2333,6 +2368,30 @@
                                             </ComboBox.Items>
                                         </ComboBox>
                                     </Grid>
+
+                                    <Border Height="1" Background="{StaticResource DividerColor}" Margin="0,20,0,20"/>
+
+                                    <!-- Media Player Engine Preference -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="150"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                            <TextBlock Text="Media Player Engine" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Choose which playback engine/method to use for streaming content."
+                                                       Foreground="{StaticResource TextMuted}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="1" VerticalAlignment="Center" Height="36" Style="{StaticResource SettingsComboBoxStyle}" SelectedItem="{Binding SelectedPlayerEngine}">
+                                            <ComboBox.Items>
+                                                <sys:String>Flyleaf</sys:String>
+                                                <sys:String>VLC</sys:String>
+                                                <sys:String>MediaElement</sys:String>
+                                                <sys:String>WebView2</sys:String>
+                                                <sys:String>MPV</sys:String>
+                                            </ComboBox.Items>
+                                        </ComboBox>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
 
@@ -2387,7 +2446,28 @@
             <fl:FlyleafHost x:Name="VideoView"
                             Background="Black"
                             HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch" />
+                            VerticalAlignment="Stretch"
+                            Visibility="Collapsed" />
+
+            <!-- VLC VideoView -->
+            <vlc:VideoView x:Name="VlcVideoView"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch"
+                           Visibility="Collapsed" />
+
+            <!-- Native MediaElement -->
+            <MediaElement x:Name="PlayerMediaElement"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          LoadedBehavior="Manual"
+                          UnloadedBehavior="Stop"
+                          Visibility="Collapsed" />
+
+            <!-- WebView2 Web Player -->
+            <wv2:WebView2 x:Name="PlayerWebView"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          Visibility="Collapsed" />
 
             <!-- Airspace-safe Popup Overlay for HwndHost -->
             <Popup x:Name="PlayerOverlayPopup"

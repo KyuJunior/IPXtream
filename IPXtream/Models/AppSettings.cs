@@ -16,4 +16,6 @@ public class AppSettings
     public int MaxConcurrentDownloads { get; set; } = 2;
     public string DefaultContainerExtension { get; set; } = "ts";
     public string DownloadFolder { get; set; } = string.Empty;
+    public string? GithubToken { get; set; }
+    public string SelectedPlayerEngine { get; set; } = "Flyleaf";
 }
