@@ -29,6 +29,9 @@ public partial class DashboardWindow : Window
         _vm = viewModel;
         DataContext = _vm;
 
+        // Apply saved theme immediately
+        Helpers.ThemeHelper.ApplyTheme(_vm.SelectedTheme);
+
         // Initialize LibVLC Core safely
         try
         {

@@ -1526,6 +1526,14 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedPlayerEngine = "Flyleaf";
 
+    [ObservableProperty]
+    private string _selectedTheme = "Dark Purple";
+
+    partial void OnSelectedThemeChanged(string value)
+    {
+        Helpers.ThemeHelper.ApplyTheme(value);
+    }
+
     public System.Collections.ObjectModel.ObservableCollection<UserCredentials> SavedAccounts { get; } = new();
 
     private void LoadSettings()
@@ -1538,6 +1546,7 @@ public partial class DashboardViewModel : ObservableObject
             MaxConcurrentDownloads = _appSettings.MaxConcurrentDownloads;
             DefaultContainerExtension = _appSettings.DefaultContainerExtension;
             SelectedPlayerEngine = _appSettings.SelectedPlayerEngine ?? "Flyleaf";
+            SelectedTheme = _appSettings.SelectedTheme ?? "Dark Purple";
 
             SavedAccounts.Clear();
             foreach (var account in _appSettings.SavedAccounts)
@@ -1560,6 +1569,7 @@ public partial class DashboardViewModel : ObservableObject
             MaxConcurrentDownloads = 2;
             DefaultContainerExtension = "ts";
             SelectedPlayerEngine = "Flyleaf";
+            SelectedTheme = "Dark Purple";
         }
     }
 
@@ -1579,6 +1589,7 @@ public partial class DashboardViewModel : ObservableObject
 
             _appSettings.DefaultContainerExtension = DefaultContainerExtension;
             _appSettings.SelectedPlayerEngine = SelectedPlayerEngine;
+            _appSettings.SelectedTheme = SelectedTheme;
 
             Helpers.CredentialStore.Save(_appSettings);
         }
