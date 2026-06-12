@@ -237,7 +237,7 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private string _errorMessage  = string.Empty;
 
     // ── Event: Open player ────────────────────────────────────────────────────
-    public event Action<StreamItem>? PlayRequested;
+    public event Action<StreamItem, List<StreamItem>>? PlayRequested;
 
     // ── Embedded player VM (null when no stream is playing) ───────────────────
     [ObservableProperty]
@@ -1267,7 +1267,13 @@ public partial class DashboardViewModel : ObservableObject
         }
 
         // Otherwise (LiveTV, VOD, or an Episode of a Series), play it.
-        PlayRequested?.Invoke(stream);
+        var siblings = (stream.StreamType == "series") ? _allStreams.ToList() : new List<StreamItem>();
+        PlayRequested?.Invoke(stream, siblings);
+    }
+
+    public void TriggerPlayRequest(StreamItem stream, List<StreamItem> siblings)
+    {
+        PlayRequested?.Invoke(stream, siblings);
     }
 
     [RelayCommand]

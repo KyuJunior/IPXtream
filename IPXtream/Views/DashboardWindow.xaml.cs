@@ -109,7 +109,7 @@ public partial class DashboardWindow : Window
     }
 
     // ── Play: show embedded player ────────────────────────────────────────────
-    private async void OnPlayRequested(Models.StreamItem stream)
+    private async void OnPlayRequested(Models.StreamItem stream, System.Collections.Generic.List<Models.StreamItem> siblings)
     {
         // Clean up any previous session
         if (_vm.PlayerVm is not null)
@@ -120,7 +120,7 @@ public partial class DashboardWindow : Window
         string engine = _vm.SelectedPlayerEngine;
 
         // Build new PlayerViewModel and attach to the dashboard VM
-        var playerVm = new PlayerViewModel(App.ApiService, stream, _vm, engine);
+        var playerVm = new PlayerViewModel(App.ApiService, stream, siblings, _vm, engine);
         _vm.PlayerVm = playerVm;
 
         // Build stream URL
@@ -548,6 +548,10 @@ public partial class DashboardWindow : Window
                 break;
             case Key.Down:
                 _vm.PlayerVm.Volume = Math.Max(0,   _vm.PlayerVm.Volume - 5);
+                break;
+            case Key.N:
+                if (_vm.PlayerVm.PlayNextEpisodeCommand.CanExecute(null))
+                    _vm.PlayerVm.PlayNextEpisodeCommand.Execute(null);
                 break;
         }
 

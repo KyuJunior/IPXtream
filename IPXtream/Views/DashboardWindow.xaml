@@ -2667,6 +2667,12 @@
                                         <TextBlock Text="&#x23E9;" FontSize="12"/>
                                     </Button>
                                     <Button Style="{StaticResource CtrlBtn}"
+                                            Command="{Binding PlayerVm.PlayNextEpisodeCommand}"
+                                            Visibility="{Binding PlayerVm.HasNextEpisode, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Margin="0,0,8,0" ToolTip="Next Episode (N)">
+                                        <TextBlock Text="&#x23ED;" FontSize="12"/>
+                                    </Button>
+                                    <Button Style="{StaticResource CtrlBtn}"
                                             Command="{Binding PlayerVm.StopCommand}"
                                             Margin="0,0,14,0" ToolTip="Stop">
                                         <TextBlock Text="&#x23F9;" FontSize="16"/>

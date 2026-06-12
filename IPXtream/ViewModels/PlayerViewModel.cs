@@ -21,6 +21,23 @@ namespace IPXtream.ViewModels;
 /// </summary>
 public partial class PlayerViewModel : ObservableObject, IDisposable
 {
+    // ── Stream / Playlist Metadata ────────────────────────────────────────────
+    public StreamItem CurrentStream { get; }
+    public System.Collections.Generic.List<StreamItem> SiblingStreams { get; }
+    private readonly DashboardViewModel _dashboardVm;
+
+    public bool HasNextEpisode
+    {
+        get
+        {
+            if (CurrentStream == null || CurrentStream.StreamType != "series" || SiblingStreams == null || SiblingStreams.Count <= 1)
+                return false;
+
+            var index = SiblingStreams.FindIndex(s => s.StreamId == CurrentStream.StreamId);
+            return index != -1 && index < SiblingStreams.Count - 1;
+        }
+    }
+
     // ── Player Engine ─────────────────────────────────────────────────────────
     public Player? Player { get; }
     public string SelectedPlayerEngine { get; }
@@ -135,11 +152,15 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _positionTimer;
 
     public PlayerViewModel(
-        XtreamApiService   api,
-        StreamItem         stream,
-        DashboardViewModel dashboardVm,
-        string             playerEngine)
+        XtreamApiService                             api,
+        StreamItem                                   stream,
+        System.Collections.Generic.List<StreamItem> siblings,
+        DashboardViewModel                           dashboardVm,
+        string                                       playerEngine)
     {
+        CurrentStream        = stream;
+        SiblingStreams       = siblings ?? new System.Collections.Generic.List<StreamItem>();
+        _dashboardVm         = dashboardVm;
         StreamTitle          = stream.Name;
         StreamIconUrl        = stream.StreamIcon;
         SelectedPlayerEngine = playerEngine;
@@ -485,6 +506,19 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         {
             IsMuted = !IsMuted;
             SetMuteAction?.Invoke(IsMuted);
+        }
+    }
+
+    [RelayCommand]
+    private void PlayNextEpisode()
+    {
+        if (!HasNextEpisode) return;
+
+        var index = SiblingStreams.FindIndex(s => s.StreamId == CurrentStream.StreamId);
+        if (index != -1 && index < SiblingStreams.Count - 1)
+        {
+            var nextEpisode = SiblingStreams[index + 1];
+            _dashboardVm.TriggerPlayRequest(nextEpisode, SiblingStreams);
         }
     }
 
