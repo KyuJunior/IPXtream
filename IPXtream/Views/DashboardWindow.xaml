@@ -236,9 +236,9 @@
                     </Image>
                     
                     <!-- Fallback empty state icon -->
-                    <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource TextMuted}" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
+                    <Path Data="{StaticResource IconTv}" Stroke="{DynamicResource TextMuted}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="40" Height="40" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Path.Style>
+                            <Style TargetType="Path">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding StreamIcon}" Value="">
@@ -249,8 +249,8 @@
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                        </Path.Style>
+                    </Path>
 
                     <!-- Dark Gradient for Text -->
                     <Border VerticalAlignment="Bottom" Height="80">
@@ -283,7 +283,7 @@
                                                     <GradientStop Color="#7C5CBF" Offset="1"/>
                                                 </LinearGradientBrush>
                                             </Border.Background>
-                                            <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                                            <Path Data="{StaticResource IconPlay}" Style="{StaticResource VectorIconFilled}" Width="16" Height="16" Margin="2,0,0,0"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
@@ -303,7 +303,7 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="DlBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Path Data="{StaticResource IconDownloads}" Style="{StaticResource VectorIcon}" Width="16" Height="16"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
@@ -323,7 +323,7 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="InfoBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Path Data="{StaticResource IconInfo}" Style="{StaticResource VectorIcon}" Width="16" Height="16"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
@@ -343,15 +343,15 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="StarBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                            <TextBlock x:Name="StarTxt" Text="&#xE724;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Path x:Name="StarPath" Data="{StaticResource IconStar}" Style="{StaticResource VectorIcon}" Width="16" Height="16"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter TargetName="StarBd" Property="Background" Value="#66FFFFFF"/>
                                             </Trigger>
                                             <DataTrigger Binding="{Binding IsFeatured}" Value="True">
-                                                <Setter TargetName="StarTxt" Property="Text" Value="&#xE735;"/>
-                                                <Setter TargetName="StarTxt" Property="Foreground" Value="#FFD700"/>
+                                                <Setter TargetName="StarPath" Property="Fill" Value="#FFD700"/>
+                                                <Setter TargetName="StarPath" Property="Stroke" Value="#FFD700"/>
                                             </DataTrigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -367,15 +367,15 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="HeartBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                            <TextBlock x:Name="HeartTxt" Text="&#xE00B;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Path x:Name="HeartPath" Data="{StaticResource IconHeart}" Style="{StaticResource VectorIcon}" Width="16" Height="16"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter TargetName="HeartBd" Property="Background" Value="#66FFFFFF"/>
                                             </Trigger>
                                             <DataTrigger Binding="{Binding IsDevRecommendation}" Value="True">
-                                                <Setter TargetName="HeartTxt" Property="Text" Value="&#xE0A5;"/>
-                                                <Setter TargetName="HeartTxt" Property="Foreground" Value="#FF4A5A"/>
+                                                <Setter TargetName="HeartPath" Property="Fill" Value="#FF4A5A"/>
+                                                <Setter TargetName="HeartPath" Property="Stroke" Value="#FF4A5A"/>
                                             </DataTrigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -636,8 +636,7 @@
                                     <GradientStop Color="#7C5CBF" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
-                            <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="White"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Path Data="{StaticResource IconLogo}" Fill="White" Stretch="Uniform" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="IPXtream" FontSize="18" FontWeight="Bold"
                                    Foreground="{DynamicResource TextPrimary}"
@@ -651,7 +650,7 @@
                                         Converter={StaticResource SectionToStyleConverter},
                                         ConverterParameter=LiveTV}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE7B4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconTv}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Live TV" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -661,7 +660,7 @@
                                         Converter={StaticResource SectionToStyleConverter},
                                         ConverterParameter=VOD}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconMovies}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Movies" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -671,7 +670,7 @@
                                         Converter={StaticResource SectionToStyleConverter},
                                         ConverterParameter=Series}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8F2;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconSeries}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Series" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -681,7 +680,7 @@
                                         Converter={StaticResource SectionToStyleConverter},
                                         ConverterParameter=WhatsNew}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE117;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconNew}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="What's new?" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -692,7 +691,7 @@
                         <Button Style="{StaticResource NavBtn}" Command="{Binding CacheAllBackgroundCommand}"
                                 Visibility="{Binding IsCachingAll, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE753;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconCloud}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Cache Entire Library" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -700,7 +699,7 @@
                                 Visibility="{Binding IsCachingAll, Converter={StaticResource BoolToVisibilityConverter}}"
                                 Foreground="#FF5370">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE10A;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconCancel}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Cancel Caching" VerticalAlignment="Center"
                                            Foreground="#FF5370"/>
                             </StackPanel>
@@ -714,7 +713,7 @@
                                 Margin="0,4,0,0">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                    <Path Data="{StaticResource IconDownloads}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                     <TextBlock Text="Downloads" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <!-- Active download count badge -->
@@ -736,21 +735,21 @@
                                 Command="{Binding SelectSectionCommand}" CommandParameter="settings"
                                 Margin="0,4,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconSettings}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Settings" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Style="{StaticResource NavBtn}" Command="{Binding RefreshCommand}" Margin="0,4,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconRefresh}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Refresh Current View" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Style="{StaticResource NavBtn}" Command="{Binding LogoutCommand}" Margin="0,4,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
+                                <Path Data="{StaticResource IconLogout}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Logout" VerticalAlignment="Center"
                                            Foreground="{StaticResource ErrorRed}"/>
                             </StackPanel>
@@ -1207,12 +1206,12 @@
                                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Background="#FFD700" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE735; " FontFamily="Segoe MDL2 Assets" Foreground="#0F0F1A" FontSize="9" FontWeight="Black" VerticalAlignment="Center"/>
+                                            <Path Data="{StaticResource IconStar}" Fill="#0F0F1A" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                             <TextBlock Text="WHAT'S NEW" Foreground="#0F0F1A" FontSize="10" FontWeight="Black" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
                                     <TextBlock Text="{Binding FeaturedCarouselItem.ReleaseDate}" Foreground="{DynamicResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                    <TextBlock Text="&#xE735;" FontFamily="Segoe MDL2 Assets" Foreground="#FFD700" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <Path Data="{StaticResource IconStar}" Fill="#FFD700" Width="10" Height="10" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="{Binding FeaturedCarouselItem.Rating}" Foreground="White" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
 
@@ -1230,7 +1229,7 @@
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="PlayBd" CornerRadius="6" Background="{TemplateBinding Background}">
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
-                                                        <TextBlock Text="&#xE768;  " FontFamily="Segoe MDL2 Assets" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <Path Data="{StaticResource IconPlay}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
                                                         <TextBlock Text="Play" FontWeight="Bold" VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
@@ -1251,7 +1250,7 @@
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="DlBd" CornerRadius="6" Background="{TemplateBinding Background}">
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
-                                                        <TextBlock Text="&#xE896;  " FontFamily="Segoe MDL2 Assets" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <Path Data="{StaticResource IconDownload}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
                                                         <TextBlock Text="Download" FontWeight="Bold" VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
@@ -1382,7 +1381,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                        <TextBlock Text="&#xE713; " FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBlue}" FontSize="11" FontWeight="Black" VerticalAlignment="Center"/>
+                                        <Path Data="{StaticResource IconSettings}" Stroke="{DynamicResource AccentBlue}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Text="WHAT'S NEW EDITOR (ADMIN MODE)" Foreground="{DynamicResource AccentBlue}" FontSize="11" FontWeight="Black" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <TextBlock Text="Add or remove items using Star (Whats New) and Heart (Dev Recommendation) buttons on any stream card." Foreground="{DynamicResource TextMuted}" FontSize="12" TextWrapping="Wrap"/>
@@ -1420,7 +1419,7 @@
                                 </Style>
                             </StackPanel.Style>
                             <StackPanel Orientation="Horizontal" Margin="10,0,10,10">
-                                <TextBlock Text="&#xE00B;" FontFamily="Segoe MDL2 Assets" Foreground="#FF4A5A" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <Path Data="{StaticResource IconHeart}" Stroke="#FF4A5A" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock Text="Dev Recommendations" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                             <ListBox ItemsSource="{Binding DevRecommendations}" SelectedItem="{Binding SelectedStream}"
@@ -1455,7 +1454,7 @@
                                 </Style>
                             </StackPanel.Style>
                             <StackPanel Orientation="Horizontal" Margin="10,0,10,10">
-                                <TextBlock Text="&#xE7B4;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBlue}" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <Path Data="{StaticResource IconTv}" Stroke="{DynamicResource AccentBlue}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock Text="Live TV" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                             <ListBox ItemsSource="{Binding FeaturedLive}" SelectedItem="{Binding SelectedStream}"
@@ -1490,7 +1489,7 @@
                                 </Style>
                             </StackPanel.Style>
                             <StackPanel Orientation="Horizontal" Margin="10,0,10,10">
-                                <TextBlock Text="&#xE8F2;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBlue}" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <Path Data="{StaticResource IconSeries}" Stroke="{DynamicResource AccentBlue}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock Text="TV Shows" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                             <ListBox ItemsSource="{Binding FeaturedShows}" SelectedItem="{Binding SelectedStream}"
@@ -1525,7 +1524,7 @@
                                 </Style>
                             </StackPanel.Style>
                             <StackPanel Orientation="Horizontal" Margin="10,0,10,10">
-                                <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBlue}" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <Path Data="{StaticResource IconMovies}" Stroke="{DynamicResource AccentBlue}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock Text="Movies" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                             <ListBox ItemsSource="{Binding FeaturedMovies}" SelectedItem="{Binding SelectedStream}"
@@ -1571,7 +1570,7 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <TextBlock Text="👈" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                    <Path Data="{StaticResource IconPointer}" Fill="{DynamicResource TextMuted}" Width="48" Height="48" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,12"/>
                     <TextBlock Text="Select a category to browse"
                                Foreground="{DynamicResource TextMuted}"
                                FontSize="16" HorizontalAlignment="Center"/>
@@ -1604,15 +1603,15 @@
                                        VerticalAlignment="Center" Margin="0,0,16,0"/>
                             
                             <!-- Previous button -->
-                            <Button Content="◀" Command="{Binding GoToPreviousPageCommand}"
+                            <Button Command="{Binding GoToPreviousPageCommand}"
                                     IsEnabled="{Binding HasPreviousPage}"
-                                    Width="24" Height="20" Padding="0" FontSize="10" FontWeight="Bold"
+                                    Width="24" Height="20" Padding="0"
                                     Foreground="White" Background="#2C2C3E" BorderThickness="0" Cursor="Hand"
                                     Margin="0,0,6,0">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="Bd" CornerRadius="4" Background="{TemplateBinding Background}">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Path Data="{StaticResource IconPrev}" Fill="White" Width="10" Height="10" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsEnabled" Value="False">
@@ -1627,14 +1626,14 @@
                             </Button>
                             
                             <!-- Next button -->
-                            <Button Content="▶" Command="{Binding GoToNextPageCommand}"
+                            <Button Command="{Binding GoToNextPageCommand}"
                                     IsEnabled="{Binding HasNextPage}"
-                                    Width="24" Height="20" Padding="0" FontSize="10" FontWeight="Bold"
+                                    Width="24" Height="20" Padding="0"
                                     Foreground="White" Background="#2C2C3E" BorderThickness="0" Cursor="Hand">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="Bd" CornerRadius="4" Background="{TemplateBinding Background}">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Path Data="{StaticResource IconNext}" Fill="White" Width="10" Height="10" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsEnabled" Value="False">
@@ -1679,13 +1678,13 @@
                                             Background="Transparent" BorderThickness="0"
                                             Foreground="{DynamicResource AccentBlue}" FontSize="13"
                                             Cursor="Hand" Padding="6,3" ToolTip="Open Downloads folder">
-                                        <TextBlock Text="📂"/>
+                                        <Path Data="{StaticResource IconFolder}" Fill="{DynamicResource AccentBlue}" Width="14" Height="14" Stretch="Uniform"/>
                                     </Button>
                                     <Button Command="{Binding ToggleDownloadsTrayCommand}"
                                             Background="Transparent" BorderThickness="0"
                                             Foreground="{DynamicResource TextMuted}" FontSize="14"
                                             Cursor="Hand" Padding="6,3" ToolTip="Close">
-                                        <TextBlock Text="✕"/>
+                                        <Path Data="{StaticResource IconClose}" Fill="{DynamicResource TextMuted}" Width="12" Height="12" Stretch="Uniform"/>
                                     </Button>
                                 </StackPanel>
                             </Grid>
@@ -1724,7 +1723,7 @@
                                                             Background="Transparent" BorderThickness="0" Foreground="#A0A0A0" Cursor="Hand"
                                                             Padding="4,0" ToolTip="Pause"
                                                             Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                        <TextBlock Text="॥" FontSize="11" FontWeight="Bold"/>
+                                                        <Path Data="{StaticResource IconPause}" Fill="#A0A0A0" Width="10" Height="10" Stretch="Uniform"/>
                                                     </Button>
                                                     
                                                     <!-- Resume -->
@@ -1733,7 +1732,7 @@
                                                             Background="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentBlue}" Cursor="Hand"
                                                             Padding="4,0" ToolTip="Resume"
                                                             Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                        <TextBlock Text="▶" FontSize="11"/>
+                                                        <Path Data="{StaticResource IconPlay}" Fill="{DynamicResource AccentBlue}" Width="10" Height="10" Stretch="Uniform"/>
                                                     </Button>
                                                     
                                                     <!-- Cancel -->
@@ -1742,7 +1741,7 @@
                                                             Background="Transparent" BorderThickness="0"
                                                             Foreground="#FF5370" Cursor="Hand"
                                                             Padding="6,0" ToolTip="Cancel / Remove">
-                                                        <TextBlock Text="✕" FontSize="12"/>
+                                                        <Path Data="{StaticResource IconClose}" Fill="#FF5370" Width="10" Height="10" Stretch="Uniform"/>
                                                     </Button>
                                                 </StackPanel>
 
@@ -1826,7 +1825,7 @@
                                     <ControlTemplate TargetType="Button">
                                         <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="📂" FontSize="12" Margin="0,0,6,0"/>
+                                                <Path Data="{StaticResource IconFolder}" Fill="White" Width="12" Height="12" Margin="0,0,6,0"/>
                                                 <TextBlock Text="Change Folder" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
                                             </StackPanel>
                                         </Border>
@@ -1841,7 +1840,7 @@
                                     <ControlTemplate TargetType="Button">
                                         <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="👁" FontSize="12" Margin="0,0,6,0"/>
+                                                <Path Data="{StaticResource IconEye}" Fill="White" Width="12" Height="12" Margin="0,0,6,0"/>
                                                 <TextBlock Text="Open Folder" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
                                             </StackPanel>
                                         </Border>
@@ -1856,7 +1855,7 @@
                                     <ControlTemplate TargetType="Button">
                                         <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="🧹" FontSize="12" Margin="0,0,6,0"/>
+                                                <Path Data="{StaticResource IconBroom}" Fill="White" Width="12" Height="12" Margin="0,0,6,0"/>
                                                 <TextBlock Text="Clear Done" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
                                             </StackPanel>
                                         </Border>
@@ -1925,7 +1924,7 @@
                                                     <TextBlock Text=" • " Foreground="{DynamicResource DividerColor}" FontSize="12"/>
                                                     <TextBlock Text="{Binding SizeText}" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
                                                     <TextBlock Text=" • " Foreground="{DynamicResource DividerColor}" FontSize="12" Visibility="{Binding SpeedText, Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
-                                                    <TextBlock Text="{Binding SpeedText}" Foreground="{StaticResource AccentGreen}" FontSize="12" FontWeight="SemiBold" Visibility="{Binding SpeedText, Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
+                                                    <TextBlock Text="{Binding SpeedText}" Foreground="{DynamicResource AccentGreen}" FontSize="12" FontWeight="SemiBold" Visibility="{Binding SpeedText, Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
                                                 </StackPanel>
                                             </StackPanel>
 
@@ -1956,7 +1955,10 @@
                                                     <Button.Template>
                                                         <ControlTemplate TargetType="Button">
                                                             <Border CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                                                                <TextBlock Text="⏸ Pause" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Path Data="{StaticResource IconPause}" Fill="White" Width="10" Height="10" Stretch="Uniform" Margin="0,0,4,0"/>
+                                                                    <TextBlock Text="Pause" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                                </StackPanel>
                                                             </Border>
                                                         </ControlTemplate>
                                                     </Button.Template>
@@ -1971,7 +1973,10 @@
                                                     <Button.Template>
                                                         <ControlTemplate TargetType="Button">
                                                             <Border CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                                                                <TextBlock Text="▶ Resume" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Path Data="{StaticResource IconPlay}" Fill="White" Width="10" Height="10" Stretch="Uniform" Margin="0,0,4,0"/>
+                                                                    <TextBlock Text="Resume" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                                </StackPanel>
                                                             </Border>
                                                         </ControlTemplate>
                                                     </Button.Template>
@@ -1986,7 +1991,10 @@
                                                     <Button.Template>
                                                         <ControlTemplate TargetType="Button">
                                                             <Border CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                                                                <TextBlock Text="⏹ Stop" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource ErrorRed}"/>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Path Data="{StaticResource IconStop}" Fill="White" Width="10" Height="10" Stretch="Uniform" Margin="0,0,4,0"/>
+                                                                    <TextBlock Text="Stop" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                                </StackPanel>
                                                             </Border>
                                                         </ControlTemplate>
                                                     </Button.Template>
@@ -2000,7 +2008,10 @@
                                                     <Button.Template>
                                                         <ControlTemplate TargetType="Button">
                                                             <Border CornerRadius="4" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                                                                <TextBlock Text="✕ Remove" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Path Data="{StaticResource IconClose}" Fill="{DynamicResource TextMuted}" Width="10" Height="10" Stretch="Uniform" Margin="0,0,4,0"/>
+                                                                    <TextBlock Text="Remove" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                                </StackPanel>
                                                             </Border>
                                                         </ControlTemplate>
                                                     </Button.Template>
@@ -2028,7 +2039,7 @@
                         <!-- Empty state when no downloads -->
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,60,0,0"
                                     Visibility="{Binding HasDownloads, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                            <TextBlock Text="⬇" FontSize="48" HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,12"/>
+                            <Path Data="{StaticResource IconDownload}" Fill="{DynamicResource TextMuted}" Width="48" Height="48" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,12"/>
                             <TextBlock Text="No downloads in progress" Foreground="{DynamicResource TextMuted}" FontSize="16" HorizontalAlignment="Center"/>
                             <TextBlock Text="Go to Movies or Series and click the download icon to start." Foreground="{DynamicResource TextMuted}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                         </StackPanel>
@@ -2058,7 +2069,7 @@
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border CornerRadius="16" Background="#2C2C3E">
-                                        <TextBlock Text="✕" Foreground="White" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Path Data="{StaticResource IconClose}" Fill="White" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>
                             </Button.Template>
@@ -2092,7 +2103,10 @@
                                 <!-- Metadata info -->
                                 <WrapPanel Grid.Row="1" Margin="0,0,0,14">
                                     <Border Background="#FFD700" CornerRadius="4" Padding="5,2" Margin="0,0,10,0">
-                                        <TextBlock Text="{Binding SelectedMovieForInfo.Rating, StringFormat='⭐ {0}'}" Foreground="#0F0F1A" FontSize="10" FontWeight="Bold"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="{StaticResource IconStar}" Fill="#0F0F1A" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                            <TextBlock Text="{Binding SelectedMovieForInfo.Rating}" Foreground="#0F0F1A" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
                                     </Border>
                                     <TextBlock Text="{Binding SelectedMovieForInfo.ReleaseDate}" Foreground="{DynamicResource TextMuted}" FontSize="12" Margin="0,0,16,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding SelectedMovieForInfo.Genre}" Foreground="{DynamicResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
@@ -2121,7 +2135,10 @@
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="PlayBd" CornerRadius="6" Background="{TemplateBinding Background}">
-                                                    <TextBlock Text="▶  Play" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+                                                        <Path Data="{StaticResource IconPlay}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="Play" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -2139,7 +2156,10 @@
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="DlBd" CornerRadius="6" Background="{TemplateBinding Background}">
-                                                    <TextBlock Text="⬇  Download" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+                                                        <Path Data="{StaticResource IconDownload}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="Download" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -2217,7 +2237,7 @@
                             Visibility="{Binding PlayerVm.IsBuffering,
                                          Converter={StaticResource BoolToVisibilityConverter}}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE10C;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <Path Data="{StaticResource IconBuffer}" Stroke="White" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <TextBlock Text="{Binding PlayerVm.StatusText}"
                                        Foreground="White" FontSize="15" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -2230,7 +2250,7 @@
                                          Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
-                                <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource ErrorRed}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <Path Data="{StaticResource IconWarning}" Stroke="{StaticResource ErrorRed}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <TextBlock Text="Playback Error" FontSize="16" FontWeight="Bold" Foreground="{StaticResource ErrorRed}" VerticalAlignment="Center"/>
                             </StackPanel>
                             <TextBlock Text="{Binding PlayerVm.ErrorText}"
@@ -2261,7 +2281,7 @@
                             <!-- Back to browse -->
                             <Button Grid.Column="0" Style="{StaticResource CtrlBtn}"
                                     Click="BackToLibrary_Click" ToolTip="Back to library">
-                                <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>
+                                <Path Data="{StaticResource IconBack}" Style="{StaticResource VectorIcon}" Width="16" Height="16"/>
                             </Button>
 
                             <!-- Channel info -->
@@ -2290,7 +2310,7 @@
                             <Button Grid.Column="2" Style="{StaticResource CtrlBtn}"
                                     Command="{Binding PlayerVm.ToggleFullscreenCommand}"
                                     ToolTip="Toggle fullscreen (F)">
-                                <TextBlock Text="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>
+                                <Path Data="{StaticResource IconFullscreen}" Style="{StaticResource VectorIcon}" Width="16" Height="16"/>
                             </Button>
                         </Grid>
                     </Border>
@@ -2349,39 +2369,39 @@
                                     <Button Style="{StaticResource CtrlBtn}"
                                             Command="{Binding PlayerVm.SkipBackwardCommand}"
                                             Margin="0,0,4,0" ToolTip="Skip Backward 5s (Left Arrow)">
-                                        <TextBlock Text="&#xE100;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                        <Path Data="{StaticResource IconSkipBack}" Style="{StaticResource VectorIcon}" Width="12" Height="12"/>
                                     </Button>
                                     <Button Style="{StaticResource CtrlBtn}"
                                             Command="{Binding PlayerVm.TogglePlayCommand}"
                                             Margin="0,0,4,0" ToolTip="Play / Pause (Space)">
-                                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text" Value="&#xE768;"/>
+                                        <Path Width="14" Height="14">
+                                            <Path.Style>
+                                                <Style TargetType="Path" BasedOn="{StaticResource VectorIconFilled}">
+                                                    <Setter Property="Data" Value="{StaticResource IconPlay}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding PlayerVm.IsPlaying}" Value="True">
-                                                            <Setter Property="Text" Value="&#xE769;"/>
+                                                            <Setter Property="Data" Value="{StaticResource IconPause}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
+                                            </Path.Style>
+                                        </Path>
                                     </Button>
                                     <Button Style="{StaticResource CtrlBtn}"
                                             Command="{Binding PlayerVm.SkipForwardCommand}"
                                             Margin="0,0,8,0" ToolTip="Skip Forward 5s (Right Arrow)">
-                                        <TextBlock Text="&#xE101;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                        <Path Data="{StaticResource IconSkipForward}" Style="{StaticResource VectorIcon}" Width="12" Height="12"/>
                                     </Button>
                                     <Button Style="{StaticResource CtrlBtn}"
                                             Command="{Binding PlayerVm.PlayNextEpisodeCommand}"
                                             Visibility="{Binding PlayerVm.HasNextEpisode, Converter={StaticResource BoolToVisibilityConverter}}"
                                             Margin="0,0,8,0" ToolTip="Next Episode (N)">
-                                        <TextBlock Text="&#xE893;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                        <Path Data="{StaticResource IconNextEpisode}" Style="{StaticResource VectorIcon}" Width="12" Height="12"/>
                                     </Button>
                                     <Button Style="{StaticResource CtrlBtn}"
                                             Command="{Binding PlayerVm.StopCommand}"
                                             Margin="0,0,14,0" ToolTip="Stop">
-                                        <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                        <Path Data="{StaticResource IconStop}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12"/>
                                     </Button>
                                     <TextBlock Text="{Binding PlayerVm.StatusText}"
                                                Foreground="{DynamicResource TextMuted}"
@@ -2445,18 +2465,18 @@
                                     <Button Style="{StaticResource CtrlBtn}"
                                             Command="{Binding PlayerVm.ToggleMuteCommand}"
                                             Margin="0,0,8,0" ToolTip="Toggle mute (M)">
-                                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text" Value="&#xE74F;"/>
+                                        <Path Width="14" Height="14">
+                                            <Path.Style>
+                                                <Style TargetType="Path" BasedOn="{StaticResource VectorIcon}">
+                                                    <Setter Property="Data" Value="{StaticResource IconUnmute}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding PlayerVm.IsMuted}" Value="True">
-                                                            <Setter Property="Text" Value="&#xE15D;"/>
+                                                            <Setter Property="Data" Value="{StaticResource IconMute}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
+                                            </Path.Style>
+                                        </Path>
                                     </Button>
                                     <Slider Minimum="0" Maximum="100"
                                             Value="{Binding PlayerVm.Volume}"
