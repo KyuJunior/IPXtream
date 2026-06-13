@@ -21,7 +21,7 @@ namespace IPXtream.ViewModels;
 /// <summary>
 /// Sidebar section identifiers.
 /// </summary>
-public enum MediaSection { LiveTV, VOD, Series, WhatsNew, Downloads, Settings }
+public enum MediaSection { LiveTV, VOD, Series, WhatsNew, CurrentlyWatching, Downloads, Settings }
 
 /// <summary>
 /// ViewModel for DashboardWindow.
@@ -35,6 +35,7 @@ public partial class DashboardViewModel : ObservableObject
     private SemaphoreSlim _downloadSemaphore = new(2); // max concurrent downloads
     private readonly List<StreamItem> _featuredItems = new();
     private readonly HashSet<string> _featuredKeys = new();
+    private int _currentSeriesId;
 
     // ── Auth info (displayed in header) ───────────────────────────────────────
     public string DisplayUsername { get; }
@@ -145,6 +146,7 @@ public partial class DashboardViewModel : ObservableObject
                 StreamType         = "series",
                 StreamId           = epId,
                 VideoId            = epId,
+                SeriesId           = _currentSeriesId,
                 ContainerExtension = ep.ContainerExtension ?? "mp4",
                 Plot               = ep.Info.Plot,
                 CustomSid          = ep.CustomSid,
@@ -446,6 +448,7 @@ public partial class DashboardViewModel : ObservableObject
             "vod"       => MediaSection.VOD,
             "series"    => MediaSection.Series,
             "whatsnew"  => MediaSection.WhatsNew,
+            "currentlywatching" => MediaSection.CurrentlyWatching,
             "downloads" => MediaSection.Downloads,
             _           => MediaSection.LiveTV
         };
@@ -467,6 +470,10 @@ public partial class DashboardViewModel : ObservableObject
             _allStreams = featured;
             SetFilteredStreams(featured);
             StatusMessage = $"{featured.Count} featured items";
+        }
+        else if (ActiveSection == MediaSection.CurrentlyWatching)
+        {
+            LoadCurrentlyWatching();
         }
         else if (ActiveSection == MediaSection.Downloads)
         {
@@ -1167,6 +1174,12 @@ public partial class DashboardViewModel : ObservableObject
             return;
         }
 
+        if (ActiveSection == MediaSection.CurrentlyWatching)
+        {
+            LoadCurrentlyWatching();
+            return;
+        }
+
         // Force refresh categories (which will then auto-refresh streams if one is selected)
         await LoadCategoriesAsync(forceRefresh: true);
         
@@ -1279,7 +1292,67 @@ public partial class DashboardViewModel : ObservableObject
         }
 
         // Otherwise (LiveTV, VOD, or an Episode of a Series), play it.
-        var siblings = (stream.StreamType == "series") ? _allStreams.ToList() : new List<StreamItem>();
+        AddToCurrentlyWatching(stream);
+
+        List<StreamItem> siblings = new List<StreamItem>();
+        if (stream.StreamType == "series")
+        {
+            if (ActiveSection == MediaSection.CurrentlyWatching && stream.SeriesId != 0)
+            {
+                try
+                {
+                    StatusMessage = "Loading series details...";
+                    var info = await _api.GetSeriesInfoAsync(stream.SeriesId);
+                    if (info != null)
+                    {
+                        var epIdStr = stream.StreamId.ToString();
+                        List<Episode>? foundSeasonEpisodes = null;
+
+                        foreach (var kvp in info.Episodes)
+                        {
+                            if (kvp.Value.Any(e => e.Id == epIdStr))
+                            {
+                                foundSeasonEpisodes = kvp.Value;
+                                break;
+                            }
+                        }
+
+                        if (foundSeasonEpisodes != null)
+                        {
+                            foreach (var ep in foundSeasonEpisodes)
+                            {
+                                _ = int.TryParse(ep.Id, out int epId);
+                                siblings.Add(new StreamItem
+                                {
+                                    Name               = string.IsNullOrWhiteSpace(ep.Title) ? ep.Info.Name : ep.Title,
+                                    StreamType         = "series",
+                                    StreamId           = epId,
+                                    VideoId            = epId,
+                                    SeriesId           = stream.SeriesId,
+                                    ContainerExtension = ep.ContainerExtension ?? "mp4",
+                                    Plot               = ep.Info.Plot,
+                                    CustomSid          = ep.CustomSid,
+                                    StreamIcon         = !string.IsNullOrEmpty(ep.Info.MovieImage) ? ep.Info.MovieImage : (info.Info.Cover ?? string.Empty)
+                                });
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogService.Log("Error loading siblings for currently watching episode", ex);
+                }
+                finally
+                {
+                    StatusMessage = string.Empty;
+                }
+            }
+            else
+            {
+                siblings = _allStreams.ToList();
+            }
+        }
+
         PlayRequested?.Invoke(stream, siblings);
     }
 
@@ -1393,6 +1466,7 @@ public partial class DashboardViewModel : ObservableObject
 
     private async Task LoadCategoriesAsync(bool forceRefresh = false)
     {
+        if (ActiveSection == MediaSection.WhatsNew || ActiveSection == MediaSection.CurrentlyWatching) return;
         IsLoadingCategories = true;
         ErrorMessage        = string.Empty;
         Categories.Clear();
@@ -1438,7 +1512,7 @@ public partial class DashboardViewModel : ObservableObject
 
     private async Task LoadStreamsAsync(string categoryId, bool forceRefresh = false)
     {
-        if (ActiveSection == MediaSection.WhatsNew) return;
+        if (ActiveSection == MediaSection.WhatsNew || ActiveSection == MediaSection.CurrentlyWatching) return;
         IsLoadingStreams = true;
         ErrorMessage     = string.Empty;
         Streams.Clear();
@@ -1502,6 +1576,7 @@ public partial class DashboardViewModel : ObservableObject
             if (info is null) return;
 
             CurrentSeries = info;
+            _currentSeriesId = series.SeriesId;
 
             // Load seasons
             foreach (var kvp in info.Episodes)
@@ -1687,5 +1762,79 @@ public partial class DashboardViewModel : ObservableObject
     private void ApplyGeneralSettings()
     {
         SaveSettings();
+    }
+
+    private string GetCurrentlyWatchingFilePath()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var dir = Path.Combine(appData, "IPXtream");
+        Directory.CreateDirectory(dir);
+        return Path.Combine(dir, "currently_watching.json");
+    }
+
+    private void AddToCurrentlyWatching(StreamItem stream)
+    {
+        try
+        {
+            var filePath = GetCurrentlyWatchingFilePath();
+            List<StreamItem> list;
+            if (File.Exists(filePath))
+            {
+                var json = File.ReadAllText(filePath);
+                list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<StreamItem>>(json) ?? new List<StreamItem>();
+            }
+            else
+            {
+                list = new List<StreamItem>();
+            }
+
+            // Remove if already exists (to push to the top)
+            list.RemoveAll(x => x.EffectiveStreamId == stream.EffectiveStreamId && x.StreamType == stream.StreamType);
+
+            // Add to start (most recent)
+            list.Insert(0, stream);
+
+            // Limit to 50 items
+            if (list.Count > 50)
+            {
+                list = list.Take(50).ToList();
+            }
+
+            var newJson = Newtonsoft.Json.JsonConvert.SerializeObject(list, Newtonsoft.Json.Formatting.Indented);
+            File.WriteAllText(filePath, newJson);
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Error saving to currently watching", ex);
+        }
+    }
+
+    private void LoadCurrentlyWatching()
+    {
+        try
+        {
+            var filePath = GetCurrentlyWatchingFilePath();
+            List<StreamItem> list;
+            if (File.Exists(filePath))
+            {
+                var json = File.ReadAllText(filePath);
+                list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<StreamItem>>(json) ?? new List<StreamItem>();
+            }
+            else
+            {
+                list = new List<StreamItem>();
+            }
+
+            _allStreams = list;
+            SetFilteredStreams(list);
+            StatusMessage = $"{list.Count} items in Currently Watching";
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Error loading currently watching", ex);
+            _allStreams = new List<StreamItem>();
+            SetFilteredStreams(_allStreams);
+            StatusMessage = "Failed to load Currently Watching items";
+        }
     }
 }
