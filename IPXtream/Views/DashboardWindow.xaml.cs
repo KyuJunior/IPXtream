@@ -10,6 +10,12 @@ namespace IPXtream.Views;
 
 public partial class DashboardWindow : Window
 {
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
+
     private readonly DashboardViewModel _vm;
 
     // Auto-hide controls timer
@@ -31,6 +37,33 @@ public partial class DashboardWindow : Window
 
         // Apply saved theme immediately
         Helpers.ThemeHelper.ApplyTheme(_vm.SelectedTheme);
+
+        // Register DWM backdrop and theme updates
+        this.Loaded += (s, e) =>
+        {
+            try
+            {
+                var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                if (hwnd != IntPtr.Zero)
+                {
+                    int backdropType = 3; // 3 = Acrylic blur backdrop
+                    DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdropType, sizeof(int));
+                    UpdateTitleBarTheme(_vm.SelectedTheme);
+                }
+            }
+            catch (Exception ex)
+            {
+                Services.LogService.Log("Failed to enable Windows 11 Acrylic backdrop", ex);
+            }
+        };
+
+        _vm.PropertyChanged += (sender, e) =>
+        {
+            if (e.PropertyName == nameof(DashboardViewModel.SelectedTheme))
+            {
+                UpdateTitleBarTheme(_vm.SelectedTheme);
+            }
+        };
 
         // Initialize LibVLC Core safely
         try
@@ -61,21 +94,14 @@ public partial class DashboardWindow : Window
                     LogLevel       = FlyleafLib.LogLevel.Debug
                 };
 
-                var ffmpegLogProp = typeof(EngineConfig).GetProperty("FFmpegLogLevel");
-                if (ffmpegLogProp != null)
-                {
-                    var debugValue = Enum.Parse(ffmpegLogProp.PropertyType, "Debug");
-                    ffmpegLogProp.SetValue(config, debugValue);
-                }
-
                 Engine.Start(config);
             }
             catch (Exception ex)
             {
                 Services.LogService.Log("Failed to start Flyleaf Engine", ex);
                 MessageBox.Show(
-                    "Failed to initialize the Flyleaf media player engine.\n\n" +
-                    "This usually happens because Microsoft Visual C++ Redistributable components or FFmpeg libraries are missing or corrupt.\n\n" +
+                    "Flyleaf Player failed to initialize.\n\n" +
+                    "Please ensure that the visual C++ runtimes are installed, and FFmpeg DLLs exist in the FFmpeg directory.\n\n" +
                     "Details: " + ex.Message,
                     "Player Engine Error",
                     MessageBoxButton.OK,
@@ -106,6 +132,22 @@ public partial class DashboardWindow : Window
                 ShowBars();
             }
         };
+    }
+
+    private void UpdateTitleBarTheme(string themeName)
+    {
+        try
+        {
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero) return;
+
+            int darkMode = themeName == "Light Ocean" ? 0 : 1;
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+        }
+        catch (Exception ex)
+        {
+            Services.LogService.Log("Failed to update DWM immersive dark mode titlebar", ex);
+        }
     }
 
     // ── Play: show embedded player ────────────────────────────────────────────
@@ -522,9 +564,15 @@ public partial class DashboardWindow : Window
         }
     }
 
-    // ── Keyboard shortcuts ────────────────────────────────────────────────────
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Escape && _vm.IsSettingsOpen)
+        {
+            _vm.CloseSettingsCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
         if (_vm.PlayerVm is null) return;
 
         switch (e.Key)
@@ -778,6 +826,14 @@ public partial class DashboardWindow : Window
         else
         {
             tcs.SetResult(null);
+        }
+    }
+
+    private void SettingsOverlay_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource == sender)
+        {
+            _vm.CloseSettingsCommand.Execute(null);
         }
     }
 }

@@ -13,6 +13,7 @@
         MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         Background="#0F0F1A"
+        FontFamily="Segoe UI"
         KeyDown="Window_KeyDown">
 
     <Window.Resources>
@@ -615,7 +616,7 @@
                                     <GradientStop Color="#7C5CBF" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
-                            <TextBlock Text="📺" FontSize="18"
+                            <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="White"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="IPXtream" FontSize="18" FontWeight="Bold"
@@ -630,7 +631,7 @@
                                         Converter={StaticResource SectionToStyleConverter},
                                         ConverterParameter=LiveTV}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📡" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE7B4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Live TV" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -640,7 +641,7 @@
                                         Converter={StaticResource SectionToStyleConverter},
                                         ConverterParameter=VOD}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🎬" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Movies" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -650,7 +651,7 @@
                                         Converter={StaticResource SectionToStyleConverter},
                                         ConverterParameter=Series}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🎞️" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE8F2;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Series" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -660,7 +661,7 @@
                                         Converter={StaticResource SectionToStyleConverter},
                                         ConverterParameter=WhatsNew}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🔥" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE117;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="What's new?" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -671,7 +672,7 @@
                         <Button Style="{StaticResource NavBtn}" Command="{Binding CacheAllBackgroundCommand}"
                                 Visibility="{Binding IsCachingAll, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="☁️" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE753;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Cache Entire Library" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -679,7 +680,7 @@
                                 Visibility="{Binding IsCachingAll, Converter={StaticResource BoolToVisibilityConverter}}"
                                 Foreground="#FF5370">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⏹" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE10A;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Cancel Caching" VerticalAlignment="Center"
                                            Foreground="#FF5370"/>
                             </StackPanel>
@@ -693,7 +694,7 @@
                                 Margin="0,4,0,0">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⬇" FontSize="16" Margin="0,0,10,0"/>
+                                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                     <TextBlock Text="Downloads" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <!-- Active download count badge -->
@@ -715,21 +716,21 @@
                                 Command="{Binding SelectSectionCommand}" CommandParameter="settings"
                                 Margin="0,4,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚙" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Settings" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Style="{StaticResource NavBtn}" Command="{Binding RefreshCommand}" Margin="0,4,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="↻" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Refresh Current View" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Style="{StaticResource NavBtn}" Command="{Binding LogoutCommand}" Margin="0,4,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🚪" FontSize="16" Margin="0,0,10,0"/>
+                                <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0"/>
                                 <TextBlock Text="Logout" VerticalAlignment="Center"
                                            Foreground="{StaticResource ErrorRed}"/>
                             </StackPanel>
@@ -2114,37 +2115,393 @@
                  </Border>
              </Grid>
 
-            <!-- ══════════ SETTINGS PANEL ═══════════════════════════════════ -->
-            <Grid x:Name="SettingsPanel" Grid.Column="2" Background="{DynamicResource BgDeep}">
-                <Grid.Style>
-                    <Style TargetType="Grid">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding ActiveSection}" Value="Settings">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
+            
+         </Grid>
+
+        <!-- ══════════════════════════════════════════════════════════════════
+             LAYER 1 — EMBEDDED PLAYER
+             Spans columns 1+2 (over categories+streams), sidebar stays visible.
+             Collapsed when no stream is playing.
+        ═══════════════════════════════════════════════════════════════════ -->
+        <Grid x:Name="PlayerPanel"
+              Margin="220,0,0,0"
+              Visibility="Collapsed"
+              Background="Black"
+              PreviewMouseMove="Player_MouseMove">
+
+            <!-- FlyleafHost natively composes into WPF Visual Tree (No HwndHost airspace bugs) -->
+            <!-- Player is assigned in code-behind after layout is measured (prevents 0x0 D3D init) -->
+            <fl:FlyleafHost x:Name="VideoView"
+                            Background="Black"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Visibility="Collapsed" />
+
+            <!-- VLC VideoView -->
+            <vlc:VideoView x:Name="VlcVideoView"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch"
+                           Visibility="Collapsed" />
+
+            <!-- Native MediaElement -->
+            <MediaElement x:Name="PlayerMediaElement"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          LoadedBehavior="Manual"
+                          UnloadedBehavior="Stop"
+                          Visibility="Collapsed" />
+
+            <!-- WebView2 Web Player -->
+            <wv2:WebView2 x:Name="PlayerWebView"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          Visibility="Collapsed" />
+
+            <!-- Airspace-safe Popup Overlay for HwndHost -->
+            <Popup x:Name="PlayerOverlayPopup"
+                   PlacementTarget="{Binding ElementName=VideoView}"
+                   Placement="Center"
+                   AllowsTransparency="True"
+                   Width="{Binding ActualWidth, ElementName=VideoView}"
+                   Height="{Binding ActualHeight, ElementName=VideoView}">
                 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/> <!-- Header -->
-                    <RowDefinition Height="*"/>    <!-- Content -->
-                </Grid.RowDefinitions>
+                <!-- Overlay Background -->
+                <Grid Background="#01000000"
+                      PreviewMouseMove="Player_MouseMove"
+                      MouseLeftButtonDown="Player_MouseLeftButtonDown">
 
-                <!-- Header Banner -->
-                <Border Grid.Row="0" Padding="24,18" Background="{DynamicResource BgSidebar}"
-                        BorderBrush="{DynamicResource DividerColor}" BorderThickness="0,0,0,1">
-                    <Grid>
-                        <StackPanel>
-                            <TextBlock Text="SETTINGS" Foreground="{DynamicResource AccentBlue}" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Text="Configure your accounts and application preferences" Foreground="{DynamicResource TextPrimary}" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                    <!-- Buffering -->
+                    <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="#99000000" CornerRadius="12" Padding="24,16"
+                            Visibility="{Binding PlayerVm.IsBuffering,
+                                         Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#x23F3;" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding PlayerVm.StatusText}"
+                                       Foreground="White" FontSize="15" VerticalAlignment="Center"/>
                         </StackPanel>
-                    </Grid>
-                </Border>
+                    </Border>
 
-                <!-- Scrollable Content -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24">
+                    <!-- Error -->
+                    <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="#99200000" CornerRadius="12" Padding="24,16"
+                            Visibility="{Binding PlayerVm.ErrorText,
+                                         Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="&#x26A0; Playback Error" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource ErrorRed}"
+                                       HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding PlayerVm.ErrorText}"
+                                       Foreground="#FFDDDD" FontSize="13"
+                                       TextWrapping="Wrap" MaxWidth="380" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- TOP BAR -->
+                    <Border x:Name="PlayerTopBar"
+                            VerticalAlignment="Top" HorizontalAlignment="Stretch"
+                            Opacity="0" IsHitTestVisible="False"
+                            MouseEnter="PlayerBar_MouseEnter" MouseLeave="PlayerBar_MouseLeave"
+                            Padding="12,10">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#CC000000" Offset="0"/>
+                                <GradientStop Color="#00000000" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Back to browse -->
+                            <Button Grid.Column="0" Style="{StaticResource CtrlBtn}"
+                                    Click="BackToLibrary_Click" ToolTip="Back to library">
+                                <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>
+                            </Button>
+
+                            <!-- Channel info -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                        VerticalAlignment="Center" Margin="12,0">
+                                <Image Source="{Binding PlayerVm.StreamIconUrl}"
+                                       Width="26" Height="26"
+                                       RenderOptions.BitmapScalingMode="LowQuality"
+                                       Margin="0,0,8,0">
+                                    <Image.Style>
+                                        <Style TargetType="Image">
+                                            <Style.Triggers>
+                                                <Trigger Property="Source" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Image.Style>
+                                </Image>
+                                <TextBlock Text="{Binding PlayerVm.StreamTitle}"
+                                           Foreground="White" FontSize="15" FontWeight="SemiBold"
+                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+
+                            <!-- Fullscreen -->
+                            <Button Grid.Column="2" Style="{StaticResource CtrlBtn}"
+                                    Command="{Binding PlayerVm.ToggleFullscreenCommand}"
+                                    ToolTip="Toggle fullscreen (F)">
+                                <TextBlock Text="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- BOTTOM BAR -->
+                    <Border x:Name="PlayerBottomBar"
+                            VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                            Opacity="0" IsHitTestVisible="False"
+                            MouseEnter="PlayerBar_MouseEnter" MouseLeave="PlayerBar_MouseLeave"
+                            Padding="16,12">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#00000000" Offset="0"/>
+                                <GradientStop Color="#CC000000" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Seekbar -->
+                            <Grid Grid.Row="0" Margin="0,0,0,10"
+                                  Visibility="{Binding PlayerVm.IsSeekable,
+                                               Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding PlayerVm.PositionText}"
+                                           Foreground="White" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <Slider Grid.Column="1"
+                                        Minimum="0" Maximum="1" Value="{Binding PlayerVm.Position, Mode=OneWay}"
+                                        SmallChange="0.001" LargeChange="0.05"
+                                        IsMoveToPointEnabled="True"
+                                        Thumb.DragStarted="SeekSlider_DragStarted"
+                                        Thumb.DragCompleted="SeekSlider_DragCompleted"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource AccentBlue}"/>
+                                <TextBlock Grid.Column="2" Text="{Binding PlayerVm.LengthText}"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- Controls -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Left -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource CtrlBtn}"
+                                            Command="{Binding PlayerVm.SkipBackwardCommand}"
+                                            Margin="0,0,4,0" ToolTip="Skip Backward 5s (Left Arrow)">
+                                        <TextBlock Text="&#xE100;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                    </Button>
+                                    <Button Style="{StaticResource CtrlBtn}"
+                                            Command="{Binding PlayerVm.TogglePlayCommand}"
+                                            Margin="0,0,4,0" ToolTip="Play / Pause (Space)">
+                                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="&#xE768;"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding PlayerVm.IsPlaying}" Value="True">
+                                                            <Setter Property="Text" Value="&#xE769;"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Button>
+                                    <Button Style="{StaticResource CtrlBtn}"
+                                            Command="{Binding PlayerVm.SkipForwardCommand}"
+                                            Margin="0,0,8,0" ToolTip="Skip Forward 5s (Right Arrow)">
+                                        <TextBlock Text="&#xE101;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                    </Button>
+                                    <Button Style="{StaticResource CtrlBtn}"
+                                            Command="{Binding PlayerVm.PlayNextEpisodeCommand}"
+                                            Visibility="{Binding PlayerVm.HasNextEpisode, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Margin="0,0,8,0" ToolTip="Next Episode (N)">
+                                        <TextBlock Text="&#xE893;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                    </Button>
+                                    <Button Style="{StaticResource CtrlBtn}"
+                                            Command="{Binding PlayerVm.StopCommand}"
+                                            Margin="0,0,14,0" ToolTip="Stop">
+                                        <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                    </Button>
+                                    <TextBlock Text="{Binding PlayerVm.StatusText}"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               FontSize="12" VerticalAlignment="Center"
+                                               Visibility="{Binding PlayerVm.StatusText,
+                                                            Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
+                                </StackPanel>
+
+                                <!-- Right -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    
+                                    <!-- Settings -->
+                                    <Border Background="#1A1A2E" CornerRadius="6" Padding="6,2" Margin="0,0,14,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="SPEED:" Foreground="{DynamicResource TextMuted}"
+                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                            <ComboBox Width="55" Margin="0,0,8,0" Foreground="Black"
+                                                      ItemsSource="{Binding PlayerVm.PlaybackSpeeds}"
+                                                      SelectedItem="{Binding PlayerVm.SelectedSpeed, Mode=TwoWay}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding StringFormat='{}{0}x'}" Foreground="Black"/>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            
+                                            <TextBlock Text="DUB:" Foreground="{DynamicResource TextMuted}"
+                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                            <ComboBox Width="90" Margin="0,0,8,0"
+                                                      ItemsSource="{Binding PlayerVm.AudioStreams}"
+                                                      SelectedItem="{Binding PlayerVm.SelectedAudioStream, Mode=TwoWay}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock>
+                                                            <TextBlock.Text>
+                                                                <MultiBinding StringFormat="{}{0} ({1})">
+                                                                    <Binding Path="Language" />
+                                                                    <Binding Path="Codec" />
+                                                                </MultiBinding>
+                                                            </TextBlock.Text>
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            
+                                            <TextBlock Text="SUB:" Foreground="{DynamicResource TextMuted}"
+                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                            <ComboBox Width="90"
+                                                      ItemsSource="{Binding PlayerVm.DisplaySubtitleStreams}"
+                                                      SelectedValuePath="Value"
+                                                      SelectedValue="{Binding PlayerVm.SelectedSubtitleStream, Mode=TwoWay}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Name}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <Button Style="{StaticResource CtrlBtn}"
+                                            Command="{Binding PlayerVm.ToggleMuteCommand}"
+                                            Margin="0,0,8,0" ToolTip="Toggle mute (M)">
+                                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="&#xE74F;"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding PlayerVm.IsMuted}" Value="True">
+                                                            <Setter Property="Text" Value="&#xE15D;"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Button>
+                                    <Slider Minimum="0" Maximum="100"
+                                            Value="{Binding PlayerVm.Volume}"
+                                            Width="80" VerticalAlignment="Center"
+                                            Foreground="{DynamicResource AccentBlue}"
+                                            IsMoveToPointEnabled="True"
+                                            ToolTip="Volume"/>
+                                    <TextBlock Text="{Binding PlayerVm.Volume, StringFormat='{}{0}%'}"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="5,0,0,0" VerticalAlignment="Center" Width="36"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Popup>
+        </Grid>
+        <!-- end PlayerPanel -->
+
+    
+        <!-- ══════════ SETTINGS MODAL OVERLAY ═══════════════════════════════════ -->
+        <Grid x:Name="SettingsModalOverlay"
+              Background="#99000000"
+              Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              Panel.ZIndex="100"
+              MouseLeftButtonDown="SettingsOverlay_MouseLeftButtonDown">
+            
+            <!-- Centered Glassy Card -->
+            <Border Width="850" Height="600"
+                    Background="{DynamicResource BgDeep}"
+                    BorderBrush="{DynamicResource DividerColor}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" Color="Black" Opacity="0.5" ShadowDepth="0"/>
+                </Border.Effect>
+                
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/> <!-- Header -->
+                        <RowDefinition Height="*"/>    <!-- Content -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Header Banner -->
+                    <Border Grid.Row="0" Padding="24,18" Background="{DynamicResource BgSidebar}"
+                            BorderBrush="{DynamicResource DividerColor}" BorderThickness="0,0,0,1"
+                            CornerRadius="16,16,0,0">
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="SETTINGS" Foreground="{DynamicResource AccentBlue}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="Configure your accounts and application preferences" Foreground="{DynamicResource TextPrimary}" FontSize="18" FontWeight="Bold" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <!-- Close Button (✕) -->
+                            <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Command="{Binding CloseSettingsCommand}"
+                                    Cursor="Hand" Width="32" Height="32" BorderThickness="0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="Bd" CornerRadius="16" Background="Transparent">
+                                                        <TextBlock Text="✕" FontFamily="Segoe UI" FontSize="16" Foreground="{DynamicResource TextMuted}"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/> <!-- Accounts -->
@@ -2451,313 +2808,8 @@
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>
-            </Grid>
-         </Grid>
-
-        <!-- ══════════════════════════════════════════════════════════════════
-             LAYER 1 — EMBEDDED PLAYER
-             Spans columns 1+2 (over categories+streams), sidebar stays visible.
-             Collapsed when no stream is playing.
-        ═══════════════════════════════════════════════════════════════════ -->
-        <Grid x:Name="PlayerPanel"
-              Margin="220,0,0,0"
-              Visibility="Collapsed"
-              Background="Black"
-              PreviewMouseMove="Player_MouseMove">
-
-            <!-- FlyleafHost natively composes into WPF Visual Tree (No HwndHost airspace bugs) -->
-            <!-- Player is assigned in code-behind after layout is measured (prevents 0x0 D3D init) -->
-            <fl:FlyleafHost x:Name="VideoView"
-                            Background="Black"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            Visibility="Collapsed" />
-
-            <!-- VLC VideoView -->
-            <vlc:VideoView x:Name="VlcVideoView"
-                           HorizontalAlignment="Stretch"
-                           VerticalAlignment="Stretch"
-                           Visibility="Collapsed" />
-
-            <!-- Native MediaElement -->
-            <MediaElement x:Name="PlayerMediaElement"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch"
-                          LoadedBehavior="Manual"
-                          UnloadedBehavior="Stop"
-                          Visibility="Collapsed" />
-
-            <!-- WebView2 Web Player -->
-            <wv2:WebView2 x:Name="PlayerWebView"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch"
-                          Visibility="Collapsed" />
-
-            <!-- Airspace-safe Popup Overlay for HwndHost -->
-            <Popup x:Name="PlayerOverlayPopup"
-                   PlacementTarget="{Binding ElementName=VideoView}"
-                   Placement="Center"
-                   AllowsTransparency="True"
-                   Width="{Binding ActualWidth, ElementName=VideoView}"
-                   Height="{Binding ActualHeight, ElementName=VideoView}">
-                
-                <!-- Overlay Background -->
-                <Grid Background="#01000000"
-                      PreviewMouseMove="Player_MouseMove"
-                      MouseLeftButtonDown="Player_MouseLeftButtonDown">
-
-                    <!-- Buffering -->
-                    <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Background="#99000000" CornerRadius="12" Padding="24,16"
-                            Visibility="{Binding PlayerVm.IsBuffering,
-                                         Converter={StaticResource BoolToVisibilityConverter}}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#x23F3;" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding PlayerVm.StatusText}"
-                                       Foreground="White" FontSize="15" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Error -->
-                    <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Background="#99200000" CornerRadius="12" Padding="24,16"
-                            Visibility="{Binding PlayerVm.ErrorText,
-                                         Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
-                        <StackPanel>
-                            <TextBlock Text="&#x26A0; Playback Error" FontSize="16" FontWeight="Bold"
-                                       Foreground="{StaticResource ErrorRed}"
-                                       HorizontalAlignment="Center" Margin="0,0,0,6"/>
-                            <TextBlock Text="{Binding PlayerVm.ErrorText}"
-                                       Foreground="#FFDDDD" FontSize="13"
-                                       TextWrapping="Wrap" MaxWidth="380" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- TOP BAR -->
-                    <Border x:Name="PlayerTopBar"
-                            VerticalAlignment="Top" HorizontalAlignment="Stretch"
-                            Opacity="0" IsHitTestVisible="False"
-                            MouseEnter="PlayerBar_MouseEnter" MouseLeave="PlayerBar_MouseLeave"
-                            Padding="12,10">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#CC000000" Offset="0"/>
-                                <GradientStop Color="#00000000" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Back to browse -->
-                            <Button Grid.Column="0" Style="{StaticResource CtrlBtn}"
-                                    Click="BackToLibrary_Click" ToolTip="Back to library">
-                                <TextBlock Text="&#x2190;" FontSize="18"/>
-                            </Button>
-
-                            <!-- Channel info -->
-                            <StackPanel Grid.Column="1" Orientation="Horizontal"
-                                        VerticalAlignment="Center" Margin="12,0">
-                                <Image Source="{Binding PlayerVm.StreamIconUrl}"
-                                       Width="26" Height="26"
-                                       RenderOptions.BitmapScalingMode="LowQuality"
-                                       Margin="0,0,8,0">
-                                    <Image.Style>
-                                        <Style TargetType="Image">
-                                            <Style.Triggers>
-                                                <Trigger Property="Source" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Image.Style>
-                                </Image>
-                                <TextBlock Text="{Binding PlayerVm.StreamTitle}"
-                                           Foreground="White" FontSize="15" FontWeight="SemiBold"
-                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                            </StackPanel>
-
-                            <!-- Fullscreen -->
-                            <Button Grid.Column="2" Style="{StaticResource CtrlBtn}"
-                                    Command="{Binding PlayerVm.ToggleFullscreenCommand}"
-                                    ToolTip="Toggle fullscreen (F)">
-                                <TextBlock Text="&#x26F6;" FontSize="18"/>
-                            </Button>
-                        </Grid>
-                    </Border>
-
-                    <!-- BOTTOM BAR -->
-                    <Border x:Name="PlayerBottomBar"
-                            VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
-                            Opacity="0" IsHitTestVisible="False"
-                            MouseEnter="PlayerBar_MouseEnter" MouseLeave="PlayerBar_MouseLeave"
-                            Padding="16,12">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#00000000" Offset="0"/>
-                                <GradientStop Color="#CC000000" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Seekbar -->
-                            <Grid Grid.Row="0" Margin="0,0,0,10"
-                                  Visibility="{Binding PlayerVm.IsSeekable,
-                                               Converter={StaticResource BoolToVisibilityConverter}}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding PlayerVm.PositionText}"
-                                           Foreground="White" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <Slider Grid.Column="1"
-                                        Minimum="0" Maximum="1" Value="{Binding PlayerVm.Position, Mode=OneWay}"
-                                        SmallChange="0.001" LargeChange="0.05"
-                                        IsMoveToPointEnabled="True"
-                                        Thumb.DragStarted="SeekSlider_DragStarted"
-                                        Thumb.DragCompleted="SeekSlider_DragCompleted"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource AccentBlue}"/>
-                                <TextBlock Grid.Column="2" Text="{Binding PlayerVm.LengthText}"
-                                           Foreground="{DynamicResource TextMuted}"
-                                           FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                            </Grid>
-
-                            <!-- Controls -->
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Left -->
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Style="{StaticResource CtrlBtn}"
-                                            Command="{Binding PlayerVm.SkipBackwardCommand}"
-                                            Margin="0,0,4,0" ToolTip="Skip Backward 5s (Left Arrow)">
-                                        <TextBlock Text="&#x23EA;" FontSize="12"/>
-                                    </Button>
-                                    <Button Style="{StaticResource CtrlBtn}"
-                                            Command="{Binding PlayerVm.TogglePlayCommand}"
-                                            Margin="0,0,4,0" ToolTip="Play / Pause (Space)">
-                                        <TextBlock FontSize="16">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text" Value="&#x25B6;"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding PlayerVm.IsPlaying}" Value="True">
-                                                            <Setter Property="Text" Value="&#x23F8;"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Button>
-                                    <Button Style="{StaticResource CtrlBtn}"
-                                            Command="{Binding PlayerVm.SkipForwardCommand}"
-                                            Margin="0,0,8,0" ToolTip="Skip Forward 5s (Right Arrow)">
-                                        <TextBlock Text="&#x23E9;" FontSize="12"/>
-                                    </Button>
-                                    <Button Style="{StaticResource CtrlBtn}"
-                                            Command="{Binding PlayerVm.PlayNextEpisodeCommand}"
-                                            Visibility="{Binding PlayerVm.HasNextEpisode, Converter={StaticResource BoolToVisibilityConverter}}"
-                                            Margin="0,0,8,0" ToolTip="Next Episode (N)">
-                                        <TextBlock Text="&#x23ED;" FontSize="12"/>
-                                    </Button>
-                                    <Button Style="{StaticResource CtrlBtn}"
-                                            Command="{Binding PlayerVm.StopCommand}"
-                                            Margin="0,0,14,0" ToolTip="Stop">
-                                        <TextBlock Text="&#x23F9;" FontSize="16"/>
-                                    </Button>
-                                    <TextBlock Text="{Binding PlayerVm.StatusText}"
-                                               Foreground="{DynamicResource TextMuted}"
-                                               FontSize="12" VerticalAlignment="Center"
-                                               Visibility="{Binding PlayerVm.StatusText,
-                                                            Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
-                                </StackPanel>
-
-                                <!-- Right -->
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                    
-                                    <!-- Settings -->
-                                    <Border Background="#1A1A2E" CornerRadius="6" Padding="6,2" Margin="0,0,14,0">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="SPEED:" Foreground="{DynamicResource TextMuted}"
-                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                            <ComboBox Width="55" Margin="0,0,8,0" Foreground="Black"
-                                                      ItemsSource="{Binding PlayerVm.PlaybackSpeeds}"
-                                                      SelectedItem="{Binding PlayerVm.SelectedSpeed, Mode=TwoWay}">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding StringFormat='{}{0}x'}" Foreground="Black"/>
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                            </ComboBox>
-                                            
-                                            <TextBlock Text="DUB:" Foreground="{DynamicResource TextMuted}"
-                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                            <ComboBox Width="90" Margin="0,0,8,0"
-                                                      ItemsSource="{Binding PlayerVm.AudioStreams}"
-                                                      SelectedItem="{Binding PlayerVm.SelectedAudioStream, Mode=TwoWay}">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock>
-                                                            <TextBlock.Text>
-                                                                <MultiBinding StringFormat="{}{0} ({1})">
-                                                                    <Binding Path="Language" />
-                                                                    <Binding Path="Codec" />
-                                                                </MultiBinding>
-                                                            </TextBlock.Text>
-                                                        </TextBlock>
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                            </ComboBox>
-                                            
-                                            <TextBlock Text="SUB:" Foreground="{DynamicResource TextMuted}"
-                                                       FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                            <ComboBox Width="90"
-                                                      ItemsSource="{Binding PlayerVm.DisplaySubtitleStreams}"
-                                                      SelectedValuePath="Value"
-                                                      SelectedValue="{Binding PlayerVm.SelectedSubtitleStream, Mode=TwoWay}">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding Name}" />
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                            </ComboBox>
-                                        </StackPanel>
-                                    </Border>
-                                    
-                                    <Button Style="{StaticResource CtrlBtn}"
-                                            Command="{Binding PlayerVm.ToggleMuteCommand}"
-                                            Margin="0,0,8,0" ToolTip="Toggle mute (M)">
-                                        <TextBlock Text="&#x1F50A;" FontSize="14"/>
-                                    </Button>
-                                    <Slider Minimum="0" Maximum="100"
-                                            Value="{Binding PlayerVm.Volume}"
-                                            Width="80" VerticalAlignment="Center"
-                                            Foreground="{DynamicResource AccentBlue}"
-                                            IsMoveToPointEnabled="True"
-                                            ToolTip="Volume"/>
-                                    <TextBlock Text="{Binding PlayerVm.Volume, StringFormat='{}{0}%'}"
-                                               Foreground="{DynamicResource TextMuted}"
-                                               Margin="5,0,0,0" VerticalAlignment="Center" Width="36"/>
-                                </StackPanel>
-                            </Grid>
-                        </Grid>
-                    </Border>
                 </Grid>
-            </Popup>
+            </Border>
         </Grid>
-        <!-- end PlayerPanel -->
-
-    </Grid>
+</Grid>
 </Window>

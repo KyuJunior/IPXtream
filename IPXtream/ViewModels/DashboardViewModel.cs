@@ -251,6 +251,7 @@ public partial class DashboardViewModel : ObservableObject
 
     [ObservableProperty] private bool _showDownloadsTray;
     [ObservableProperty] private string _downloadFolder = string.Empty;
+    [ObservableProperty] private bool _isSettingsOpen;
 
     public bool HasDownloads        => Downloads.Count > 0;
     public bool HasActiveDownloads  => Downloads.Any(d => d.IsActive);
@@ -434,13 +435,18 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task SelectSectionAsync(string section)
     {
+        if (section == "settings")
+        {
+            IsSettingsOpen = true;
+            return;
+        }
+
         ActiveSection     = section switch
         {
             "vod"       => MediaSection.VOD,
             "series"    => MediaSection.Series,
             "whatsnew"  => MediaSection.WhatsNew,
             "downloads" => MediaSection.Downloads,
-            "settings"  => MediaSection.Settings,
             _           => MediaSection.LiveTV
         };
 
@@ -474,6 +480,12 @@ public partial class DashboardViewModel : ObservableObject
         {
             await LoadCategoriesAsync();
         }
+    }
+
+    [RelayCommand]
+    private void CloseSettings()
+    {
+        IsSettingsOpen = false;
     }
 
     [RelayCommand]

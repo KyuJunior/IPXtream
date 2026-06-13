@@ -500,6 +500,7 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
         if (Player != null)
         {
             Player.Audio.Mute = !Player.Audio.Mute;
+            IsMuted = Player.Audio.Mute;
             OnPropertyChanged(nameof(Volume));
         }
         else
