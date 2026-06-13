@@ -12,7 +12,7 @@
         Width="1200" Height="750"
         MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        Background="#0F0F1A"
+        Background="Transparent"
         FontFamily="Segoe UI"
         KeyDown="Window_KeyDown">
 
@@ -123,10 +123,29 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="Center"
-                                          Focusable="False"/>
+                            <Grid>
+                                <TextBlock Text="Search channels, movies, and series..." 
+                                           Foreground="{DynamicResource TextMuted}"
+                                           Margin="{TemplateBinding Padding}"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False"
+                                           Opacity="0.5">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              Margin="{TemplateBinding Padding}"
+                                              VerticalAlignment="Center"
+                                              Focusable="False"/>
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
@@ -199,7 +218,8 @@
 
         <!-- ── Stream Card DataTemplate ────────────────────────────────────── -->
         <DataTemplate x:Key="StreamCardTemplate">
-            <Border Width="150" Height="220" CornerRadius="8" Background="{DynamicResource BgSidebar}" ClipToBounds="True">
+            <Border Width="150" Height="220" CornerRadius="12" Background="{DynamicResource BgSidebar}" 
+                    BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" ClipToBounds="True">
                 <Grid>
                     <!-- Poster -->
                     <Image Source="{Binding StreamIcon, Converter={StaticResource CachedImageConverter}}"
@@ -216,7 +236,7 @@
                     </Image>
                     
                     <!-- Fallback empty state icon -->
-                    <TextBlock Text="📺" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource TextMuted}" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -263,7 +283,7 @@
                                                     <GradientStop Color="#7C5CBF" Offset="1"/>
                                                 </LinearGradientBrush>
                                             </Border.Background>
-                                            <TextBlock Text="▶" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                                            <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0,0,0"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
@@ -283,7 +303,7 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="DlBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                            <TextBlock Text="⬇" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
@@ -303,7 +323,7 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="InfoBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                            <TextBlock Text="ℹ" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
@@ -323,14 +343,14 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="StarBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                            <TextBlock x:Name="StarTxt" Text="☆" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="StarTxt" Text="&#xE724;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter TargetName="StarBd" Property="Background" Value="#66FFFFFF"/>
                                             </Trigger>
                                             <DataTrigger Binding="{Binding IsFeatured}" Value="True">
-                                                <Setter TargetName="StarTxt" Property="Text" Value="★"/>
+                                                <Setter TargetName="StarTxt" Property="Text" Value="&#xE735;"/>
                                                 <Setter TargetName="StarTxt" Property="Foreground" Value="#FFD700"/>
                                             </DataTrigger>
                                         </ControlTemplate.Triggers>
@@ -347,14 +367,14 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="HeartBd" CornerRadius="22" Background="{TemplateBinding Background}">
-                                            <TextBlock x:Name="HeartTxt" Text="♡" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="HeartTxt" Text="&#xE00B;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter TargetName="HeartBd" Property="Background" Value="#66FFFFFF"/>
                                             </Trigger>
                                             <DataTrigger Binding="{Binding IsDevRecommendation}" Value="True">
-                                                <Setter TargetName="HeartTxt" Property="Text" Value="♥"/>
+                                                <Setter TargetName="HeartTxt" Property="Text" Value="&#xE0A5;"/>
                                                 <Setter TargetName="HeartTxt" Property="Foreground" Value="#FF4A5A"/>
                                             </DataTrigger>
                                         </ControlTemplate.Triggers>
@@ -569,7 +589,7 @@
           [1] Player panel — hidden by default, slides over the content area (columns 1+2)
               when a stream is playing. Sidebar stays visible.
     -->
-    <Grid>
+    <Grid Background="{DynamicResource BgDeep}">
 
         <!-- ══════════════════════════════════════════════════════════════════
              LAYER 0 — DASHBOARD
@@ -1186,10 +1206,13 @@
                                 <!-- Tag -->
                                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Background="#FFD700" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                        <TextBlock Text="★ WHAT'S NEW" Foreground="#0F0F1A" FontSize="10" FontWeight="Black" VerticalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE735; " FontFamily="Segoe MDL2 Assets" Foreground="#0F0F1A" FontSize="9" FontWeight="Black" VerticalAlignment="Center"/>
+                                            <TextBlock Text="WHAT'S NEW" Foreground="#0F0F1A" FontSize="10" FontWeight="Black" VerticalAlignment="Center"/>
+                                        </StackPanel>
                                     </Border>
                                     <TextBlock Text="{Binding FeaturedCarouselItem.ReleaseDate}" Foreground="{DynamicResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                    <TextBlock Text="⭐" Foreground="#FFD700" FontSize="12" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="&#xE735;" FontFamily="Segoe MDL2 Assets" Foreground="#FFD700" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                     <TextBlock Text="{Binding FeaturedCarouselItem.Rating}" Foreground="White" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
 
@@ -1207,7 +1230,8 @@
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="PlayBd" CornerRadius="6" Background="{TemplateBinding Background}">
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
-                                                        <TextBlock Text="▶  Play" FontWeight="Bold"/>
+                                                        <TextBlock Text="&#xE768;  " FontFamily="Segoe MDL2 Assets" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Play" FontWeight="Bold" VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
@@ -1227,7 +1251,8 @@
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="DlBd" CornerRadius="6" Background="{TemplateBinding Background}">
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
-                                                        <TextBlock Text="⬇  Download" FontWeight="Bold"/>
+                                                        <TextBlock Text="&#xE896;  " FontFamily="Segoe MDL2 Assets" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Download" FontWeight="Bold" VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
@@ -1255,18 +1280,19 @@
                                 <DataTemplate>
                                     <Button Command="{Binding DataContext.SelectCarouselItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"
-                                            Margin="4,0" Width="10" Height="10" Cursor="Hand" BorderThickness="0">
+                                            Margin="4,0" Width="20" Height="10" Cursor="Hand" BorderThickness="0">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
-                                                <Ellipse x:Name="Dot" Fill="#55FFFFFF" Width="8" Height="8"/>
+                                                <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <Border x:Name="Dot" CornerRadius="3" Background="#55FFFFFF" Width="6" Height="6"/>
+                                                </Grid>
                                                 <ControlTemplate.Triggers>
                                                     <DataTrigger Binding="{Binding IsSelectedCarousel}" Value="True">
-                                                        <Setter TargetName="Dot" Property="Fill" Value="#4F8EF7"/>
-                                                        <Setter TargetName="Dot" Property="Width" Value="10"/>
-                                                        <Setter TargetName="Dot" Property="Height" Value="10"/>
+                                                        <Setter TargetName="Dot" Property="Background" Value="#4F8EF7"/>
+                                                        <Setter TargetName="Dot" Property="Width" Value="16"/>
                                                     </DataTrigger>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="Dot" Property="Fill" Value="White"/>
+                                                        <Setter TargetName="Dot" Property="Background" Value="White"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -1347,7 +1373,7 @@
                     </ScrollViewer.Style>
                     <StackPanel>
                         <!-- Admin Control Panel for What's New -->
-                        <Border Background="#1C1C28" CornerRadius="8" Padding="16,12" Margin="10,0,10,20"
+                        <Border Background="{DynamicResource BgCard}" CornerRadius="8" Padding="16,12" Margin="10,0,10,20"
                                 Visibility="{Binding IsAdminMode, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -1355,7 +1381,10 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                    <TextBlock Text="🛠️ WHAT'S NEW EDITOR (ADMIN MODE)" Foreground="{DynamicResource AccentBlue}" FontSize="11" FontWeight="Black" Margin="0,0,0,2"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                        <TextBlock Text="&#xE713; " FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBlue}" FontSize="11" FontWeight="Black" VerticalAlignment="Center"/>
+                                        <TextBlock Text="WHAT'S NEW EDITOR (ADMIN MODE)" Foreground="{DynamicResource AccentBlue}" FontSize="11" FontWeight="Black" VerticalAlignment="Center"/>
+                                    </StackPanel>
                                     <TextBlock Text="Add or remove items using Star (Whats New) and Heart (Dev Recommendation) buttons on any stream card." Foreground="{DynamicResource TextMuted}" FontSize="12" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" Command="{Binding PushWhatsNewCommand}"
@@ -1390,7 +1419,10 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="💖 Dev Recommendations" Foreground="White" FontSize="16" FontWeight="Bold" Margin="10,0,10,10"/>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,10,10">
+                                <TextBlock Text="&#xE00B;" FontFamily="Segoe MDL2 Assets" Foreground="#FF4A5A" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Dev Recommendations" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
                             <ListBox ItemsSource="{Binding DevRecommendations}" SelectedItem="{Binding SelectedStream}"
                                      ItemContainerStyle="{StaticResource StreamItemStyle}"
                                      ItemTemplate="{StaticResource StreamCardTemplate}"
@@ -1422,7 +1454,10 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="📺 Live TV" Foreground="White" FontSize="16" FontWeight="Bold" Margin="10,0,10,10"/>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,10,10">
+                                <TextBlock Text="&#xE7B4;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBlue}" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Live TV" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
                             <ListBox ItemsSource="{Binding FeaturedLive}" SelectedItem="{Binding SelectedStream}"
                                      ItemContainerStyle="{StaticResource StreamItemStyle}"
                                      ItemTemplate="{StaticResource StreamCardTemplate}"
@@ -1454,7 +1489,10 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="🎬 TV Shows" Foreground="White" FontSize="16" FontWeight="Bold" Margin="10,0,10,10"/>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,10,10">
+                                <TextBlock Text="&#xE8F2;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBlue}" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="TV Shows" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
                             <ListBox ItemsSource="{Binding FeaturedShows}" SelectedItem="{Binding SelectedStream}"
                                      ItemContainerStyle="{StaticResource StreamItemStyle}"
                                      ItemTemplate="{StaticResource StreamCardTemplate}"
@@ -1486,7 +1524,10 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="🎥 Movies" Foreground="White" FontSize="16" FontWeight="Bold" Margin="10,0,10,10"/>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,10,10">
+                                <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBlue}" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Movies" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
                             <ListBox ItemsSource="{Binding FeaturedMovies}" SelectedItem="{Binding SelectedStream}"
                                      ItemContainerStyle="{StaticResource StreamItemStyle}"
                                      ItemTemplate="{StaticResource StreamCardTemplate}"
@@ -2176,7 +2217,7 @@
                             Visibility="{Binding PlayerVm.IsBuffering,
                                          Converter={StaticResource BoolToVisibilityConverter}}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#x23F3;" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE10C;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding PlayerVm.StatusText}"
                                        Foreground="White" FontSize="15" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -2188,9 +2229,10 @@
                             Visibility="{Binding PlayerVm.ErrorText,
                                          Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
                         <StackPanel>
-                            <TextBlock Text="&#x26A0; Playback Error" FontSize="16" FontWeight="Bold"
-                                       Foreground="{StaticResource ErrorRed}"
-                                       HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
+                                <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource ErrorRed}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Playback Error" FontSize="16" FontWeight="Bold" Foreground="{StaticResource ErrorRed}" VerticalAlignment="Center"/>
+                            </StackPanel>
                             <TextBlock Text="{Binding PlayerVm.ErrorText}"
                                        Foreground="#FFDDDD" FontSize="13"
                                        TextWrapping="Wrap" MaxWidth="380" HorizontalAlignment="Center"/>
