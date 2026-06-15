@@ -22,24 +22,24 @@
 
             <!-- ── Sidebar palette ───────────────────────────────────────────── -->
             <SolidColorBrush x:Key="NavTextMuted" Color="#888899"/>
-            <SolidColorBrush x:Key="NavBgHover"   Color="#22224A"/>
-
+            <SolidColorBrush x:Key="NavBgHover"   Color="#1A1A35"/>
+ 
             <!-- ── NavBtn: inactive sidebar button (globally accessible) ─────── -->
             <Style x:Key="NavBtn" TargetType="Button">
                 <Setter Property="Background"                Value="Transparent"/>
                 <Setter Property="BorderThickness"           Value="0"/>
                 <Setter Property="Foreground"                Value="{StaticResource NavTextMuted}"/>
                 <Setter Property="FontSize"                  Value="14"/>
-                <Setter Property="FontWeight"                Value="SemiBold"/>
-                <Setter Property="FontFamily"                Value="Segoe UI"/>
+                <Setter Property="FontWeight"                Value="Medium"/>
+                <Setter Property="FontFamily"                Value="Segoe UI Variable, Segoe UI"/>
                 <Setter Property="Cursor"                    Value="Hand"/>
                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                <Setter Property="Padding"                   Value="16,13"/>
+                <Setter Property="Padding"                   Value="16,10"/>
                 <Setter Property="Template">
-                    <Setter.Value>
+                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                    CornerRadius="10" Margin="8,2">
+                                    CornerRadius="10" Margin="6,2">
                                 <ContentPresenter Margin="{TemplateBinding Padding}"
                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                   VerticalAlignment="Center"/>
@@ -47,11 +47,11 @@
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="Bd" Property="Background" Value="{StaticResource NavBgHover}"/>
-                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
-                    </Setter.Value>
+                     </Setter.Value>
                 </Setter>
             </Style>
 
@@ -61,20 +61,20 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border CornerRadius="10" Margin="8,2">
+                            <Border CornerRadius="10" Margin="6,2">
                                 <Border.Background>
                                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                        <GradientStop Color="#4F8EF730" Offset="0"/>
-                                        <GradientStop Color="#7C5CBF30" Offset="1"/>
+                                        <GradientStop Color="#355B9BFF" Offset="0"/>
+                                        <GradientStop Color="#358B6BD4" Offset="1"/>
                                     </LinearGradientBrush>
                                 </Border.Background>
                                 <Grid>
                                     <!-- Left accent bar -->
-                                    <Border Width="3" HorizontalAlignment="Left" CornerRadius="3">
+                                    <Border Width="3.5" HorizontalAlignment="Left" CornerRadius="3">
                                         <Border.Background>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#4F8EF7" Offset="0"/>
-                                                <GradientStop Color="#7C5CBF" Offset="1"/>
+                                                <GradientStop Color="#5B9BFF" Offset="0"/>
+                                                <GradientStop Color="#8B6BD4" Offset="1"/>
                                             </LinearGradientBrush>
                                         </Border.Background>
                                     </Border>
@@ -90,17 +90,17 @@
 
             <!-- ── Global typography ─────────────────────────────────────────── -->
             <Style TargetType="TextBlock">
-                <Setter Property="FontFamily" Value="Segoe UI"/>
+                <Setter Property="FontFamily" Value="Segoe UI Variable, Segoe UI"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
             </Style>
             <Style TargetType="TextBox">
-                <Setter Property="FontFamily" Value="Segoe UI"/>
+                <Setter Property="FontFamily" Value="Segoe UI Variable, Segoe UI"/>
             </Style>
             <Style TargetType="PasswordBox">
-                <Setter Property="FontFamily" Value="Segoe UI"/>
+                <Setter Property="FontFamily" Value="Segoe UI Variable, Segoe UI"/>
             </Style>
             <Style TargetType="Button">
-                <Setter Property="FontFamily" Value="Segoe UI"/>
+                <Setter Property="FontFamily" Value="Segoe UI Variable, Segoe UI"/>
             </Style>
 
             <!-- ── VectorIcon Style (Default Outlined) ───────────────────────── -->
@@ -121,6 +121,46 @@
                 <Setter Property="Stretch" Value="Uniform"/>
                 <Setter Property="HorizontalAlignment" Value="Center"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <!-- ── Thin ScrollBar Style (Globally Applied) ──────────────────── -->
+            <Style TargetType="ScrollBar">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Width" Value="8"/>
+                <Setter Property="Height" Value="8"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Grid x:Name="Bg" SnapsToDevicePixels="true" Background="Transparent">
+                                <Track x:Name="PART_Track" IsDirectionReversed="true">
+                                    <Track.Thumb>
+                                        <Thumb x:Name="Thumb" Cursor="Hand">
+                                            <Thumb.Template>
+                                                <ControlTemplate TargetType="Thumb">
+                                                    <Border x:Name="ThumbBd" CornerRadius="4" Background="#30FFFFFF" Margin="1"/>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="ThumbBd" Property="Background" Value="#60FFFFFF"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Thumb.Template>
+                                        </Thumb>
+                                    </Track.Thumb>
+                                </Track>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="Orientation" Value="Horizontal">
+                                    <Setter Property="Width" Value="Auto"/>
+                                    <Setter Property="Height" Value="8"/>
+                                    <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
+                                    <Setter TargetName="Thumb" Property="Height" Value="8"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
         </ResourceDictionary>

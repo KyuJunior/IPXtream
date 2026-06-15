@@ -18,6 +18,17 @@ public class SectionToStyleConverter : IValueConverter
             && Enum.TryParse<MediaSection>(targetSection, out var target))
         {
             var key = activeSection == target ? "NavBtnActive" : "NavBtn";
+            if (Application.Current.MainWindow != null)
+            {
+                try
+                {
+                    return Application.Current.MainWindow.FindResource(key) ?? Application.Current.Resources[key]!;
+                }
+                catch
+                {
+                    // Fallback to Application Resources
+                }
+            }
             return Application.Current.Resources[key]!;
         }
 

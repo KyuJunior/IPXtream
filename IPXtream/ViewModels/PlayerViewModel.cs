@@ -352,6 +352,11 @@ public partial class PlayerViewModel : ObservableObject, IDisposable
             PositionText = cur.ToString(@"hh\:mm\:ss");
             LengthText   = dur.ToString(@"hh\:mm\:ss");
         }
+
+        if (Position > 0 && Position < 0.99 && CurrentStream != null && CurrentStream.StreamType != "live")
+        {
+            _dashboardVm.UpdateStreamProgress(CurrentStream, Position * 100.0);
+        }
     }
 
     public void CommitSeek(float targetPosition)

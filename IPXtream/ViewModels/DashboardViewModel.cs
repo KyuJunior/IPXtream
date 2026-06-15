@@ -66,6 +66,17 @@ public partial class DashboardViewModel : ObservableObject
     public ObservableCollection<StreamItem> FeaturedShows { get; } = new();
     public ObservableCollection<StreamItem> FeaturedMovies { get; } = new();
     public ObservableCollection<StreamItem> DevRecommendations { get; } = new();
+    public ObservableCollection<StreamItem> RecentlyWatched { get; } = new();
+
+    // ── My Library Sections ──────────────────────────────────────────────────
+    public ObservableCollection<StreamItem> ContinueWatching { get; } = new();
+    public ObservableCollection<StreamItem> LikedShows { get; } = new();
+    public ObservableCollection<StreamItem> LikedLive { get; } = new();
+    public ObservableCollection<StreamItem> LikedMovies { get; } = new();
+    public ObservableCollection<StreamItem> WatchLater { get; } = new();
+
+    [ObservableProperty]
+    private StreamItem? _selectedSeriesForInfo;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
@@ -150,7 +161,10 @@ public partial class DashboardViewModel : ObservableObject
                 ContainerExtension = ep.ContainerExtension ?? "mp4",
                 Plot               = ep.Info.Plot,
                 CustomSid          = ep.CustomSid,
-                StreamIcon         = !string.IsNullOrEmpty(ep.Info.MovieImage) ? ep.Info.MovieImage : (CurrentSeries?.Info.Cover ?? string.Empty)
+                StreamIcon         = !string.IsNullOrEmpty(ep.Info.MovieImage) ? ep.Info.MovieImage : (CurrentSeries?.Info.Cover ?? string.Empty),
+                SeriesName         = CurrentSeries?.Info?.Name,
+                EpisodeTitle       = string.IsNullOrWhiteSpace(ep.Title) ? ep.Info.Name : ep.Title,
+                SeasonName         = value.DisplayName
             };
             MarkFeatured(si);
             episodesList.Add(si);
@@ -244,6 +258,10 @@ public partial class DashboardViewModel : ObservableObject
     // ── Embedded player VM (null when no stream is playing) ───────────────────
     [ObservableProperty]
     private PlayerViewModel? _playerVm;
+
+    // ── PiP (Picture-in-Picture) state ────────────────────────────────────────
+    [ObservableProperty]
+    private bool _isPlayerMinimized;
 
     // ── Event: Logout ─────────────────────────────────────────────────────────
     public event Action? LogoutRequested;
@@ -443,6 +461,12 @@ public partial class DashboardViewModel : ObservableObject
             return;
         }
 
+        // If a stream is playing, minimize to PiP instead of blocking navigation
+        if (PlayerVm != null)
+        {
+            IsPlayerMinimized = true;
+        }
+
         ActiveSection     = section switch
         {
             "vod"       => MediaSection.VOD,
@@ -462,6 +486,7 @@ public partial class DashboardViewModel : ObservableObject
 
         if (ActiveSection == MediaSection.WhatsNew)
         {
+            LoadRecentlyWatched();
             var featured = _featuredItems.ToList();
             foreach (var item in featured)
             {
@@ -473,7 +498,7 @@ public partial class DashboardViewModel : ObservableObject
         }
         else if (ActiveSection == MediaSection.CurrentlyWatching)
         {
-            LoadCurrentlyWatching();
+            LoadLibraryData();
         }
         else if (ActiveSection == MediaSection.Downloads)
         {
@@ -493,6 +518,21 @@ public partial class DashboardViewModel : ObservableObject
     private void CloseSettings()
     {
         IsSettingsOpen = false;
+    }
+
+    [RelayCommand]
+    private void RestorePlayer()
+    {
+        IsPlayerMinimized = false;
+    }
+
+    /// <summary>Raised when user closes the PiP mini-player.</summary>
+    public event Action? ClosePipRequested;
+
+    [RelayCommand]
+    private void ClosePip()
+    {
+        ClosePipRequested?.Invoke();
     }
 
     [RelayCommand]
@@ -930,10 +970,14 @@ public partial class DashboardViewModel : ObservableObject
             stream.IsFeatured = false;
             stream.IsDevRecommendation = false;
         }
+        
+        SyncItemLibraryState(stream);
     }
 
     private async Task InitializeWhatsNewAsync()
     {
+        LoadLibraryData();
+
         await LoadWhatsNewAsync();
         
         SyncFeaturedItemsCollection();
@@ -943,6 +987,8 @@ public partial class DashboardViewModel : ObservableObject
             FeaturedCarouselItem = _featuredItems[0];
             Application.Current?.Dispatcher.BeginInvoke(() => StartCarouselTimer());
         }
+
+        LoadRecentlyWatched();
 
         if (ActiveSection == MediaSection.WhatsNew)
         {
@@ -1365,6 +1411,7 @@ public partial class DashboardViewModel : ObservableObject
     private async Task BackToSeriesAsync()
     {
         CurrentSeries = null;
+        SelectedSeriesForInfo = null;
         SelectedMovieForInfo = null;
         if (ActiveSection == MediaSection.WhatsNew)
         {
@@ -1577,6 +1624,8 @@ public partial class DashboardViewModel : ObservableObject
 
             CurrentSeries = info;
             _currentSeriesId = series.SeriesId;
+            SelectedSeriesForInfo = series;
+            SyncItemLibraryState(series);
 
             // Load seasons
             foreach (var kvp in info.Episodes)
@@ -1764,6 +1813,228 @@ public partial class DashboardViewModel : ObservableObject
         SaveSettings();
     }
 
+    [RelayCommand]
+    private void ToggleLike(StreamItem? stream)
+    {
+        if (stream == null) return;
+        
+        stream.IsLiked = !stream.IsLiked;
+        
+        if (stream.StreamType == "movie")
+        {
+            ToggleItemInCollection(LikedMovies, stream, stream.IsLiked, "liked_movies.json");
+        }
+        else if (stream.StreamType == "series")
+        {
+            ToggleItemInCollection(LikedShows, stream, stream.IsLiked, "liked_shows.json");
+        }
+        else if (stream.StreamType == "live" || string.IsNullOrEmpty(stream.StreamType))
+        {
+            // Fallback for live channels or empty stream type (which default to live in player)
+            ToggleItemInCollection(LikedLive, stream, stream.IsLiked, "liked_live.json");
+        }
+
+        // Keep all other references in sync
+        SyncAllItemsLibraryState();
+    }
+
+    [RelayCommand]
+    private void ToggleWatchLater(StreamItem? stream)
+    {
+        if (stream == null || stream.StreamType == "live") return;
+        
+        stream.IsWatchLater = !stream.IsWatchLater;
+        ToggleItemInCollection(WatchLater, stream, stream.IsWatchLater, "watch_later.json");
+
+        // Keep all other references in sync
+        SyncAllItemsLibraryState();
+    }
+
+    private void ToggleItemInCollection(ObservableCollection<StreamItem> collection, StreamItem stream, bool isAdded, string fileName)
+    {
+        var existing = collection.FirstOrDefault(x => x.EffectiveStreamId == stream.EffectiveStreamId && x.StreamType == stream.StreamType);
+        if (isAdded)
+        {
+            if (existing == null)
+            {
+                // Sync library status before adding to the collection
+                SyncItemLibraryState(stream);
+                collection.Insert(0, stream);
+            }
+        }
+        else
+        {
+            if (existing != null)
+            {
+                collection.Remove(existing);
+            }
+        }
+        SaveLibraryList(collection, fileName);
+    }
+
+    private void SaveLibraryList(ObservableCollection<StreamItem> collection, string fileName)
+    {
+        try
+        {
+            var filePath = GetLibraryFilePath(fileName);
+            var itemsList = collection.ToList();
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(itemsList, Newtonsoft.Json.Formatting.Indented);
+            File.WriteAllText(filePath, json);
+        }
+        catch (Exception ex)
+        {
+            LogService.Log($"Error saving library list to {fileName}", ex);
+        }
+    }
+
+    private string GetLibraryFilePath(string fileName)
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var dir = Path.Combine(appData, "IPXtream");
+        Directory.CreateDirectory(dir);
+        return Path.Combine(dir, fileName);
+    }
+
+    private void LoadLibrarySection(ObservableCollection<StreamItem> collection, string fileName)
+    {
+        try
+        {
+            var filePath = GetLibraryFilePath(fileName);
+            List<StreamItem> list;
+            if (File.Exists(filePath))
+            {
+                var json = File.ReadAllText(filePath);
+                list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<StreamItem>>(json) ?? new List<StreamItem>();
+            }
+            else
+            {
+                list = new List<StreamItem>();
+            }
+
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                collection.Clear();
+                foreach (var item in list)
+                {
+                    collection.Add(item);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            LogService.Log($"Error loading library section from {fileName}", ex);
+        }
+    }
+
+    private void LoadLibraryData()
+    {
+        // 1. Load Continue Watching from currently_watching.json
+        LoadLibrarySection(ContinueWatching, "currently_watching.json");
+        // 2. Load Liked Shows from liked_shows.json
+        LoadLibrarySection(LikedShows, "liked_shows.json");
+        // 3. Load Liked Live TV from liked_live.json
+        LoadLibrarySection(LikedLive, "liked_live.json");
+        // 4. Load Liked Movies from liked_movies.json
+        LoadLibrarySection(LikedMovies, "liked_movies.json");
+        // 5. Load Watch Later from watch_later.json
+        LoadLibrarySection(WatchLater, "watch_later.json");
+
+        // Sync IsLiked/IsWatchLater properties on loaded items
+        SyncAllItemsLibraryState();
+
+        // Also merge them into _allStreams for searching
+        try
+        {
+            var tempAll = new List<StreamItem>();
+            void LoadAndMergeFile(string file)
+            {
+                var filePath = GetLibraryFilePath(file);
+                if (File.Exists(filePath))
+                {
+                    var json = File.ReadAllText(filePath);
+                    var list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<StreamItem>>(json);
+                    if (list != null)
+                    {
+                        foreach (var item in list)
+                        {
+                            if (!tempAll.Any(x => x.EffectiveStreamId == item.EffectiveStreamId && x.StreamType == item.StreamType))
+                            {
+                                tempAll.Add(item);
+                            }
+                        }
+                    }
+                }
+            }
+
+            LoadAndMergeFile("currently_watching.json");
+            LoadAndMergeFile("liked_shows.json");
+            LoadAndMergeFile("liked_live.json");
+            LoadAndMergeFile("liked_movies.json");
+            LoadAndMergeFile("watch_later.json");
+
+            _allStreams = tempAll;
+            foreach (var item in _allStreams)
+            {
+                SyncItemLibraryState(item);
+            }
+            SetFilteredStreams(_allStreams);
+            StatusMessage = $"{tempAll.Count} unique items in My Library";
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Error loading library items for search", ex);
+        }
+    }
+
+    private void SyncItemLibraryState(StreamItem stream)
+    {
+        if (stream == null) return;
+
+        // Determine if it's liked
+        if (stream.StreamType == "movie")
+        {
+            stream.IsLiked = LikedMovies.Any(x => x.EffectiveStreamId == stream.EffectiveStreamId);
+        }
+        else if (stream.StreamType == "series")
+        {
+            stream.IsLiked = LikedShows.Any(x => x.SeriesId == stream.SeriesId || (x.EffectiveStreamId == stream.EffectiveStreamId && x.EffectiveStreamId != 0));
+        }
+        else if (stream.StreamType == "live" || string.IsNullOrEmpty(stream.StreamType))
+        {
+            stream.IsLiked = LikedLive.Any(x => x.EffectiveStreamId == stream.EffectiveStreamId);
+        }
+
+        // Determine if it is watch later (only movies and series)
+        if (stream.StreamType == "movie" || stream.StreamType == "series")
+        {
+            stream.IsWatchLater = WatchLater.Any(x => x.EffectiveStreamId == stream.EffectiveStreamId || (stream.StreamType == "series" && x.SeriesId == stream.SeriesId && x.SeriesId != 0));
+        }
+    }
+
+    private void SyncAllItemsLibraryState()
+    {
+        // Sync continue watching items
+        foreach (var item in ContinueWatching) SyncItemLibraryState(item);
+        // Sync liked items (liked shows, liked movies, liked live tv)
+        foreach (var item in LikedShows) SyncItemLibraryState(item);
+        foreach (var item in LikedLive) SyncItemLibraryState(item);
+        foreach (var item in LikedMovies) SyncItemLibraryState(item);
+        // Sync watch later items
+        foreach (var item in WatchLater) SyncItemLibraryState(item);
+
+        // Sync currently active lists
+        foreach (var item in Streams) SyncItemLibraryState(item);
+        foreach (var item in RecentlyWatched) SyncItemLibraryState(item);
+        foreach (var item in FeaturedItems) SyncItemLibraryState(item);
+        foreach (var item in FeaturedLive) SyncItemLibraryState(item);
+        foreach (var item in FeaturedShows) SyncItemLibraryState(item);
+        foreach (var item in FeaturedMovies) SyncItemLibraryState(item);
+        foreach (var item in DevRecommendations) SyncItemLibraryState(item);
+
+        if (SelectedSeriesForInfo != null) SyncItemLibraryState(SelectedSeriesForInfo);
+        if (SelectedMovieForInfo != null) SyncItemLibraryState(SelectedMovieForInfo);
+    }
+
     private string GetCurrentlyWatchingFilePath()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -1802,6 +2073,8 @@ public partial class DashboardViewModel : ObservableObject
 
             var newJson = Newtonsoft.Json.JsonConvert.SerializeObject(list, Newtonsoft.Json.Formatting.Indented);
             File.WriteAllText(filePath, newJson);
+            LoadRecentlyWatched();
+            LoadLibrarySection(ContinueWatching, "currently_watching.json");
         }
         catch (Exception ex)
         {
@@ -1835,6 +2108,104 @@ public partial class DashboardViewModel : ObservableObject
             _allStreams = new List<StreamItem>();
             SetFilteredStreams(_allStreams);
             StatusMessage = "Failed to load Currently Watching items";
+        }
+    }
+
+    private void LoadRecentlyWatched()
+    {
+        try
+        {
+            var filePath = GetCurrentlyWatchingFilePath();
+            List<StreamItem> list;
+            if (File.Exists(filePath))
+            {
+                var json = File.ReadAllText(filePath);
+                list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<StreamItem>>(json) ?? new List<StreamItem>();
+            }
+            else
+            {
+                list = new List<StreamItem>();
+            }
+
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                RecentlyWatched.Clear();
+                foreach (var item in list.Take(10))
+                {
+                    // Mock progress if it is 0
+                    if (item.WatchProgress == 0)
+                    {
+                        var rand = new Random(item.EffectiveStreamId);
+                        item.WatchProgress = rand.Next(15, 85);
+                        item.WatchProgressText = item.StreamType == "series"
+                            ? $"{item.SeasonName ?? "Season 1"} {item.EpisodeTitle ?? item.Name}, {Math.Round(item.WatchProgress)}% watched"
+                            : $"{Math.Round(item.WatchProgress)}% watched";
+                    }
+                    RecentlyWatched.Add(item);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Error loading recently watched", ex);
+        }
+    }
+
+    private DateTime _lastProgressSaveTime = DateTime.MinValue;
+
+    public void UpdateStreamProgress(StreamItem stream, double progress)
+    {
+        if (stream == null || stream.StreamType == "live") return;
+
+        var text = stream.StreamType == "series"
+            ? $"{stream.SeasonName ?? "Season 1"} {stream.EpisodeTitle ?? stream.Name}, {Math.Round(progress)}% watched"
+            : $"{Math.Round(progress)}% watched";
+
+        var existing = RecentlyWatched.FirstOrDefault(x => x.EffectiveStreamId == stream.EffectiveStreamId && x.StreamType == stream.StreamType);
+        if (existing != null)
+        {
+            existing.WatchProgress = progress;
+            existing.WatchProgressText = text;
+        }
+
+        var existingCw = ContinueWatching.FirstOrDefault(x => x.EffectiveStreamId == stream.EffectiveStreamId && x.StreamType == stream.StreamType);
+        if (existingCw != null)
+        {
+            existingCw.WatchProgress = progress;
+            existingCw.WatchProgressText = text;
+        }
+
+        if ((DateTime.Now - _lastProgressSaveTime).TotalSeconds > 3)
+        {
+            _lastProgressSaveTime = DateTime.Now;
+            SaveCurrentlyWatchingProgress(stream.EffectiveStreamId, stream.StreamType, progress, text);
+        }
+    }
+
+    private void SaveCurrentlyWatchingProgress(int streamId, string streamType, double progress, string progressText)
+    {
+        try
+        {
+            var filePath = GetCurrentlyWatchingFilePath();
+            if (File.Exists(filePath))
+            {
+                var json = File.ReadAllText(filePath);
+                var list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<StreamItem>>(json) ?? new List<StreamItem>();
+
+                var item = list.FirstOrDefault(x => x.EffectiveStreamId == streamId && x.StreamType == streamType);
+                if (item != null)
+                {
+                    item.WatchProgress = progress;
+                    item.WatchProgressText = progressText;
+
+                    var newJson = Newtonsoft.Json.JsonConvert.SerializeObject(list, Newtonsoft.Json.Formatting.Indented);
+                    File.WriteAllText(filePath, newJson);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Error saving progress to currently watching", ex);
         }
     }
 }

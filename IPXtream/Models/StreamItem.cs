@@ -139,4 +139,60 @@ public class StreamItem : ObservableObject
 
     [JsonIgnore]
     public bool IsMovie => StreamType == "movie";
+
+    private string? _seriesName;
+    [JsonProperty("series_name")]
+    public string? SeriesName
+    {
+        get => _seriesName;
+        set => SetProperty(ref _seriesName, value);
+    }
+
+    private string? _episodeTitle;
+    [JsonProperty("episode_title")]
+    public string? EpisodeTitle
+    {
+        get => _episodeTitle;
+        set => SetProperty(ref _episodeTitle, value);
+    }
+
+    private string? _seasonName;
+    [JsonProperty("season_name")]
+    public string? SeasonName
+    {
+        get => _seasonName;
+        set => SetProperty(ref _seasonName, value);
+    }
+
+    private double _watchProgress;
+    [JsonProperty("watch_progress")]
+    public double WatchProgress
+    {
+        get => _watchProgress;
+        set => SetProperty(ref _watchProgress, value);
+    }
+
+    private string? _watchProgressText;
+    [JsonProperty("watch_progress_text")]
+    public string? WatchProgressText
+    {
+        get => _watchProgressText;
+        set => SetProperty(ref _watchProgressText, value);
+    }
+
+    private bool _isLiked;
+    [JsonIgnore]
+    public bool IsLiked
+    {
+        get => _isLiked;
+        set => SetProperty(ref _isLiked, value);
+    }
+
+    private bool _isWatchLater;
+    [JsonIgnore]
+    public bool IsWatchLater
+    {
+        get => _isWatchLater;
+        set => SetProperty(ref _isWatchLater, value);
+    }
 }

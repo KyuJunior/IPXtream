@@ -10,18 +10,18 @@
         MinWidth="400" MinHeight="550"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanMinimize"
-        Background="#0F0F1A">
+        Background="#080812">
 
     <Window.Resources>
         <!-- ── Colour palette ───────────────────────────────────────────── -->
-        <SolidColorBrush x:Key="BgDeep"       Color="#0F0F1A"/>
-        <SolidColorBrush x:Key="BgCard"       Color="#1A1A2E"/>
-        <SolidColorBrush x:Key="AccentBlue"   Color="#4F8EF7"/>
-        <SolidColorBrush x:Key="AccentPurple" Color="#7C5CBF"/>
-        <SolidColorBrush x:Key="TextPrimary"  Color="#E8E8F0"/>
+        <SolidColorBrush x:Key="BgDeep"       Color="#080812"/>
+        <SolidColorBrush x:Key="BgCard"       Color="#141422"/>
+        <SolidColorBrush x:Key="AccentBlue"   Color="#5B9BFF"/>
+        <SolidColorBrush x:Key="AccentPurple" Color="#8B6BD4"/>
+        <SolidColorBrush x:Key="TextPrimary"  Color="#F0F0F8"/>
         <SolidColorBrush x:Key="TextMuted"    Color="#888899"/>
-        <SolidColorBrush x:Key="InputBg"      Color="#12122A"/>
-        <SolidColorBrush x:Key="InputBorder"  Color="#2E2E50"/>
+        <SolidColorBrush x:Key="InputBg"      Color="#0E0E20"/>
+        <SolidColorBrush x:Key="InputBorder"  Color="#252545"/>
         <SolidColorBrush x:Key="ErrorRed"     Color="#FF5370"/>
 
         <!-- ── TextBox style ──────────────────────────────────────────────── -->
@@ -43,7 +43,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
+                                CornerRadius="10">
                             <ScrollViewer x:Name="PART_ContentHost"
                                           Margin="{TemplateBinding Padding}"
                                           VerticalAlignment="Center"
@@ -77,7 +77,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
+                                CornerRadius="10">
                             <ScrollViewer x:Name="PART_ContentHost"
                                           Margin="{TemplateBinding Padding}"
                                           VerticalAlignment="Center"
@@ -113,11 +113,11 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" CornerRadius="10">
+                        <Border x:Name="Bd" CornerRadius="12">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#4F8EF7" Offset="0"/>
-                                    <GradientStop Color="#7C5CBF" Offset="1"/>
+                                    <GradientStop Color="#5B9BFF" Offset="0"/>
+                                    <GradientStop Color="#8B6BD4" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -195,7 +195,7 @@
                                                 Background="{TemplateBinding Background}"
                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                                CornerRadius="8">
+                                                CornerRadius="10">
                                             <Grid HorizontalAlignment="Right" Width="30">
                                                 <Path x:Name="Arrow"
                                                       Fill="{StaticResource TextMuted}"
@@ -234,7 +234,7 @@
                                             Background="{StaticResource InputBg}"
                                             BorderBrush="{StaticResource InputBorder}"
                                             BorderThickness="1"
-                                            CornerRadius="8"
+                                            CornerRadius="10"
                                             Margin="0,2,0,0">
                                         <ScrollViewer SnapsToDevicePixels="True">
                                             <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
@@ -271,9 +271,12 @@
 
     <!-- ── Root card ────────────────────────────────────────────────────────── -->
     <Border Background="{StaticResource BgCard}"
-            CornerRadius="16"
+            CornerRadius="20"
             Margin="16"
-            Padding="28,20">
+            Padding="32,24">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.5" ShadowDepth="0"/>
+        </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>   <!-- Logo + title -->
@@ -284,19 +287,19 @@
 
             <!-- ── Header ───────────────────────────────────────────────── -->
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,14">
-                <Border Width="48" Height="48" CornerRadius="24"
+                <Border Width="56" Height="56" CornerRadius="28"
                         HorizontalAlignment="Center" Margin="0,0,0,10">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#4F8EF7" Offset="0"/>
-                            <GradientStop Color="#7C5CBF" Offset="1"/>
+                            <GradientStop Color="#5B9BFF" Offset="0"/>
+                            <GradientStop Color="#8B6BD4" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    <Path Data="{StaticResource IconLogo}" Fill="White" Width="22" Height="22" Stretch="Uniform"
+                    <Path Data="{StaticResource IconLogo}" Fill="White" Width="26" Height="26" Stretch="Uniform"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <TextBlock Text="IPXtream"
-                           FontSize="22" FontWeight="Bold"
+                           FontSize="24" FontWeight="Bold"
                            Foreground="{StaticResource TextPrimary}"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="Sign in to your IPTV service"
@@ -352,7 +355,7 @@
             <!-- ── Error message ─────────────────────────────────────────── -->
             <Border Grid.Row="2"
                     Background="#3DFF5370"
-                    CornerRadius="8"
+                    CornerRadius="10"
                     Padding="12,8"
                     Margin="0,14,0,0"
                     Visibility="{Binding ErrorMessage,
@@ -383,7 +386,13 @@
                 </Button>
 
                 <!-- Simple loading indicator -->
-                <Border Background="#7C5CBF" CornerRadius="10" Height="48">
+                <Border CornerRadius="12" Height="48">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#5B9BFF" Offset="0"/>
+                            <GradientStop Color="#8B6BD4" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Visibility" Value="Collapsed"/>

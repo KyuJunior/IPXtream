@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using IPXtream.ViewModels;
 using FlyleafLib;
@@ -13,6 +14,15 @@ public partial class DashboardWindow : Window
     [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOACTIVATE = 0x0010;
+
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
 
@@ -22,6 +32,8 @@ public partial class DashboardWindow : Window
     private readonly System.Windows.Threading.DispatcherTimer _hideTimer;
     private bool _barsLocked;
     private bool _isFullscreen;
+    private bool _wasPlayerPopupOpenBeforeDeactivation;
+    private bool _wasPipPopupOpenBeforeDeactivation;
 
     // VLC and WebView2 fields
     private LibVLCSharp.Shared.LibVLC? _libVLC;
@@ -62,6 +74,10 @@ public partial class DashboardWindow : Window
             if (e.PropertyName == nameof(DashboardViewModel.SelectedTheme))
             {
                 UpdateTitleBarTheme(_vm.SelectedTheme);
+            }
+            else if (e.PropertyName == nameof(DashboardViewModel.IsPlayerMinimized))
+            {
+                OnPipStateChanged(_vm.IsPlayerMinimized);
             }
         };
 
@@ -113,6 +129,7 @@ public partial class DashboardWindow : Window
         _vm.PlayRequested   += OnPlayRequested;
         _vm.LogoutRequested += OnLogoutRequested;
         _vm.RequestGithubToken += OnRequestGithubToken;
+        _vm.ClosePipRequested += ClosePlayer;
 
         // Force popup position update on resize/move since WPF popups don't track inherently
         this.LocationChanged += (_, _) => UpdatePopupPosition();
@@ -457,6 +474,7 @@ public partial class DashboardWindow : Window
 
         PlayerOverlayPopup.IsOpen = false;
         PlayerPanel.Visibility = Visibility.Collapsed;
+        _vm.IsPlayerMinimized = false;
     }
 
     // ── VLC Event Handlers ───────────────────────────────────────────────────
@@ -531,7 +549,11 @@ public partial class DashboardWindow : Window
             
             Topmost = true; // Cover taskbar
 
-            // Extend player panel over the sidebar
+            // Extend player panel over the entire grid
+            Grid.SetRow(PlayerPanel, 0);
+            Grid.SetRowSpan(PlayerPanel, 2);
+            Grid.SetColumn(PlayerPanel, 0);
+            Grid.SetColumnSpan(PlayerPanel, 2);
             PlayerPanel.Margin = new Thickness(0);
         }
         else
@@ -544,8 +566,12 @@ public partial class DashboardWindow : Window
             WindowStyle = WindowStyle.SingleBorderWindow;
             ResizeMode  = ResizeMode.CanResize;
             
-            // Restore sidebar gap
-            PlayerPanel.Margin = new Thickness(220, 0, 0, 0);
+            // Restore standard embed area (Row 1, spanning both content columns)
+            Grid.SetRow(PlayerPanel, 1);
+            Grid.SetRowSpan(PlayerPanel, 1);
+            Grid.SetColumn(PlayerPanel, 0);
+            Grid.SetColumnSpan(PlayerPanel, 2);
+            PlayerPanel.Margin = new Thickness(0);
         }
 
         // Re-open popup so it is created on top of the active topmost window with the correct size
@@ -561,6 +587,74 @@ public partial class DashboardWindow : Window
             var offset = PlayerOverlayPopup.HorizontalOffset;
             PlayerOverlayPopup.HorizontalOffset = offset + 0.1;
             PlayerOverlayPopup.HorizontalOffset = offset;
+            ForcePopupTopmost(PlayerOverlayPopup);
+        }
+        if (PipOverlayPopup != null && PipOverlayPopup.IsOpen)
+        {
+            var offset = PipOverlayPopup.HorizontalOffset;
+            PipOverlayPopup.HorizontalOffset = offset + 0.1;
+            PipOverlayPopup.HorizontalOffset = offset;
+            ForcePopupTopmost(PipOverlayPopup);
+        }
+    }
+
+    private void OnPipStateChanged(bool isMinimized)
+    {
+        if (isMinimized)
+        {
+            // Exit fullscreen first if active
+            if (_isFullscreen) ApplyFullscreen(false);
+
+            // Hide the full-player overlay popup and stop auto-hide timer
+            PlayerOverlayPopup.IsOpen = false;
+            _hideTimer.Stop();
+
+            // Place in root coordinates spanning everything so it floats over top bar
+            Grid.SetRow(PlayerPanel, 0);
+            Grid.SetRowSpan(PlayerPanel, 2);
+            Grid.SetColumn(PlayerPanel, 0);
+            Grid.SetColumnSpan(PlayerPanel, 2);
+
+            // Set PiP size, alignment, and margin programmatically to avoid dependency precedence issues
+            PlayerPanel.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
+            PlayerPanel.VerticalAlignment = System.Windows.VerticalAlignment.Bottom;
+            PlayerPanel.Width = 320;
+            PlayerPanel.Height = 180;
+            PlayerPanel.Margin = new Thickness(0, 0, 16, 16);
+
+            // Show PiP airspace-safe popup controls
+            if (PipOverlayPopup != null)
+            {
+                PipOverlayPopup.IsOpen = true;
+                UpdatePopupPosition();
+            }
+        }
+        else
+        {
+            // Restore full player layout values
+            Grid.SetRow(PlayerPanel, 1);
+            Grid.SetRowSpan(PlayerPanel, 1);
+            Grid.SetColumn(PlayerPanel, 0);
+            Grid.SetColumnSpan(PlayerPanel, 2);
+
+            PlayerPanel.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
+            PlayerPanel.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
+            PlayerPanel.Width = double.NaN; // Auto
+            PlayerPanel.Height = double.NaN; // Auto
+            PlayerPanel.Margin = new Thickness(0);
+
+            // Hide PiP popup controls
+            if (PipOverlayPopup != null)
+            {
+                PipOverlayPopup.IsOpen = false;
+            }
+
+            if (_vm.PlayerVm != null)
+            {
+                PlayerOverlayPopup.IsOpen = true;
+                _hideTimer.Start();
+                UpdatePopupPosition();
+            }
         }
     }
 
@@ -834,6 +928,72 @@ public partial class DashboardWindow : Window
         if (e.OriginalSource == sender)
         {
             _vm.CloseSettingsCommand.Execute(null);
+        }
+    }
+
+    private void Popup_Opened(object sender, EventArgs e)
+    {
+        UpdatePopupPosition();
+    }
+
+    private void PlayerPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdatePopupPosition();
+    }
+
+    private void PipOverlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left)
+        {
+            DragMove();
+        }
+    }
+
+    private void Window_Deactivated(object sender, EventArgs e)
+    {
+        _wasPlayerPopupOpenBeforeDeactivation = PlayerOverlayPopup.IsOpen;
+        _wasPipPopupOpenBeforeDeactivation = PipOverlayPopup != null && PipOverlayPopup.IsOpen;
+
+        PlayerOverlayPopup.IsOpen = false;
+        if (PipOverlayPopup != null)
+        {
+            PipOverlayPopup.IsOpen = false;
+        }
+    }
+
+    private void Window_Activated(object sender, EventArgs e)
+    {
+        if (_wasPlayerPopupOpenBeforeDeactivation)
+        {
+            PlayerOverlayPopup.IsOpen = true;
+            UpdatePopupPosition();
+        }
+        if (_wasPipPopupOpenBeforeDeactivation && PipOverlayPopup != null)
+        {
+            PipOverlayPopup.IsOpen = true;
+            UpdatePopupPosition();
+        }
+    }
+
+    private void ForcePopupTopmost(Popup popup)
+    {
+        if (popup == null || !popup.IsOpen || popup.Child == null) return;
+
+        try
+        {
+            var hwndSource = System.Windows.PresentationSource.FromVisual(popup.Child) as System.Windows.Interop.HwndSource;
+            if (hwndSource != null)
+            {
+                IntPtr hwnd = hwndSource.Handle;
+                if (hwnd != IntPtr.Zero)
+                {
+                    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ForcePopupTopmost] Error forcing topmost z-order: {ex.Message}");
         }
     }
 }
