@@ -381,8 +381,60 @@ public partial class DashboardViewModel : ObservableObject
                 UpdateUrl    = htmlUrl;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            LogService.Log("Update check API failed, trying fallback...", ex);
+            
+            try
+            {
+                using var http = new HttpClient();
+                http.DefaultRequestHeaders.UserAgent.Add(
+                    new ProductInfoHeaderValue("IPXtream", AppVersion.TrimStart('v')));
+
+                using var request = new HttpRequestMessage(HttpMethod.Head, "https://github.com/KyuJunior/IPXtream/releases/latest");
+                using var response = await http.SendAsync(request);
+                var finalUrl = response.RequestMessage?.RequestUri?.ToString() ?? string.Empty;
+
+                if (!string.IsNullOrEmpty(finalUrl) && finalUrl.Contains("/releases/tag/"))
+                {
+                    var tagIdx = finalUrl.IndexOf("/releases/tag/");
+                    var tagName = finalUrl.Substring(tagIdx + "/releases/tag/".Length).Trim();
+
+                    var htmlUrl = finalUrl;
+                    var latestStr = tagName.TrimStart('v');
+                    var currentStr = AppVersion.TrimStart('v');
+
+                    // Construct download URL
+                    string downloadUrl = $"https://github.com/KyuJunior/IPXtream/releases/download/{tagName}/IPXtream_Setup_{tagName}.exe";
+                    _updateDownloadUrl = downloadUrl;
+
+                    if (Version.TryParse(latestStr, out var latest) &&
+                        Version.TryParse(currentStr, out var current))
+                    {
+                        if (latest > current)
+                        {
+                            UpdateStatus = $"⬆ Update available: v{latestStr}";
+                            UpdateUrl = htmlUrl;
+                        }
+                        else
+                        {
+                            UpdateStatus = "✔ Up to date";
+                            UpdateUrl = string.Empty;
+                        }
+                    }
+                    else
+                    {
+                        UpdateStatus = tagName == currentStr ? "✔ Up to date" : $"Latest: {tagName}";
+                        UpdateUrl = htmlUrl;
+                    }
+                    return; // Succeeded via fallback!
+                }
+            }
+            catch (Exception ex2)
+            {
+                LogService.Log("Update check fallback failed", ex2);
+            }
+
             UpdateStatus = silent ? string.Empty : "⚠ Could not check";
         }
         finally

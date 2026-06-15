@@ -996,4 +996,31 @@ public partial class DashboardWindow : Window
             System.Diagnostics.Debug.WriteLine($"[ForcePopupTopmost] Error forcing topmost z-order: {ex.Message}");
         }
     }
+
+    private void HorizontalListBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (!e.Handled)
+        {
+            var listBox = sender as ListBox;
+            if (listBox == null) return;
+
+            // Find parent ScrollViewer using VisualTreeHelper
+            var parent = System.Windows.Media.VisualTreeHelper.GetParent(listBox);
+            while (parent != null && !(parent is ScrollViewer))
+            {
+                parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+            }
+
+            if (parent is ScrollViewer scrollViewer)
+            {
+                e.Handled = true;
+                var eventArg = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+                {
+                    RoutedEvent = UIElement.MouseWheelEvent,
+                    Source = listBox
+                };
+                scrollViewer.RaiseEvent(eventArg);
+            }
+        }
+    }
 }

@@ -15,6 +15,12 @@ def error(msg):
     sys.exit(1)
 
 def main():
+    # Clear dummy environment tokens to fall back to user's keychain/keyring
+    if "GITHUB_TOKEN" in os.environ:
+        del os.environ["GITHUB_TOKEN"]
+    if "GH_TOKEN" in os.environ:
+        del os.environ["GH_TOKEN"]
+
     csproj_path = os.path.join("IPXtream", "IPXtream.csproj")
     iss_path = "IPXtream_Installer.iss"
 
