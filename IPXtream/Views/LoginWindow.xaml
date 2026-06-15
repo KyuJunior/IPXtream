@@ -51,8 +51,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush"
-                                        Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="Bd" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect BlurRadius="8" Color="#5B9BFF" Opacity="0.25" ShadowDepth="0"/>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -85,8 +89,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush"
-                                        Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="Bd" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect BlurRadius="8" Color="#5B9BFF" Opacity="0.25" ShadowDepth="0"/>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -249,6 +257,11 @@
                             </Trigger>
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter TargetName="ToggleButton" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="ToggleButton" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect BlurRadius="8" Color="#5B9BFF" Opacity="0.25" ShadowDepth="0"/>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -269,14 +282,26 @@
         </EventTrigger>
     </Window.Triggers>
 
-    <!-- ── Root card ────────────────────────────────────────────────────────── -->
-    <Border Background="{StaticResource BgCard}"
-            CornerRadius="20"
-            Margin="16"
-            Padding="32,24">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.5" ShadowDepth="0"/>
-        </Border.Effect>
+    <!-- ── Main Grid Container ── -->
+    <Grid>
+        <!-- Ambient Backdrop Artwork Glow -->
+        <Grid IsHitTestVisible="False">
+            <Image Source="/dashboard_bg.png" Stretch="UniformToFill" Opacity="0.55"/>
+            <Border Background="#E5080812"/>
+        </Grid>
+
+        <!-- ── Root card ────────────────────────────────────────────────────────── -->
+        <Border Background="#D0141422"
+                BorderBrush="#15FFFFFF"
+                BorderThickness="1"
+                CornerRadius="20"
+                Margin="24"
+                Padding="32,24"
+                VerticalAlignment="Center"
+                MaxWidth="420">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.65" ShadowDepth="0"/>
+            </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>   <!-- Logo + title -->
@@ -422,5 +447,6 @@
                 </Border>
             </Grid>
         </Grid>
-    </Border>
+        </Border>
+    </Grid>
 </Window>
