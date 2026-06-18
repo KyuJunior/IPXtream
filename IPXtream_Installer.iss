@@ -1,22 +1,22 @@
 ; ============================================================
-;  IPXtream v2.0.55 — Inno Setup 6 Installer Script
+;  IPXtream v2.0.60 — Inno Setup 6 Installer Script
 ;
 ;  Step 1 — Publish the app first (run from IPXtream\ folder):
 ;    dotnet publish -c Release -r win-x64 --self-contained true ^
 ;      -p:PublishSingleFile=false ^
-;      -o "bin\publish_v2.0.55"
+;      -o "bin\publish_v2.0.60"
 ;
 ;  Step 2 — Open this file in Inno Setup 6 and press F9.
 ;
-;  Output: Output\IPXtream_Setup_v2.0.55.exe
+;  Output: Output\IPXtream_Setup_v2.0.60.exe
 ; ============================================================
 
 #define MyAppName      "IPXtream"
-#define MyAppVersion   "2.0.55"
+#define MyAppVersion   "2.0.60"
 #define MyAppPublisher "Dr. Yaser"
 #define MyAppURL       "https://github.com/KyuJunior/IPXtream"
 #define MyAppExeName   "IPXtream.exe"
-#define MyPublishDir   "IPXtream\bin\publish_v2.0.55"
+#define MyPublishDir   "IPXtream\bin\publish_v2.0.60"
 
 [Setup]
 AppId={{E7A2C3D4-F8B1-4E5A-9C6D-1234567890AB}

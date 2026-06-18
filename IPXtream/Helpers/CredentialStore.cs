@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using IPXtream.Models;
+using IPXtream.Services;
 using Newtonsoft.Json;
 
 namespace IPXtream.Helpers;
@@ -16,6 +17,8 @@ namespace IPXtream.Helpers;
 /// </summary>
 public static class CredentialStore
 {
+    private static readonly object FileLock = new();
+
     private static readonly string StorageDir =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                      "IPXtream");
@@ -40,19 +43,28 @@ public static class CredentialStore
     /// </summary>
     public static void Save(AppSettings settings)
     {
-        try
+        lock (FileLock)
         {
-            Directory.CreateDirectory(StorageDir);
+            try
+            {
+                Directory.CreateDirectory(StorageDir);
 
-            var json        = JsonConvert.SerializeObject(settings, Formatting.Indented);
-            var plainBytes  = Encoding.UTF8.GetBytes(json);
-            var cipherBytes = ProtectedData.Protect(plainBytes, Entropy, DataProtectionScope.CurrentUser);
+                var json        = JsonConvert.SerializeObject(settings, Formatting.Indented);
+                var plainBytes  = Encoding.UTF8.GetBytes(json);
+                var cipherBytes = ProtectedData.Protect(plainBytes, Entropy, DataProtectionScope.CurrentUser);
 
-            File.WriteAllBytes(SettingsFilePath, cipherBytes);
-        }
-        catch
-        {
-            // Ignore settings save errors
+                var tempPath = SettingsFilePath + ".tmp";
+                File.WriteAllBytes(tempPath, cipherBytes);
+                if (File.Exists(SettingsFilePath))
+                {
+                    File.Delete(SettingsFilePath);
+                }
+                File.Move(tempPath, SettingsFilePath);
+            }
+            catch (Exception ex)
+            {
+                LogService.Log("Failed to save credentials/settings to disk.", ex);
+            }
         }
     }
 
@@ -61,110 +73,129 @@ public static class CredentialStore
     /// </summary>
     public static AppSettings Load()
     {
-        var settings = new AppSettings();
-
-        // 1. Load settings.dat if it exists
-        if (File.Exists(SettingsFilePath))
+        lock (FileLock)
         {
-            try
+            var settings = new AppSettings();
+
+            // 1. Load settings.dat if it exists
+            if (File.Exists(SettingsFilePath))
             {
-                var cipherBytes = File.ReadAllBytes(SettingsFilePath);
-                var plainBytes  = ProtectedData.Unprotect(cipherBytes, Entropy, DataProtectionScope.CurrentUser);
-                var json        = Encoding.UTF8.GetString(plainBytes);
-                var loaded      = JsonConvert.DeserializeObject<AppSettings>(json);
-                if (loaded != null)
+                try
                 {
-                    settings = loaded;
-                }
-            }
-            catch
-            {
-                // Corrupted file, treat as default settings
-            }
-        }
-
-        bool needsSave = false;
-
-        // 2. Migrate legacy single credentials file (credentials.dat)
-        if (File.Exists(LegacyCredentialsFilePath))
-        {
-            try
-            {
-                var cipherBytes = File.ReadAllBytes(LegacyCredentialsFilePath);
-                var plainBytes  = ProtectedData.Unprotect(cipherBytes, Entropy, DataProtectionScope.CurrentUser);
-                var json        = Encoding.UTF8.GetString(plainBytes);
-                var legacyCreds = JsonConvert.DeserializeObject<UserCredentials>(json);
-
-                if (legacyCreds != null)
-                {
-                    // Add legacy creds to the list if not already present
-                    if (!settings.SavedAccounts.Any(a => a.Username == legacyCreds.Username && a.ServerUrl == legacyCreds.ServerUrl))
+                    var cipherBytes = File.ReadAllBytes(SettingsFilePath);
+                    var plainBytes  = ProtectedData.Unprotect(cipherBytes, Entropy, DataProtectionScope.CurrentUser);
+                    var json        = Encoding.UTF8.GetString(plainBytes);
+                    var loaded      = JsonConvert.DeserializeObject<AppSettings>(json);
+                    if (loaded != null)
                     {
-                        settings.SavedAccounts.Add(legacyCreds);
+                        settings = loaded;
                     }
-                    // Make it default
-                    settings.DefaultAccountUsername = legacyCreds.Username;
-                    settings.DefaultAccountServerUrl = legacyCreds.ServerUrl;
-                    needsSave = true;
                 }
-            }
-            catch
-            {
-                // Ignore load error for legacy credentials
-            }
-            finally
-            {
-                try { File.Delete(LegacyCredentialsFilePath); } catch { }
-            }
-        }
-
-        // 3. Migrate legacy settings file (settings.json)
-        if (File.Exists(LegacySettingsJsonPath))
-        {
-            try
-            {
-                var json = File.ReadAllText(LegacySettingsJsonPath);
-                var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-                if (dict != null && dict.TryGetValue("DownloadFolder", out var path) && !string.IsNullOrWhiteSpace(path))
+                catch (Exception ex)
                 {
-                    settings.DownloadFolder = path;
-                    needsSave = true;
+                    LogService.Log("Corrupted settings.dat or DPAPI decryption failed. Using default settings.", ex);
                 }
             }
-            catch
+
+            bool needsSave = false;
+
+            // 2. Migrate legacy single credentials file (credentials.dat)
+            if (File.Exists(LegacyCredentialsFilePath))
             {
-                // Ignore load error for legacy settings
+                try
+                {
+                    var cipherBytes = File.ReadAllBytes(LegacyCredentialsFilePath);
+                    var plainBytes  = ProtectedData.Unprotect(cipherBytes, Entropy, DataProtectionScope.CurrentUser);
+                    var json        = Encoding.UTF8.GetString(plainBytes);
+                    var legacyCreds = JsonConvert.DeserializeObject<UserCredentials>(json);
+
+                    if (legacyCreds != null)
+                    {
+                        // Add legacy creds to the list if not already present
+                        if (!settings.SavedAccounts.Any(a => a.Username == legacyCreds.Username && a.ServerUrl == legacyCreds.ServerUrl))
+                        {
+                            settings.SavedAccounts.Add(legacyCreds);
+                        }
+                        // Make it default
+                        settings.DefaultAccountUsername = legacyCreds.Username;
+                        settings.DefaultAccountServerUrl = legacyCreds.ServerUrl;
+                        needsSave = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogService.Log("Failed to migrate legacy credentials file.", ex);
+                }
+                finally
+                {
+                    try { File.Delete(LegacyCredentialsFilePath); } catch (Exception ex) { LogService.Log("Failed to delete legacy credentials.dat file.", ex); }
+                }
             }
-            finally
+
+            // 3. Migrate legacy settings file (settings.json)
+            if (File.Exists(LegacySettingsJsonPath))
             {
-                try { File.Delete(LegacySettingsJsonPath); } catch { }
+                try
+                {
+                    var json = File.ReadAllText(LegacySettingsJsonPath);
+                    var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                    if (dict != null && dict.TryGetValue("DownloadFolder", out var path) && !string.IsNullOrWhiteSpace(path))
+                    {
+                        settings.DownloadFolder = path;
+                        needsSave = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogService.Log("Failed to migrate legacy settings file.", ex);
+                }
+                finally
+                {
+                    try { File.Delete(LegacySettingsJsonPath); } catch (Exception ex) { LogService.Log("Failed to delete legacy settings.json file.", ex); }
+                }
             }
-        }
 
-        // Apply default download folder if empty
-        if (string.IsNullOrWhiteSpace(settings.DownloadFolder))
-        {
-            settings.DownloadFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Downloads", "IPXtream");
-            needsSave = true;
-        }
+            // Apply default download folder if empty
+            if (string.IsNullOrWhiteSpace(settings.DownloadFolder))
+            {
+                settings.DownloadFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "Downloads", "IPXtream");
+                needsSave = true;
+            }
 
-        if (needsSave)
-        {
-            Save(settings);
-        }
+            if (needsSave)
+            {
+                Save(settings);
+            }
 
-        return settings;
+            return settings;
+        }
     }
 
     /// <summary>Deletes any saved settings file from disk.</summary>
     public static void Clear()
     {
-        if (File.Exists(SettingsFilePath))
-            File.Delete(SettingsFilePath);
+        lock (FileLock)
+        {
+            try
+            {
+                if (File.Exists(SettingsFilePath))
+                    File.Delete(SettingsFilePath);
+            }
+            catch (Exception ex)
+            {
+                LogService.Log("Failed to clear/delete settings file.", ex);
+            }
+        }
     }
 
     /// <summary>Returns <c>true</c> if a settings file already exists.</summary>
-    public static bool HasSavedSettings() => File.Exists(SettingsFilePath);
+    public static bool HasSavedSettings()
+    {
+        lock (FileLock)
+        {
+            return File.Exists(SettingsFilePath);
+        }
+    }
 }

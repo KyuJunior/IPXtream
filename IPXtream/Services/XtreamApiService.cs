@@ -274,60 +274,100 @@ public class XtreamApiService : IDisposable
     {
         var cacheFile = GetCacheFilePath(url);
 
-        // 1. Try reading from cache
+        // 1. Try reading from cache if it exists and is not expired (TTL = 60 minutes)
         if (!forceRefresh && File.Exists(cacheFile))
         {
             try
             {
-                return await File.ReadAllTextAsync(cacheFile, ct);
-            }
-            catch
-            {
-                // Fall back to network on read error
-            }
-        }
-
-        // 2. Fetch from network
-        try
-        {
-            var response = await _http.GetAsync(url, ct);
-            response.EnsureSuccessStatusCode();
-            var json = await response.Content.ReadAsStringAsync(ct);
-
-            // 3. Save to cache in background (fire-and-forget)
-            _ = Task.Run(async () =>
-            {
-                try
+                var fileInfo = new FileInfo(cacheFile);
+                if (DateTime.UtcNow - fileInfo.LastWriteTimeUtc < TimeSpan.FromMinutes(60))
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(cacheFile)!);
-                    await File.WriteAllTextAsync(cacheFile, json);
+                    return await File.ReadAllTextAsync(cacheFile, ct);
                 }
-                catch { /* Ignore caching errors */ }
-            });
-
-            return json;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogService.Log($"HTTP Request error for URL: {url}", ex);
-            
-            // Check for DNS resolution error (SocketError 11001 / HostNotFound)
-            if (ex.InnerException is System.Net.Sockets.SocketException sex && sex.ErrorCode == 11001)
-            {
-                throw new XtreamApiException(
-                    "Connection failed: The server domain could not be resolved. " +
-                    "Your ISP may be blocking this IPTV service. Try enabling a VPN or changing your system DNS to Google (8.8.8.8).", ex);
             }
-            
-            throw new XtreamApiException(
-                $"Network error while contacting server: {ex.Message}", ex);
+            catch (Exception ex)
+            {
+                LogService.Log($"Cache read failure for: {url}", ex);
+            }
         }
-        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+
+        // 2. Fetch from network with transient error retries (3 attempts)
+        int maxAttempts = 3;
+        int delayMs = 500;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            LogService.Log($"HTTP Timeout for URL: {url}", ex);
-            throw new XtreamApiException(
-                "Request timed out. Check your server URL and connection.", ex);
+            try
+            {
+                var response = await _http.GetAsync(url, ct);
+                
+                // Specific messaging based on HTTP status code
+                if (!response.IsSuccessStatusCode)
+                {
+                    var statusCode = (int)response.StatusCode;
+                    if (statusCode == 401 || statusCode == 403)
+                    {
+                        throw new XtreamApiException("Authentication failed: Access denied by the server. Check your credentials.");
+                    }
+                    if (statusCode == 429)
+                    {
+                        throw new XtreamApiException("Rate limit exceeded: The server is receiving too many requests. Please try again in a moment.");
+                    }
+                    if (statusCode >= 500)
+                    {
+                        throw new XtreamApiException($"Server error ({statusCode}): The IPTV server encountered an error or is temporarily offline.");
+                    }
+                    response.EnsureSuccessStatusCode(); // Throws default HttpRequestException for others
+                }
+
+                var json = await response.Content.ReadAsStringAsync(ct);
+
+                // 3. Save to cache in background (fire-and-forget)
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(cacheFile)!);
+                        await File.WriteAllTextAsync(cacheFile, json);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Log($"Cache write failure for: {url}", ex);
+                    }
+                });
+
+                return json;
+            }
+            catch (Exception ex) when (attempt < maxAttempts && (ex is HttpRequestException || ex is TaskCanceledException))
+            {
+                LogService.Log($"Transient network error on attempt {attempt} for URL: {url}. Retrying in {delayMs}ms...", ex);
+                await Task.Delay(delayMs, ct);
+                delayMs *= 2;
+            }
+            catch (HttpRequestException ex)
+            {
+                LogService.Log($"HTTP Request error for URL: {url}", ex);
+                
+                // Check for DNS resolution error (SocketError 11001 / HostNotFound)
+                if (ex.InnerException is System.Net.Sockets.SocketException sex && sex.ErrorCode == 11001)
+                {
+                    throw new XtreamApiException(
+                        "Connection failed: The server domain could not be resolved. " +
+                        "Your ISP may be blocking this IPTV service. Try enabling a VPN or changing your system DNS to Google (8.8.8.8).", ex);
+                }
+                
+                throw new XtreamApiException(
+                    $"Network error while contacting server: {ex.Message}", ex);
+            }
+            catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+            {
+                LogService.Log($"HTTP Timeout for URL: {url}", ex);
+                throw new XtreamApiException(
+                    "Request timed out. Check your server URL and connection.", ex);
+            }
         }
+
+        throw new XtreamApiException("Request failed after maximum retry attempts.");
     }
 
     private async Task<List<T>> GetListAsync<T>(string url, CancellationToken ct, bool forceRefresh = false)

@@ -15,12 +15,13 @@ public partial class LoginWindow : Window
         DataContext = _vm;
 
         // If credentials were saved, the VM already set the password string —
-        // push it into the PasswordBox (one-time, at startup only).
+        // push it into the controls (one-time, at startup only).
         PbPassword.Password = _vm.Password;
+        TbPassword.Text = _vm.Password;
 
         _vm.LoginSucceeded += OnLoginSucceeded;
 
-        // Sync PasswordBox when SelectedAccount changes the Password property in the VM
+        // Sync inputs when SelectedAccount changes the Password property in the VM
         _vm.PropertyChanged += (sender, e) =>
         {
             if (e.PropertyName == nameof(LoginViewModel.Password))
@@ -29,15 +30,34 @@ public partial class LoginWindow : Window
                 {
                     PbPassword.Password = _vm.Password;
                 }
+                if (TbPassword.Text != _vm.Password)
+                {
+                    TbPassword.Text = _vm.Password;
+                }
             }
         };
     }
 
-    // ── PasswordBox workaround ────────────────────────────────────────────────
+    // ── PasswordBox / TextBox synchronization workaround ───────────────────────
     // WPF's PasswordBox intentionally blocks binding for security reasons.
-    // We bridge it manually via the PasswordChanged event.
+    // We bridge both the PasswordBox and TextBox manually.
     private void PbPassword_PasswordChanged(object sender, RoutedEventArgs e)
-        => _vm.Password = PbPassword.Password;
+    {
+        if (_vm.Password != PbPassword.Password)
+        {
+            _vm.Password = PbPassword.Password;
+            TbPassword.Text = PbPassword.Password;
+        }
+    }
+
+    private void TbPassword_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (_vm.Password != TbPassword.Text)
+        {
+            _vm.Password = TbPassword.Text;
+            PbPassword.Password = TbPassword.Text;
+        }
+    }
 
     // ── Navigation ────────────────────────────────────────────────────────────
     private void OnLoginSucceeded(AuthResponse auth, UserCredentials creds)

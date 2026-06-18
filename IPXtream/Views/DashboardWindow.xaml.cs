@@ -660,10 +660,27 @@ public partial class DashboardWindow : Window
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
+        // 1. Settings Escape handler
         if (e.Key == Key.Escape && _vm.IsSettingsOpen)
         {
             _vm.CloseSettingsCommand.Execute(null);
             e.Handled = true;
+            return;
+        }
+
+        // 2. Global search shortcut (Ctrl+F)
+        if (e.Key == Key.F && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            SearchTextBox.Focus();
+            e.Handled = true;
+            return;
+        }
+
+        // 3. Guards for Spacebar play/pause toggling when focusing input fields
+        var focused = Keyboard.FocusedElement;
+        if (e.Key == Key.Space && (focused is TextBox || focused is PasswordBox || focused is ComboBox || focused is ComboBoxItem))
+        {
+            // Allow default spacebar typing behavior in inputs/menus
             return;
         }
 
@@ -673,27 +690,44 @@ public partial class DashboardWindow : Window
         {
             case Key.Space:
                 _vm.PlayerVm.TogglePlayCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Key.Left:
+                if (_vm.PlayerVm.SkipBackwardCommand.CanExecute(null))
+                    _vm.PlayerVm.SkipBackwardCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Key.Right:
+                if (_vm.PlayerVm.SkipForwardCommand.CanExecute(null))
+                    _vm.PlayerVm.SkipForwardCommand.Execute(null);
+                e.Handled = true;
                 break;
             case Key.F:
             case Key.F11:
                 _vm.PlayerVm.ToggleFullscreenCommand.Execute(null);
+                e.Handled = true;
                 break;
             case Key.M:
                 _vm.PlayerVm.ToggleMuteCommand.Execute(null);
+                e.Handled = true;
                 break;
             case Key.Escape:
                 if (_isFullscreen) ApplyFullscreen(false);
                 else               ClosePlayer();
+                e.Handled = true;
                 break;
             case Key.Up:
                 _vm.PlayerVm.Volume = Math.Min(100, _vm.PlayerVm.Volume + 5);
+                e.Handled = true;
                 break;
             case Key.Down:
                 _vm.PlayerVm.Volume = Math.Max(0,   _vm.PlayerVm.Volume - 5);
+                e.Handled = true;
                 break;
             case Key.N:
                 if (_vm.PlayerVm.PlayNextEpisodeCommand.CanExecute(null))
                     _vm.PlayerVm.PlayNextEpisodeCommand.Execute(null);
+                e.Handled = true;
                 break;
         }
 

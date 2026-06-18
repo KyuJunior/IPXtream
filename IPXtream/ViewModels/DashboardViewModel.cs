@@ -31,6 +31,7 @@ public partial class DashboardViewModel : ObservableObject
 {
     private readonly XtreamApiService _api;
     private DispatcherTimer? _searchTimer;
+    private CancellationTokenSource? _categoryLoadingCts;
     private CancellationTokenSource? _cacheCts;
     private SemaphoreSlim _downloadSemaphore = new(2); // max concurrent downloads
     private readonly List<StreamItem> _featuredItems = new();
@@ -104,7 +105,19 @@ public partial class DashboardViewModel : ObservableObject
     partial void OnSelectedCategoryChanged(Category? value)
     {
         if (value is null) return;
-        _ = LoadStreamsAsync(value.CategoryId);
+
+        try
+        {
+            _categoryLoadingCts?.Cancel();
+            _categoryLoadingCts?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Error cancelling previous stream load.", ex);
+        }
+
+        _categoryLoadingCts = new CancellationTokenSource();
+        _ = LoadStreamsAsync(value.CategoryId, forceRefresh: false, ct: _categoryLoadingCts.Token);
     }
 
 
@@ -272,6 +285,11 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private bool _showDownloadsTray;
     [ObservableProperty] private string _downloadFolder = string.Empty;
     [ObservableProperty] private bool _isSettingsOpen;
+
+    [ObservableProperty] private string _newAccountServerUrl = string.Empty;
+    [ObservableProperty] private string _newAccountUsername = string.Empty;
+    [ObservableProperty] private string _newAccountPassword = string.Empty;
+    [ObservableProperty] private string _newAccountErrorMessage = string.Empty;
 
     public bool HasDownloads        => Downloads.Count > 0;
     public bool HasActiveDownloads  => Downloads.Any(d => d.IsActive);
@@ -1508,8 +1526,15 @@ public partial class DashboardViewModel : ObservableObject
             };
             _searchTimer.Tick += async (s, e) =>
             {
-                _searchTimer.Stop();
-                await PerformSearchAsync(SearchText);
+                try
+                {
+                    _searchTimer.Stop();
+                    await PerformSearchAsync(SearchText);
+                }
+                catch (Exception ex)
+                {
+                    LogService.Log("Unhandled error during search timer tick.", ex);
+                }
             };
         }
 
@@ -1519,45 +1544,46 @@ public partial class DashboardViewModel : ObservableObject
 
     private async Task PerformSearchAsync(string query)
     {
-        Streams.Clear();
-
-        // If searching the "All" category without text, we don't want to draw everything
-        if (string.IsNullOrWhiteSpace(query) && SelectedCategory?.CategoryId == "" && !IsViewingSeriesInfo)
+        try
         {
-            _filteredStreams.Clear();
-            CurrentPage = 1;
-            OnPropertyChanged(nameof(TotalPages));
-            OnPropertyChanged(nameof(HasPreviousPage));
-            OnPropertyChanged(nameof(HasNextPage));
-            OnPropertyChanged(nameof(PageStatusText));
-            StatusMessage = $"Loaded {_allStreams.Count} items. Type in the search box to find a stream.";
-            return;
-        }
+            Streams.Clear();
 
-        StatusMessage = "Searching...";
-
-        // Filter on a background thread
-        var filtered = await Task.Run(() => XtreamApiService.Search(_allStreams, query).ToList());
-        
-        // Background batch rendering using synchronized locks (10x faster)
-        await Task.Run(() =>
-        {
-            lock (_streamsLock)
+            // If searching the "All" category without text, we don't want to draw everything
+            if (string.IsNullOrWhiteSpace(query) && SelectedCategory?.CategoryId == "" && !IsViewingSeriesInfo)
             {
-                // Abort if typing changed
-                if (SearchText != query) return;
+                _filteredStreams.Clear();
+                CurrentPage = 1;
+                OnPropertyChanged(nameof(TotalPages));
+                OnPropertyChanged(nameof(HasPreviousPage));
+                OnPropertyChanged(nameof(HasNextPage));
+                OnPropertyChanged(nameof(PageStatusText));
+                StatusMessage = $"Loaded {_allStreams.Count} items. Type in the search box to find a stream.";
+                return;
             }
-        });
 
-        if (SearchText == query)
-        {
+            StatusMessage = "Searching...";
+
+            // Filter on a background thread
+            var filtered = await Task.Run(() => XtreamApiService.Search(_allStreams, query).ToList());
+            
+            // Abort if typing changed
+            if (SearchText != query) return;
+
             Application.Current?.Dispatcher.BeginInvoke(() =>
             {
-                SetFilteredStreams(filtered);
-                StatusMessage = filtered.Count == 0 && _allStreams.Count > 0
-                    ? "No results match your search."
-                    : $"{filtered.Count} / {_allStreams.Count} streams";
+                if (SearchText == query)
+                {
+                    SetFilteredStreams(filtered);
+                    StatusMessage = filtered.Count == 0 && _allStreams.Count > 0
+                        ? "No results match your search."
+                        : $"{filtered.Count} / {_allStreams.Count} streams";
+                }
             });
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Error performing search query.", ex);
+            StatusMessage = "Search failed.";
         }
     }
 
@@ -1609,7 +1635,7 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
-    private async Task LoadStreamsAsync(string categoryId, bool forceRefresh = false)
+    private async Task LoadStreamsAsync(string categoryId, bool forceRefresh = false, CancellationToken ct = default)
     {
         if (ActiveSection == MediaSection.WhatsNew || ActiveSection == MediaSection.CurrentlyWatching) return;
         IsLoadingStreams = true;
@@ -1624,10 +1650,12 @@ public partial class DashboardViewModel : ObservableObject
         {
             var items = ActiveSection switch
             {
-                MediaSection.VOD    => await _api.GetVodStreamsAsync(categoryId, forceRefresh: forceRefresh),
-                MediaSection.Series => await _api.GetSeriesAsync(categoryId, forceRefresh: forceRefresh),
-                _                   => await _api.GetLiveStreamsAsync(categoryId, forceRefresh: forceRefresh)
+                MediaSection.VOD    => await _api.GetVodStreamsAsync(categoryId, forceRefresh: forceRefresh, ct: ct),
+                MediaSection.Series => await _api.GetSeriesAsync(categoryId, forceRefresh: forceRefresh, ct: ct),
+                _                   => await _api.GetLiveStreamsAsync(categoryId, forceRefresh: forceRefresh, ct: ct)
             };
+
+            if (ct.IsCancellationRequested) return;
 
             foreach (var s in items)
             {
@@ -1649,9 +1677,19 @@ public partial class DashboardViewModel : ObservableObject
                 StatusMessage = $"{items.Count} streams";
             }
         }
+        catch (OperationCanceledException)
+        {
+            // Silently abort on cancellation
+        }
         catch (XtreamApiException ex)
         {
             ErrorMessage  = ex.Message;
+            StatusMessage = "Failed to load streams.";
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Unhandled exception loading streams.", ex);
+            ErrorMessage  = "An unexpected error occurred while loading streams.";
             StatusMessage = "Failed to load streams.";
         }
         finally
@@ -1857,6 +1895,78 @@ public partial class DashboardViewModel : ObservableObject
                                      account.ServerUrl == _appSettings.DefaultAccountServerUrl);
             }
         }
+    }
+
+    [RelayCommand]
+    private void AddNewAccount()
+    {
+        NewAccountErrorMessage = string.Empty;
+
+        var url = NewAccountServerUrl?.Trim();
+        var user = NewAccountUsername?.Trim();
+        var pass = NewAccountPassword;
+
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
+        {
+            NewAccountErrorMessage = "All fields (Server URL, Username, Password) are required.";
+            return;
+        }
+
+        // Basic URL corrections and checks
+        if (url.StartsWith("HTTP://", StringComparison.OrdinalIgnoreCase))
+        {
+            url = "http://" + url.Substring(7);
+        }
+        else if (url.StartsWith("HTTPS://", StringComparison.OrdinalIgnoreCase))
+        {
+            url = "https://" + url.Substring(8);
+        }
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+        {
+            NewAccountErrorMessage = "Server URL is not a valid absolute URL.";
+            return;
+        }
+
+        // Check if account already exists
+        var existing = _appSettings.SavedAccounts.FirstOrDefault(a => 
+            a.Username.Equals(user, StringComparison.OrdinalIgnoreCase) && 
+            a.ServerUrl.TrimEnd('/').Equals(url.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
+
+        if (existing != null)
+        {
+            NewAccountErrorMessage = "This account already exists.";
+            return;
+        }
+
+        var creds = new UserCredentials
+        {
+            ServerUrl = url,
+            Username = user,
+            Password = pass,
+            RememberMe = true
+        };
+
+        _appSettings.SavedAccounts.Add(creds);
+        
+        // If this is the only account, set it as default
+        if (string.IsNullOrEmpty(_appSettings.DefaultAccountUsername))
+        {
+            _appSettings.DefaultAccountUsername = creds.Username;
+            _appSettings.DefaultAccountServerUrl = creds.ServerUrl;
+        }
+
+        Helpers.CredentialStore.Save(_appSettings);
+
+        // Update active collections
+        creds.IsDefault = (creds.Username == _appSettings.DefaultAccountUsername && 
+                           creds.ServerUrl == _appSettings.DefaultAccountServerUrl);
+        SavedAccounts.Add(creds);
+
+        // Clear forms
+        NewAccountServerUrl = string.Empty;
+        NewAccountUsername = string.Empty;
+        NewAccountPassword = string.Empty;
     }
 
     [RelayCommand]
