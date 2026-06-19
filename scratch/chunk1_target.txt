@@ -1,0 +1,98 @@
+    // ── Fullscreen ────────────────────────────────────────────────────────────
+    private void ApplyFullscreen(bool go)
+    {
+        _isFullscreen = go;
+
+        // Temporarily close popup to trigger HWND recreation on top of the fullscreen topmost window
+        PlayerOverlayPopup.IsOpen = false;
+
+        if (go)
+        {
+            // Set pure black background to hide WPF airspace borders
+            Background = System.Windows.Media.Brushes.Black;
+            
+            WindowStyle = WindowStyle.None;
+            // Intentionally keeping ResizeMode.CanResize — setting NoResize 
+            // causes a known WPF bug on Win11 where it leaves white margins.
+            
+            // Force layout refresh
+            if (WindowState == WindowState.Maximized)
+                WindowState = WindowState.Normal;
+            WindowState = WindowState.Maximized;
+            
+            Topmost = true; // Cover taskbar
+
+            // Extend player panel over the sidebar
+            PlayerPanel.Margin = new Thickness(0);
+        }
+        else
+        {
+            Topmost = false;
+            // Restore original dark dashboard background
+            Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#0F0F1A")!;
+            
+            WindowState = WindowState.Normal;
+            WindowStyle = WindowStyle.SingleBorderWindow;
+            ResizeMode  = ResizeMode.CanResize;
+            
+            // Restore sidebar gap
+            PlayerPanel.Margin = new Thickness(220, 0, 0, 0);
+        }
+
+        // Re-open popup so it is created on top of the active topmost window with the correct size
+        PlayerOverlayPopup.IsOpen = true;
+        UpdatePopupPosition();
+    }
+
+    private void UpdatePopupPosition()
+    {
+        if (PlayerOverlayPopup.IsOpen)
+        {
+            // Toggle placement explicitly forces WPF rendering layout recalculation
+            var offset = PlayerOverlayPopup.HorizontalOffset;
+            PlayerOverlayPopup.HorizontalOffset = offset + 0.1;
+            PlayerOverlayPopup.HorizontalOffset = offset;
+        }
+    }
+
+    private void Window_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && _vm.IsSettingsOpen)
+        {
+            _vm.CloseSettingsCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
+        if (_vm.PlayerVm is null) return;
+
+        switch (e.Key)
+        {
+            case Key.Space:
+                _vm.PlayerVm.TogglePlayCommand.Execute(null);
+                break;
+            case Key.F:
+            case Key.F11:
+                _vm.PlayerVm.ToggleFullscreenCommand.Execute(null);
+                break;
+            case Key.M:
+                _vm.PlayerVm.ToggleMuteCommand.Execute(null);
+                break;
+            case Key.Escape:
+                if (_isFullscreen) ApplyFullscreen(false);
+                else               ClosePlayer();
+                break;
+            case Key.Up:
+                _vm.PlayerVm.Volume = Math.Min(100, _vm.PlayerVm.Volume + 5);
+                break;
+            case Key.Down:
+                _vm.PlayerVm.Volume = Math.Max(0,   _vm.PlayerVm.Volume - 5);
+                break;
+            case Key.N:
+                if (_vm.PlayerVm.PlayNextEpisodeCommand.CanExecute(null))
+                    _vm.PlayerVm.PlayNextEpisodeCommand.Execute(null);
+                break;
+        }
+
+        ShowBars();
+    }

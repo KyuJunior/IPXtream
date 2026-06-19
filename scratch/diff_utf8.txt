@@ -1,0 +1,1395 @@
+diff --git a/IPXtream/App.xaml b/IPXtream/App.xaml
+index 28eb2e0..10dbb6a 100644
+--- a/IPXtream/App.xaml
++++ b/IPXtream/App.xaml
+@@ -22,24 +22,24 @@
+ 
+             <!-- ── Sidebar palette ───────────────────────────────────────────── -->
+             <SolidColorBrush x:Key="NavTextMuted" Color="#888899"/>
+-            <SolidColorBrush x:Key="NavBgHover"   Color="#22224A"/>
+-
++            <SolidColorBrush x:Key="NavBgHover"   Color="#1A1A35"/>
++ 
+             <!-- ── NavBtn: inactive sidebar button (globally accessible) ─────── -->
+             <Style x:Key="NavBtn" TargetType="Button">
+                 <Setter Property="Background"                Value="Transparent"/>
+                 <Setter Property="BorderThickness"           Value="0"/>
+                 <Setter Property="Foreground"                Value="{StaticResource NavTextMuted}"/>
+                 <Setter Property="FontSize"                  Value="14"/>
+-                <Setter Property="FontWeight"                Value="SemiBold"/>
+-                <Setter Property="FontFamily"                Value="Segoe UI"/>
++                <Setter Property="FontWeight"                Value="Medium"/>
++                <Setter Property="FontFamily"                Value="Segoe UI Variable, Segoe UI"/>
+                 <Setter Property="Cursor"                    Value="Hand"/>
+                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
+-                <Setter Property="Padding"                   Value="16,13"/>
++                <Setter Property="Padding"                   Value="16,10"/>
+                 <Setter Property="Template">
+-                    <Setter.Value>
++                     <Setter.Value>
+                         <ControlTemplate TargetType="Button">
+                             <Border x:Name="Bd" Background="{TemplateBinding Background}"
+-                                    CornerRadius="10" Margin="8,2">
++                                    CornerRadius="10" Margin="6,2">
+                                 <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                   VerticalAlignment="Center"/>
+@@ -47,11 +47,11 @@
+                             <ControlTemplate.Triggers>
+                                 <Trigger Property="IsMouseOver" Value="True">
+                                     <Setter TargetName="Bd" Property="Background" Value="{StaticResource NavBgHover}"/>
+-                                    <Setter Property="Foreground" Value="White"/>
++                                    <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+                                 </Trigger>
+                             </ControlTemplate.Triggers>
+                         </ControlTemplate>
+-                    </Setter.Value>
++                     </Setter.Value>
+                 </Setter>
+             </Style>
+ 
+@@ -61,11 +61,11 @@
+                 <Setter Property="Template">
+                     <Setter.Value>
+                         <ControlTemplate TargetType="Button">
+-                            <Border CornerRadius="10" Margin="8,2">
++                            <Border CornerRadius="10" Margin="6,2">
+                                 <Border.Background>
+                                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+-                                        <GradientStop Color="#4F8EF730" Offset="0"/>
+-                                        <GradientStop Color="#7C5CBF30" Offset="1"/>
++                                        <GradientStop Color="#5B9BFF35" Offset="0"/>
++                                        <GradientStop Color="#8B6BD435" Offset="1"/>
+                                     </LinearGradientBrush>
+                                 </Border.Background>
+                                 <Grid>
+@@ -73,8 +73,8 @@
+                                     <Border Width="3" HorizontalAlignment="Left" CornerRadius="3">
+                                         <Border.Background>
+                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+-                                                <GradientStop Color="#4F8EF7" Offset="0"/>
+-                                                <GradientStop Color="#7C5CBF" Offset="1"/>
++                                                <GradientStop Color="#5B9BFF" Offset="0"/>
++                                                <GradientStop Color="#8B6BD4" Offset="1"/>
+                                             </LinearGradientBrush>
+                                         </Border.Background>
+                                     </Border>
+@@ -90,17 +90,17 @@
+ 
+             <!-- ── Global typography ─────────────────────────────────────────── -->
+             <Style TargetType="TextBlock">
+-                <Setter Property="FontFamily" Value="Segoe UI"/>
++                <Setter Property="FontFamily" Value="Segoe UI Variable, Segoe UI"/>
+                 <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+             </Style>
+             <Style TargetType="TextBox">
+-                <Setter Property="FontFamily" Value="Segoe UI"/>
++                <Setter Property="FontFamily" Value="Segoe UI Variable, Segoe UI"/>
+             </Style>
+             <Style TargetType="PasswordBox">
+-                <Setter Property="FontFamily" Value="Segoe UI"/>
++                <Setter Property="FontFamily" Value="Segoe UI Variable, Segoe UI"/>
+             </Style>
+             <Style TargetType="Button">
+-                <Setter Property="FontFamily" Value="Segoe UI"/>
++                <Setter Property="FontFamily" Value="Segoe UI Variable, Segoe UI"/>
+             </Style>
+ 
+             <!-- ── VectorIcon Style (Default Outlined) ───────────────────────── -->
+diff --git a/IPXtream/IPXtream.csproj b/IPXtream/IPXtream.csproj
+index d0dc259..2f103d1 100644
+--- a/IPXtream/IPXtream.csproj
++++ b/IPXtream/IPXtream.csproj
+@@ -7,7 +7,7 @@
+     <Nullable>enable</Nullable>
+     <ImplicitUsings>enable</ImplicitUsings>
+     <AssemblyName>IPXtream</AssemblyName>
+-    <Version>2.0.32</Version>
++    <Version>2.0.39</Version>
+     <RootNamespace>IPXtream</RootNamespace>
+     <ApplicationIcon>appicon.ico</ApplicationIcon>
+   </PropertyGroup>
+diff --git a/IPXtream/ViewModels/DashboardViewModel.cs b/IPXtream/ViewModels/DashboardViewModel.cs
+index d4511da..91a8171 100644
+--- a/IPXtream/ViewModels/DashboardViewModel.cs
++++ b/IPXtream/ViewModels/DashboardViewModel.cs
+@@ -245,6 +245,10 @@ public partial class DashboardViewModel : ObservableObject
+     [ObservableProperty]
+     private PlayerViewModel? _playerVm;
+ 
++    // ── PiP (Picture-in-Picture) state ────────────────────────────────────────
++    [ObservableProperty]
++    private bool _isPlayerMinimized;
++
+     // ── Event: Logout ─────────────────────────────────────────────────────────
+     public event Action? LogoutRequested;
+ 
+@@ -443,6 +447,12 @@ public partial class DashboardViewModel : ObservableObject
+             return;
+         }
+ 
++        // If a stream is playing, minimize to PiP instead of blocking navigation
++        if (PlayerVm != null)
++        {
++            IsPlayerMinimized = true;
++        }
++
+         ActiveSection     = section switch
+         {
+             "vod"       => MediaSection.VOD,
+@@ -495,6 +505,21 @@ public partial class DashboardViewModel : ObservableObject
+         IsSettingsOpen = false;
+     }
+ 
++    [RelayCommand]
++    private void RestorePlayer()
++    {
++        IsPlayerMinimized = false;
++    }
++
++    /// <summary>Raised when user closes the PiP mini-player.</summary>
++    public event Action? ClosePipRequested;
++
++    [RelayCommand]
++    private void ClosePip()
++    {
++        ClosePipRequested?.Invoke();
++    }
++
+     [RelayCommand]
+     private void Logout()
+     {
+diff --git a/IPXtream/Views/DashboardWindow.xaml b/IPXtream/Views/DashboardWindow.xaml
+index 062b501..a9933cc 100644
+--- a/IPXtream/Views/DashboardWindow.xaml
++++ b/IPXtream/Views/DashboardWindow.xaml
+@@ -14,7 +14,9 @@
+         WindowStartupLocation="CenterScreen"
+         Background="Transparent"
+         FontFamily="Segoe UI"
+-        KeyDown="Window_KeyDown">
++        KeyDown="Window_KeyDown"
++        Activated="Window_Activated"
++        Deactivated="Window_Deactivated">
+ 
+     <Window.Resources>
+         <sys:Int32 x:Key="Limit0">0</sys:Int32>
+@@ -24,19 +26,19 @@
+         <sys:Int32 x:Key="Limit2048">2048</sys:Int32>
+         <sys:Int32 x:Key="Limit5120">5120</sys:Int32>
+         <sys:Int32 x:Key="Limit10240">10240</sys:Int32>
+-        <SolidColorBrush x:Key="BgDeep"       Color="#0F0F1A"/>
+-        <SolidColorBrush x:Key="BgSidebar"    Color="#12122A"/>
+-        <SolidColorBrush x:Key="BgCard"       Color="#1A1A2E"/>
+-        <SolidColorBrush x:Key="BgHover"      Color="#22224A"/>
+-        <SolidColorBrush x:Key="AccentBlue"   Color="#4F8EF7"/>
+-        <SolidColorBrush x:Key="AccentPurple" Color="#7C5CBF"/>
+-        <SolidColorBrush x:Key="TextPrimary"  Color="#E8E8F0"/>
+-        <SolidColorBrush x:Key="TextMuted"    Color="#888899"/>
+-        <SolidColorBrush x:Key="InputBg"      Color="#12122A"/>
+-        <SolidColorBrush x:Key="InputBorder"  Color="#2E2E50"/>
+-        <SolidColorBrush x:Key="DividerColor" Color="#1E1E3A"/>
++        <SolidColorBrush x:Key="BgDeep"       Color="#0A0A14"/>
++        <SolidColorBrush x:Key="BgSidebar"    Color="#0E0E1E"/>
++        <SolidColorBrush x:Key="BgCard"       Color="#161625"/>
++        <SolidColorBrush x:Key="BgHover"      Color="#1E1E38"/>
++        <SolidColorBrush x:Key="AccentBlue"   Color="#5B9BFF"/>
++        <SolidColorBrush x:Key="AccentPurple" Color="#8B6BD4"/>
++        <SolidColorBrush x:Key="TextPrimary"  Color="#F0F0F8"/>
++        <SolidColorBrush x:Key="TextMuted"    Color="#7A7A90"/>
++        <SolidColorBrush x:Key="InputBg"      Color="#0E0E20"/>
++        <SolidColorBrush x:Key="InputBorder"  Color="#252545"/>
++        <SolidColorBrush x:Key="DividerColor" Color="#1A1A30"/>
+         <SolidColorBrush x:Key="ErrorRed"     Color="#FF5370"/>
+-        <SolidColorBrush x:Key="AccentGreen"  Color="#4EC994"/>
++        <SolidColorBrush x:Key="AccentGreen"  Color="#00E676"/>
+ 
+         <CollectionViewSource x:Key="GroupedDownloads" Source="{Binding Downloads}">
+             <CollectionViewSource.GroupDescriptions>
+@@ -48,7 +50,7 @@
+         <Style x:Key="CategoryItemStyle" TargetType="ListBoxItem">
+             <Setter Property="Background"      Value="Transparent"/>
+             <Setter Property="BorderThickness" Value="0"/>
+-            <Setter Property="Padding"         Value="12,9"/>
++            <Setter Property="Padding"         Value="14,8"/>
+             <Setter Property="Cursor"          Value="Hand"/>
+             <Setter Property="Foreground"      Value="{DynamicResource TextMuted}"/>
+             <Setter Property="FontSize"        Value="13"/>
+@@ -56,7 +58,7 @@
+                 <Setter.Value>
+                     <ControlTemplate TargetType="ListBoxItem">
+                         <Border x:Name="Bd" Background="{TemplateBinding Background}"
+-                                CornerRadius="8" Margin="4,2">
++                                CornerRadius="14" Margin="4,2">
+                             <ContentPresenter Margin="{TemplateBinding Padding}"
+                                               VerticalAlignment="Center"/>
+                         </Border>
+@@ -67,7 +69,19 @@
+                             </Trigger>
+                             <Trigger Property="IsSelected" Value="True">
+                                 <Setter Property="Foreground" Value="White"/>
+-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBlue}"/>
++                                <Setter TargetName="Bd" Property="Background">
++                                    <Setter.Value>
++                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
++                                            <GradientStop Color="#5B9BFF" Offset="0"/>
++                                            <GradientStop Color="#8B6BD4" Offset="1"/>
++                                        </LinearGradientBrush>
++                                    </Setter.Value>
++                                </Setter>
++                                <Setter TargetName="Bd" Property="Effect">
++                                    <Setter.Value>
++                                        <DropShadowEffect BlurRadius="12" Color="#5B9BFF" Opacity="0.3" ShadowDepth="2" Direction="270"/>
++                                    </Setter.Value>
++                                </Setter>
+                             </Trigger>
+                         </ControlTemplate.Triggers>
+                     </ControlTemplate>
+@@ -79,23 +93,37 @@
+         <Style x:Key="StreamItemStyle" TargetType="ListBoxItem">
+             <Setter Property="Background"      Value="{DynamicResource BgCard}"/>
+             <Setter Property="BorderThickness" Value="0"/>
+-            <Setter Property="Margin"          Value="4"/>
++            <Setter Property="Margin"          Value="5"/>
+             <Setter Property="Padding"         Value="0"/>
+             <Setter Property="Cursor"          Value="Hand"/>
++            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
++            <Setter Property="RenderTransform">
++                <Setter.Value>
++                    <ScaleTransform ScaleX="1" ScaleY="1"/>
++                </Setter.Value>
++            </Setter>
+             <Setter Property="Template">
+                 <Setter.Value>
+                     <ControlTemplate TargetType="ListBoxItem">
+                         <Border x:Name="Bd" Background="{TemplateBinding Background}"
+-                                CornerRadius="10" Margin="{TemplateBinding Margin}">
++                                CornerRadius="12" Margin="{TemplateBinding Margin}">
++                            <Border.Effect>
++                                <DropShadowEffect BlurRadius="8" Color="#000000" Opacity="0.3" ShadowDepth="2" Direction="270"/>
++                            </Border.Effect>
+                             <ContentPresenter/>
+                         </Border>
+                         <ControlTemplate.Triggers>
+                             <Trigger Property="IsMouseOver" Value="True">
+                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgHover}"/>
++                                <Setter TargetName="Bd" Property="Effect">
++                                    <Setter.Value>
++                                        <DropShadowEffect BlurRadius="16" Color="#5B9BFF" Opacity="0.2" ShadowDepth="0"/>
++                                    </Setter.Value>
++                                </Setter>
+                             </Trigger>
+                             <Trigger Property="IsSelected" Value="True">
+                                 <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+-                                <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
++                                <Setter TargetName="Bd" Property="BorderThickness" Value="1.5"/>
+                             </Trigger>
+                         </ControlTemplate.Triggers>
+                     </ControlTemplate>
+@@ -111,19 +139,26 @@
+             <Setter Property="Foreground"      Value="{DynamicResource TextPrimary}"/>
+             <Setter Property="BorderBrush"     Value="{DynamicResource InputBorder}"/>
+             <Setter Property="BorderThickness" Value="1"/>
+-            <Setter Property="Padding"         Value="12,0"/>
++            <Setter Property="Padding"         Value="32,0,12,0"/>
+             <Setter Property="FontSize"        Value="13"/>
++            <Setter Property="Height"          Value="38"/>
+             <Setter Property="VerticalContentAlignment" Value="Center"/>
+             <Setter Property="CaretBrush"      Value="{DynamicResource AccentBlue}"/>
+             <Setter Property="SelectionBrush"  Value="{DynamicResource AccentBlue}"/>
+             <Setter Property="Template">
+                 <Setter.Value>
+                     <ControlTemplate TargetType="TextBox">
+-                        <Border Background="{TemplateBinding Background}"
++                        <Border x:Name="OuterBd" Background="{TemplateBinding Background}"
+                                 BorderBrush="{TemplateBinding BorderBrush}"
+                                 BorderThickness="{TemplateBinding BorderThickness}"
+-                                CornerRadius="8">
++                                CornerRadius="12">
+                             <Grid>
++                                <!-- Search icon -->
++                                <Path Data="{StaticResource IconSearch}" 
++                                      Stroke="{DynamicResource TextMuted}" StrokeThickness="1.5" 
++                                      Width="14" Height="14" Stretch="Uniform"
++                                      HorizontalAlignment="Left" VerticalAlignment="Center"
++                                      Margin="12,0,0,0" IsHitTestVisible="False"/>
+                                 <TextBlock Text="Search channels, movies, and series..." 
+                                            Foreground="{DynamicResource TextMuted}"
+                                            Margin="{TemplateBinding Padding}"
+@@ -150,6 +185,11 @@
+                         <ControlTemplate.Triggers>
+                             <Trigger Property="IsFocused" Value="True">
+                                 <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
++                                <Setter TargetName="OuterBd" Property="Effect">
++                                    <Setter.Value>
++                                        <DropShadowEffect BlurRadius="12" Color="#5B9BFF" Opacity="0.25" ShadowDepth="0"/>
++                                    </Setter.Value>
++                                </Setter>
+                             </Trigger>
+                         </ControlTemplate.Triggers>
+                     </ControlTemplate>
+@@ -164,15 +204,15 @@
+             <Setter Property="FontSize"        Value="11"/>
+             <Setter Property="FontWeight"      Value="Bold"/>
+             <Setter Property="Cursor"          Value="Hand"/>
+-            <Setter Property="Padding"         Value="10,5"/>
++            <Setter Property="Padding"         Value="12,6"/>
+             <Setter Property="Template">
+                 <Setter.Value>
+                     <ControlTemplate TargetType="Button">
+-                        <Border x:Name="Bd" CornerRadius="6">
++                        <Border x:Name="Bd" CornerRadius="8">
+                             <Border.Background>
+                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+-                                    <GradientStop Color="#4F8EF7" Offset="0"/>
+-                                    <GradientStop Color="#7C5CBF" Offset="1"/>
++                                    <GradientStop Color="#5B9BFF" Offset="0"/>
++                                    <GradientStop Color="#8B6BD4" Offset="1"/>
+                                 </LinearGradientBrush>
+                             </Border.Background>
+                             <ContentPresenter HorizontalAlignment="Center"
+@@ -191,8 +231,8 @@
+ 
+         <!-- ── Player control button ──────────────────────────────────────── -->
+         <Style x:Key="CtrlBtn" TargetType="Button">
+-            <Setter Property="Width"           Value="38"/>
+-            <Setter Property="Height"          Value="38"/>
++            <Setter Property="Width"           Value="40"/>
++            <Setter Property="Height"          Value="40"/>
+             <Setter Property="Foreground"      Value="White"/>
+             <Setter Property="FontSize"        Value="15"/>
+             <Setter Property="Cursor"          Value="Hand"/>
+@@ -200,15 +240,15 @@
+             <Setter Property="Template">
+                 <Setter.Value>
+                     <ControlTemplate TargetType="Button">
+-                        <Border x:Name="Bd" CornerRadius="19" Background="#55FFFFFF">
++                        <Border x:Name="Bd" CornerRadius="20" Background="#44FFFFFF">
+                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                         </Border>
+                         <ControlTemplate.Triggers>
+                             <Trigger Property="IsMouseOver" Value="True">
+-                                <Setter TargetName="Bd" Property="Background" Value="#88FFFFFF"/>
++                                <Setter TargetName="Bd" Property="Background" Value="#77FFFFFF"/>
+                             </Trigger>
+                             <Trigger Property="IsPressed" Value="True">
+-                                <Setter TargetName="Bd" Property="Background" Value="#AAFFFFFF"/>
++                                <Setter TargetName="Bd" Property="Background" Value="#99FFFFFF"/>
+                             </Trigger>
+                         </ControlTemplate.Triggers>
+                     </ControlTemplate>
+@@ -671,13 +711,22 @@
+                         </Grid>
+                         <ControlTemplate.Triggers>
+                             <Trigger Property="IsChecked" Value="True">
++                                <Trigger.EnterActions>
++                                    <BeginStoryboard>
++                                        <Storyboard>
++                                            <DoubleAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" To="20" Duration="0:0:0.12"/>
++                                        </Storyboard>
++                                    </BeginStoryboard>
++                                </Trigger.EnterActions>
++                                <Trigger.ExitActions>
++                                    <BeginStoryboard>
++                                        <Storyboard>
++                                            <DoubleAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" To="0" Duration="0:0:0.12"/>
++                                        </Storyboard>
++                                    </BeginStoryboard>
++                                </Trigger.ExitActions>
+                                 <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBlue}"/>
+                                 <Setter TargetName="Thumb" Property="Fill" Value="White"/>
+-                                <Setter TargetName="Thumb" Property="RenderTransform">
+-                                    <Setter.Value>
+-                                        <TranslateTransform X="20"/>
+-                                    </Setter.Value>
+-                                </Setter>
+                             </Trigger>
+                             <Trigger Property="IsMouseOver" Value="True">
+                                 <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+@@ -687,6 +736,99 @@
+                 </Setter.Value>
+             </Setter>
+         </Style>
++
++        <!-- ── Thin ScrollBar Style ── -->
++        <Style TargetType="ScrollBar">
++            <Setter Property="Background" Value="Transparent"/>
++            <Setter Property="BorderThickness" Value="0"/>
++            <Setter Property="Width" Value="8"/>
++            <Setter Property="Height" Value="8"/>
++            <Setter Property="Template">
++                <Setter.Value>
++                    <ControlTemplate TargetType="ScrollBar">
++                        <Grid x:Name="Bg" SnapsToDevicePixels="true" Background="Transparent">
++                            <Track x:Name="PART_Track" IsDirectionReversed="true">
++                                <Track.Thumb>
++                                    <Thumb x:Name="Thumb" Cursor="Hand">
++                                        <Thumb.Template>
++                                            <ControlTemplate TargetType="Thumb">
++                                                <Border x:Name="ThumbBd" CornerRadius="4" Background="#35FFFFFF" Margin="1"/>
++                                                <ControlTemplate.Triggers>
++                                                    <Trigger Property="IsMouseOver" Value="True">
++                                                        <Setter TargetName="ThumbBd" Property="Background" Value="#65FFFFFF"/>
++                                                    </Trigger>
++                                                </ControlTemplate.Triggers>
++                                            </ControlTemplate>
++                                        </Thumb.Template>
++                                    </Thumb>
++                                </Track.Thumb>
++                            </Track>
++                        </Grid>
++                    </ControlTemplate>
++                </Setter.Value>
++            </Setter>
++        </Style>
++
++        <!-- ── Custom Premium Slider Style ── -->
++        <Style x:Key="PremiumSliderStyle" TargetType="Slider">
++            <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false"/>
++            <Setter Property="Background" Value="#25FFFFFF"/>
++            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
++            <Setter Property="Template">
++                <Setter.Value>
++                    <ControlTemplate TargetType="Slider">
++                        <Grid x:Name="GridRoot">
++                            <Grid.RowDefinitions>
++                                <RowDefinition Height="Auto"/>
++                                <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
++                                <RowDefinition Height="Auto"/>
++                            </Grid.RowDefinitions>
++                            <!-- Track Background -->
++                            <Border x:Name="TrackBackground" Grid.Row="1" Height="4" CornerRadius="2" Background="{TemplateBinding Background}" VerticalAlignment="Center"/>
++                            <Track x:Name="PART_Track" Grid.Row="1">
++                                <Track.DecreaseRepeatButton>
++                                    <RepeatButton Command="Slider.DecreaseLarge" Background="{TemplateBinding Foreground}">
++                                        <RepeatButton.Template>
++                                            <ControlTemplate TargetType="RepeatButton">
++                                                <Border Height="4" CornerRadius="2,0,0,2" Background="{TemplateBinding Background}"/>
++                                            </ControlTemplate>
++                                        </RepeatButton.Template>
++                                    </RepeatButton>
++                                </Track.DecreaseRepeatButton>
++                                <Track.IncreaseRepeatButton>
++                                    <RepeatButton Command="Slider.IncreaseLarge" Background="Transparent">
++                                        <RepeatButton.Template>
++                                            <ControlTemplate TargetType="RepeatButton">
++                                                <Border Height="4" Background="Transparent"/>
++                                            </ControlTemplate>
++                                        </RepeatButton.Template>
++                                    </RepeatButton>
++                                </Track.IncreaseRepeatButton>
++                                <Track.Thumb>
++                                    <Thumb x:Name="Thumb" Width="12" Height="12" Cursor="Hand">
++                                        <Thumb.Template>
++                                            <ControlTemplate TargetType="Thumb">
++                                                <Border CornerRadius="6" Background="White" Width="12" Height="12" BorderBrush="{DynamicResource AccentBlue}" BorderThickness="1.5">
++                                                    <Border.Effect>
++                                                        <DropShadowEffect BlurRadius="4" Color="Black" Opacity="0.3" ShadowDepth="1"/>
++                                                    </Border.Effect>
++                                                </Border>
++                                            </ControlTemplate>
++                                        </Thumb.Template>
++                                    </Thumb>
++                                </Track.Thumb>
++                            </Track>
++                        </Grid>
++                        <ControlTemplate.Triggers>
++                            <Trigger Property="IsMouseOver" Value="True">
++                                <Setter TargetName="TrackBackground" Property="Height" Value="6"/>
++                            </Trigger>
++                        </ControlTemplate.Triggers>
++                    </ControlTemplate>
++                </Setter.Value>
++            </Setter>
++        </Style>
++
+     </Window.Resources>
+ 
+     <!-- ── Window load animation ──────────────────────────────────────────────── -->
+@@ -750,18 +892,25 @@
+ 
+                     <!-- Logo -->
+                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="20,24,20,20">
+-                        <Border Width="36" Height="36" CornerRadius="10">
++                        <Border Width="38" Height="38" CornerRadius="12">
+                             <Border.Background>
+                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+-                                    <GradientStop Color="#4F8EF7" Offset="0"/>
+-                                    <GradientStop Color="#7C5CBF" Offset="1"/>
++                                    <GradientStop Color="#5B9BFF" Offset="0"/>
++                                    <GradientStop Color="#8B6BD4" Offset="1"/>
+                                 </LinearGradientBrush>
+                             </Border.Background>
+-                            <Path Data="{StaticResource IconLogo}" Fill="White" Stretch="Uniform" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
++                            <Border.Effect>
++                                <DropShadowEffect BlurRadius="15" Color="#5B9BFF" Opacity="0.4" ShadowDepth="0"/>
++                            </Border.Effect>
++                            <Path Data="{StaticResource IconLogo}" Fill="White" Stretch="Uniform" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                         </Border>
+-                        <TextBlock Text="IPXtream" FontSize="18" FontWeight="Bold"
++                        <TextBlock Text="IPXtream" FontSize="20" FontWeight="Bold"
+                                    Foreground="{DynamicResource TextPrimary}"
+-                                   VerticalAlignment="Center" Margin="10,0,0,0"/>
++                                   VerticalAlignment="Center" Margin="12,0,0,0">
++                            <TextBlock.Effect>
++                                <DropShadowEffect BlurRadius="10" Color="#5B9BFF" Opacity="0.15" ShadowDepth="0"/>
++                            </TextBlock.Effect>
++                        </TextBlock>
+                     </StackPanel>
+ 
+                     <!-- Nav -->
+@@ -816,7 +965,15 @@
+                             </StackPanel>
+                         </Button>
+ 
+-                        <Border Height="1" Background="{DynamicResource DividerColor}" Margin="16,16"/>
++                        <Border Height="1" Margin="16,16">
++                            <Border.Background>
++                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
++                                    <GradientStop Color="Transparent" Offset="0"/>
++                                    <GradientStop Color="{DynamicResource DividerColor}" Offset="0.5"/>
++                                    <GradientStop Color="Transparent" Offset="1"/>
++                                </LinearGradientBrush>
++                            </Border.Background>
++                        </Border>
+ 
+                         <!-- Cache / Cancel toggle -->
+                         <Button Style="{StaticResource NavBtn}" Command="{Binding CacheAllBackgroundCommand}"
+@@ -878,18 +1035,41 @@
+                             </StackPanel>
+                         </Button>
+ 
+-                        <Button Style="{StaticResource NavBtn}" Command="{Binding LogoutCommand}" Margin="0,4,0,0">
++                        <Button Command="{Binding LogoutCommand}" Margin="0,4,0,0">
++                            <Button.Style>
++                                <Style TargetType="Button" BasedOn="{StaticResource NavBtn}">
++                                    <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
++                                    <Setter Property="Template">
++                                        <Setter.Value>
++                                            <ControlTemplate TargetType="Button">
++                                                <Border x:Name="Bd" Background="Transparent" CornerRadius="10" Margin="6,2">
++                                                    <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
++                                                </Border>
++                                                <ControlTemplate.Triggers>
++                                                    <Trigger Property="IsMouseOver" Value="True">
++                                                        <Setter TargetName="Bd" Property="Background" Value="#20FF5370"/>
++                                                        <Setter Property="Foreground" Value="#FF5370"/>
++                                                    </Trigger>
++                                                </ControlTemplate.Triggers>
++                                            </ControlTemplate>
++                                        </Setter.Value>
++                                    </Setter>
++                                </Style>
++                            </Button.Style>
+                             <StackPanel Orientation="Horizontal">
+                                 <Path Data="{StaticResource IconLogout}" Style="{StaticResource VectorIcon}" Width="16" Height="16" Margin="0,0,10,0"/>
+-                                <TextBlock Text="Logout" VerticalAlignment="Center"
+-                                           Foreground="{StaticResource ErrorRed}"/>
++                                <TextBlock Text="Logout" VerticalAlignment="Center"/>
+                             </StackPanel>
+                         </Button>
+                     </StackPanel>
+ 
+                     <!-- User footer -->
+-                    <Border Grid.Row="2" Background="{DynamicResource BgCard}"
+-                            CornerRadius="12" Margin="12,0,12,16" Padding="12,10">
++                    <Border Grid.Row="2" Background="#141426"
++                            BorderBrush="#15FFFFFF" BorderThickness="1"
++                            CornerRadius="16" Margin="12,0,12,16" Padding="12,10">
++                        <Border.Effect>
++                            <DropShadowEffect BlurRadius="15" Color="#000000" Opacity="0.3" ShadowDepth="2" Direction="270"/>
++                        </Border.Effect>
+                         <StackPanel>
+                             <TextBlock Text="{Binding DisplayUsername}"
+                                        Foreground="{DynamicResource TextPrimary}"
+@@ -1134,7 +1314,7 @@
+                 </Grid.RowDefinitions>
+ 
+                 <!-- Toolbar -->
+-                <Border Grid.Row="0" Padding="16,14">
++                <Border Grid.Row="0" Padding="16,14" BorderBrush="{DynamicResource DividerColor}" BorderThickness="0,0,0,1">
+                     <Grid>
+                         <Grid.ColumnDefinitions>
+                             <ColumnDefinition Width="*"/>
+@@ -1275,7 +1455,7 @@
+                 </Border>
+ 
+                 <!-- 16:9 Hero Banner (Auto-rotating What's New Carousel) -->
+-                <Border x:Name="HeroBanner" Grid.Row="3" Height="280" CornerRadius="10" Margin="16,0,16,10" ClipToBounds="True" Background="#121225">
++                <Border x:Name="HeroBanner" Grid.Row="3" Height="300" CornerRadius="16" Margin="16,0,16,14" ClipToBounds="True" Background="#121225">
+                     <Border.Style>
+                         <Style TargetType="Border">
+                             <Setter Property="Visibility" Value="Collapsed"/>
+@@ -1295,7 +1475,15 @@
+                         </Image>
+                         
+                         <!-- Overlay Dark Grid for Premium Contrast -->
+-                        <Border Background="#990F0F1D"/>
++                        <Border>
++                            <Border.Background>
++                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
++                                    <GradientStop Color="#250A0A14" Offset="0"/>
++                                    <GradientStop Color="#AA0A0A14" Offset="0.6"/>
++                                    <GradientStop Color="#F50A0A14" Offset="1"/>
++                                </LinearGradientBrush>
++                            </Border.Background>
++                        </Border>
+ 
+                         <!-- Actual 16:9 Poster Image + Details Grid -->
+                         <Grid x:Name="BannerContent" Margin="24">
+@@ -1321,8 +1509,11 @@
+                             </Grid.ColumnDefinitions>
+ 
+                             <!-- Highlighted Poster -->
+-                            <Border Grid.Column="0" Width="150" CornerRadius="6" ClipToBounds="True" Background="#0A0A16"
+-                                    BorderBrush="#33FFFFFF" BorderThickness="1" Margin="0,0,24,0">
++                            <Border Grid.Column="0" Width="150" CornerRadius="12" ClipToBounds="True" Background="#0A0A16"
++                                    BorderBrush="#25FFFFFF" BorderThickness="1" Margin="0,0,24,0">
++                                <Border.Effect>
++                                    <DropShadowEffect BlurRadius="15" Color="#000000" Opacity="0.5" ShadowDepth="4" Direction="270"/>
++                                </Border.Effect>
+                                 <Image Source="{Binding FeaturedCarouselItem.StreamIcon, Converter={StaticResource CachedImageConverter}, NotifyOnTargetUpdated=True}" 
+                                        Stretch="UniformToFill"/>
+                             </Border>
+@@ -1338,38 +1529,72 @@
+ 
+                                 <!-- Tag -->
+                                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+-                                    <Border Background="#FFD700" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
++                                    <Border CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
++                                        <Border.Background>
++                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
++                                                <GradientStop Color="#5B9BFF" Offset="0"/>
++                                                <GradientStop Color="#8B6BD4" Offset="1"/>
++                                            </LinearGradientBrush>
++                                        </Border.Background>
+                                         <StackPanel Orientation="Horizontal">
+-                                            <Path Data="{StaticResource IconStar}" Fill="#0F0F1A" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,4,0"/>
+-                                            <TextBlock Text="WHAT'S NEW" Foreground="#0F0F1A" FontSize="10" FontWeight="Black" VerticalAlignment="Center"/>
++                                            <Path Data="{StaticResource IconNew}" Fill="White" Width="10" Height="10" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,4,0"/>
++                                            <TextBlock Text="WHAT'S NEW" Foreground="White" FontSize="10" FontWeight="Black" VerticalAlignment="Center"/>
++                                        </StackPanel>
++                                    </Border>
++                                    <Border Background="#15FFFFFF" BorderBrush="#15FFFFFF" BorderThickness="1" CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
++                                        <TextBlock Text="{Binding FeaturedCarouselItem.ReleaseDate}" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
++                                    </Border>
++                                    <Border Background="#15FFFFFF" BorderBrush="#15FFFFFF" BorderThickness="1" CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
++                                        <StackPanel Orientation="Horizontal">
++                                            <Path Data="{StaticResource IconStar}" Fill="#FFD700" Width="10" Height="10" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,4,0"/>
++                                            <TextBlock Text="{Binding FeaturedCarouselItem.Rating}" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                         </StackPanel>
+                                     </Border>
+-                                    <TextBlock Text="{Binding FeaturedCarouselItem.ReleaseDate}" Foreground="{DynamicResource TextMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
+-                                    <Path Data="{StaticResource IconStar}" Fill="#FFD700" Width="10" Height="10" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,6,0"/>
+-                                    <TextBlock Text="{Binding FeaturedCarouselItem.Rating}" Foreground="White" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                 </StackPanel>
+ 
+                                 <!-- Title -->
+-                                <TextBlock Grid.Row="1" Text="{Binding FeaturedCarouselItem.Name}" Foreground="White" FontSize="24" FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,0,10"/>
++                                <TextBlock Grid.Row="1" Text="{Binding FeaturedCarouselItem.Name}" Foreground="White" FontSize="28" FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,0,10">
++                                    <TextBlock.Effect>
++                                        <DropShadowEffect BlurRadius="8" Color="Black" Opacity="0.6" ShadowDepth="2" Direction="270"/>
++                                    </TextBlock.Effect>
++                                </TextBlock>
+ 
+                                 <!-- Plot -->
+                                 <TextBlock Grid.Row="2" Text="{Binding FeaturedCarouselItem.Plot}" Foreground="{DynamicResource TextMuted}" FontSize="13" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="0,0,48,16" LineHeight="18"/>
+ 
+                                 <!-- Buttons -->
+                                 <StackPanel Grid.Row="3" Orientation="Horizontal">
++                                    <!-- Play Button -->
+                                     <Button Command="{Binding PlayCommand}" CommandParameter="{Binding FeaturedCarouselItem}"
+-                                            Background="#4F8EF7" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="20,8" Margin="0,0,12,0">
++                                            Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="24,10" Margin="0,0,12,0">
+                                         <Button.Template>
+                                             <ControlTemplate TargetType="Button">
+-                                                <Border x:Name="PlayBd" CornerRadius="6" Background="{TemplateBinding Background}">
++                                                <Border x:Name="PlayBd" CornerRadius="10" RenderTransformOrigin="0.5,0.5">
++                                                    <Border.Background>
++                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
++                                                            <GradientStop Color="#5B9BFF" Offset="0"/>
++                                                            <GradientStop Color="#8B6BD4" Offset="1"/>
++                                                        </LinearGradientBrush>
++                                                    </Border.Background>
++                                                    <Border.Effect>
++                                                        <DropShadowEffect BlurRadius="15" Color="#5B9BFF" Opacity="0.3" ShadowDepth="2" Direction="270"/>
++                                                    </Border.Effect>
++                                                    <Border.RenderTransform>
++                                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
++                                                    </Border.RenderTransform>
+                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+-                                                        <Path Data="{StaticResource IconPlay}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
+-                                                        <TextBlock Text="Play" FontWeight="Bold" VerticalAlignment="Center"/>
++                                                         <Path Data="{StaticResource IconPlay}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
++                                                         <TextBlock Text="Watch Now" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                     </StackPanel>
+                                                 </Border>
+                                                 <ControlTemplate.Triggers>
+                                                     <Trigger Property="IsMouseOver" Value="True">
+-                                                        <Setter TargetName="PlayBd" Property="Background" Value="#3B7AE3"/>
++                                                        <Setter TargetName="PlayBd" Property="Opacity" Value="0.95"/>
++                                                        <Setter TargetName="PlayBd" Property="RenderTransform">
++                                                            <Setter.Value>
++                                                                <ScaleTransform ScaleX="1.03" ScaleY="1.03"/>
++                                                            </Setter.Value>
++                                                        </Setter>
+                                                     </Trigger>
+                                                 </ControlTemplate.Triggers>
+                                             </ControlTemplate>
+@@ -1379,10 +1604,10 @@
+                                     <!-- Download button (Only visible if downloadable) -->
+                                     <Button Command="{Binding DownloadCommand}" CommandParameter="{Binding FeaturedCarouselItem}"
+                                             Visibility="{Binding FeaturedCarouselItem.IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
+-                                            Background="#2C2C3E" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="20,8">
++                                            Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="22,10">
+                                         <Button.Template>
+                                             <ControlTemplate TargetType="Button">
+-                                                <Border x:Name="DlBd" CornerRadius="6" Background="{TemplateBinding Background}">
++                                                <Border x:Name="DlBd" CornerRadius="10" Background="#20FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1">
+                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+                                                         <Path Data="{StaticResource IconDownload}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
+                                                         <TextBlock Text="Download" FontWeight="Bold" VerticalAlignment="Center"/>
+@@ -1390,7 +1615,8 @@
+                                                 </Border>
+                                                 <ControlTemplate.Triggers>
+                                                     <Trigger Property="IsMouseOver" Value="True">
+-                                                        <Setter TargetName="DlBd" Property="Background" Value="#3D3D52"/>
++                                                        <Setter TargetName="DlBd" Property="Background" Value="#35FFFFFF"/>
++                                                        <Setter TargetName="DlBd" Property="BorderBrush" Value="#40FFFFFF"/>
+                                                     </Trigger>
+                                                 </ControlTemplate.Triggers>
+                                             </ControlTemplate>
+@@ -1421,7 +1647,7 @@
+                                                 </Grid>
+                                                 <ControlTemplate.Triggers>
+                                                     <DataTrigger Binding="{Binding IsSelectedCarousel}" Value="True">
+-                                                        <Setter TargetName="Dot" Property="Background" Value="#4F8EF7"/>
++                                                        <Setter TargetName="Dot" Property="Background" Value="#5B9BFF"/>
+                                                         <Setter TargetName="Dot" Property="Width" Value="16"/>
+                                                     </DataTrigger>
+                                                     <Trigger Property="IsMouseOver" Value="True">
+@@ -1888,10 +2114,15 @@
+                                                 <!-- Custom progress bar (Grid-based, avoids Win theme issues) -->
+                                                 <Grid Grid.Row="1" Grid.ColumnSpan="2"
+                                                       x:Name="ProgressTrack"
+-                                                      Height="4" Margin="0,5,0,0">
+-                                                    <Border CornerRadius="2" Background="#1A1A2E"/>
+-                                                    <Border CornerRadius="2" Background="#4F8EF7"
+-                                                            HorizontalAlignment="Left">
++                                                      Height="5" Margin="0,6,0,0">
++                                                    <Border CornerRadius="2.5" Background="#16162C"/>
++                                                    <Border CornerRadius="2.5" HorizontalAlignment="Left">
++                                                        <Border.Background>
++                                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
++                                                                <GradientStop Color="#5B9BFF" Offset="0"/>
++                                                                <GradientStop Color="#8B6BD4" Offset="1"/>
++                                                            </LinearGradientBrush>
++                                                        </Border.Background>
+                                                         <Border.Width>
+                                                             <MultiBinding Converter="{StaticResource ProgressToWidthMultiConverter}">
+                                                                 <Binding Path="Progress"/>
+@@ -2200,8 +2431,11 @@
+                 </Button>
+ 
+                 <!-- Details Card -->
+-                <Border Width="650" Height="420" CornerRadius="12" Background="#121225" BorderBrush="#33FFFFFF" BorderThickness="1"
+-                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" ClipToBounds="True">
++                <Border Width="700" Height="460" CornerRadius="16" Background="#10101F" BorderBrush="#15FFFFFF" BorderThickness="1"
++                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="28" ClipToBounds="True">
++                    <Border.Effect>
++                        <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.6" ShadowDepth="0"/>
++                    </Border.Effect>
+                     <Grid>
+                         <!-- Close Button -->
+                         <Button HorizontalAlignment="Right" VerticalAlignment="Top" Width="32" Height="32" Background="Transparent" BorderThickness="0" Cursor="Hand"
+@@ -2223,7 +2457,10 @@
+                             </Grid.ColumnDefinitions>
+ 
+                             <!-- Movie Poster -->
+-                            <Border Grid.Column="0" CornerRadius="8" ClipToBounds="True" BorderBrush="#33FFFFFF" BorderThickness="1" Height="300" VerticalAlignment="Top" Margin="0,0,24,0">
++                            <Border Grid.Column="0" CornerRadius="12" ClipToBounds="True" BorderBrush="#15FFFFFF" BorderThickness="1" Height="320" VerticalAlignment="Top" Margin="0,0,24,0">
++                                <Border.Effect>
++                                    <DropShadowEffect BlurRadius="15" Color="#000000" Opacity="0.4" ShadowDepth="4" Direction="270"/>
++                                </Border.Effect>
+                                 <Image Source="{Binding SelectedMovieForInfo.Cover, Converter={StaticResource CachedImageConverter}}" Stretch="UniformToFill"/>
+                             </Border>
+ 
+@@ -2242,14 +2479,24 @@
+ 
+                                 <!-- Metadata info -->
+                                 <WrapPanel Grid.Row="1" Margin="0,0,0,14">
+-                                    <Border Background="#FFD700" CornerRadius="4" Padding="5,2" Margin="0,0,10,0">
++                                    <Border CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
++                                        <Border.Background>
++                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
++                                                <GradientStop Color="#FFD700" Offset="0"/>
++                                                <GradientStop Color="#FFA500" Offset="1"/>
++                                            </LinearGradientBrush>
++                                        </Border.Background>
+                                         <StackPanel Orientation="Horizontal">
+                                             <Path Data="{StaticResource IconStar}" Fill="#0F0F1A" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,4,0"/>
+-                                            <TextBlock Text="{Binding SelectedMovieForInfo.Rating}" Foreground="#0F0F1A" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
++                                            <TextBlock Text="{Binding SelectedMovieForInfo.Rating}" Foreground="#0F0F1A" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                         </StackPanel>
+                                     </Border>
+-                                    <TextBlock Text="{Binding SelectedMovieForInfo.ReleaseDate}" Foreground="{DynamicResource TextMuted}" FontSize="12" Margin="0,0,16,0" VerticalAlignment="Center"/>
+-                                    <TextBlock Text="{Binding SelectedMovieForInfo.Genre}" Foreground="{DynamicResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
++                                    <Border Background="#15FFFFFF" BorderBrush="#15FFFFFF" BorderThickness="1" CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
++                                        <TextBlock Text="{Binding SelectedMovieForInfo.ReleaseDate}" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
++                                    </Border>
++                                    <Border Background="#15FFFFFF" BorderBrush="#15FFFFFF" BorderThickness="1" CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
++                                        <TextBlock Text="{Binding SelectedMovieForInfo.Genre}" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
++                                    </Border>
+                                 </WrapPanel>
+ 
+                                 <!-- Director & Cast -->
+@@ -2271,18 +2518,35 @@
+                                 <StackPanel Grid.Row="4" Orientation="Horizontal">
+                                     <!-- Play Button -->
+                                     <Button Command="{Binding PlayCommand}" CommandParameter="{Binding SelectedMovieForInfo}"
+-                                            Background="#4F8EF7" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="20,8" Margin="0,0,12,0">
++                                            Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="24,10" Margin="0,0,12,0">
+                                         <Button.Template>
+                                             <ControlTemplate TargetType="Button">
+-                                                <Border x:Name="PlayBd" CornerRadius="6" Background="{TemplateBinding Background}">
++                                                <Border x:Name="PlayBd" CornerRadius="10" RenderTransformOrigin="0.5,0.5">
++                                                    <Border.Background>
++                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
++                                                            <GradientStop Color="#5B9BFF" Offset="0"/>
++                                                            <GradientStop Color="#8B6BD4" Offset="1"/>
++                                                        </LinearGradientBrush>
++                                                    </Border.Background>
++                                                    <Border.Effect>
++                                                        <DropShadowEffect BlurRadius="15" Color="#5B9BFF" Opacity="0.3" ShadowDepth="2" Direction="270"/>
++                                                    </Border.Effect>
++                                                    <Border.RenderTransform>
++                                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
++                                                    </Border.RenderTransform>
+                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+                                                         <Path Data="{StaticResource IconPlay}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
+-                                                        <TextBlock Text="Play" FontWeight="Bold" VerticalAlignment="Center"/>
++                                                        <TextBlock Text="Watch Now" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                     </StackPanel>
+                                                 </Border>
+                                                 <ControlTemplate.Triggers>
+                                                     <Trigger Property="IsMouseOver" Value="True">
+-                                                        <Setter TargetName="PlayBd" Property="Background" Value="#3B7AE3"/>
++                                                        <Setter TargetName="PlayBd" Property="Opacity" Value="0.95"/>
++                                                        <Setter TargetName="PlayBd" Property="RenderTransform">
++                                                            <Setter.Value>
++                                                                <ScaleTransform ScaleX="1.03" ScaleY="1.03"/>
++                                                            </Setter.Value>
++                                                        </Setter>
+                                                     </Trigger>
+                                                 </ControlTemplate.Triggers>
+                                             </ControlTemplate>
+@@ -2292,10 +2556,10 @@
+                                     <!-- Download Button -->
+                                     <Button Command="{Binding DownloadCommand}" CommandParameter="{Binding SelectedMovieForInfo}"
+                                             Visibility="{Binding SelectedMovieForInfo.IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
+-                                            Background="#2C2C3E" Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="20,8">
++                                            Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="22,10">
+                                         <Button.Template>
+                                             <ControlTemplate TargetType="Button">
+-                                                <Border x:Name="DlBd" CornerRadius="6" Background="{TemplateBinding Background}">
++                                                <Border x:Name="DlBd" CornerRadius="10" Background="#20FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1">
+                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+                                                         <Path Data="{StaticResource IconDownload}" Style="{StaticResource VectorIconFilled}" Width="12" Height="12" Margin="0,0,8,0"/>
+                                                         <TextBlock Text="Download" FontWeight="Bold" VerticalAlignment="Center"/>
+@@ -2303,7 +2567,8 @@
+                                                 </Border>
+                                                 <ControlTemplate.Triggers>
+                                                     <Trigger Property="IsMouseOver" Value="True">
+-                                                        <Setter TargetName="DlBd" Property="Background" Value="#3D3D52"/>
++                                                        <Setter TargetName="DlBd" Property="Background" Value="#35FFFFFF"/>
++                                                        <Setter TargetName="DlBd" Property="BorderBrush" Value="#40FFFFFF"/>
+                                                     </Trigger>
+                                                 </ControlTemplate.Triggers>
+                                             </ControlTemplate>
+@@ -2358,13 +2623,132 @@
+                           VerticalAlignment="Stretch"
+                           Visibility="Collapsed" />
+ 
+-            <!-- Airspace-safe Popup Overlay for HwndHost -->
++                        <!-- Airspace-safe Popup Overlay for HwndHost in PiP mode -->
++            <Popup x:Name="PipOverlayPopup"
++                   PlacementTarget="{Binding ElementName=PlayerPanel}"
++                   Placement="Center"
++                   AllowsTransparency="True"
++                   Width="{Binding ActualWidth, ElementName=PlayerPanel}"
++                   Height="{Binding ActualHeight, ElementName=PlayerPanel}"
++                   IsOpen="{Binding IsPlayerMinimized}"
++                   Opened="Popup_Opened">
++
++                <Grid Background="#01000000"
++                      MouseLeftButtonDown="PipOverlay_MouseLeftButtonDown">
++
++                    <!-- Rounded clip to match PipFrame -->
++                    <Border CornerRadius="8" ClipToBounds="True">
++                        <Grid>
++                            <!-- Gradient scrim at bottom for controls -->
++                            <Border VerticalAlignment="Bottom" Height="56">
++                                <Border.Background>
++                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
++                                        <GradientStop Color="#00000000" Offset="0"/>
++                                        <GradientStop Color="#CC000000" Offset="1"/>
++                                    </LinearGradientBrush>
++                                </Border.Background>
++                            </Border>
++
++                            <!-- Stream title at top -->
++                            <Border VerticalAlignment="Top" Padding="10,8">
++                                <Border.Background>
++                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
++                                        <GradientStop Color="#AA000000" Offset="0"/>
++                                        <GradientStop Color="#00000000" Offset="1"/>
++                                    </LinearGradientBrush>
++                                </Border.Background>
++                                <TextBlock Text="{Binding PlayerVm.StreamTitle}"
++                                           Foreground="White"
++                                           FontSize="11" FontWeight="SemiBold"
++                                           TextTrimming="CharacterEllipsis"
++                                           MaxWidth="280"/>
++                            </Border>
++
++                            <!-- Control buttons at bottom -->
++                            <StackPanel Orientation="Horizontal"
++                                        HorizontalAlignment="Center"
++                                        VerticalAlignment="Bottom"
++                                        Margin="0,0,0,10">
++                                <!-- Play / Pause -->
++                                <Button Command="{Binding PlayerVm.TogglePlayCommand}"
++                                        Width="32" Height="32" Background="Transparent"
++                                        BorderThickness="0" Cursor="Hand"
++                                        ToolTip="Play / Pause">
++                                    <Button.Template>
++                                        <ControlTemplate TargetType="Button">
++                                            <Border Background="#66000000" CornerRadius="16"
++                                                    Width="32" Height="32">
++                                                <Path Width="12" Height="12" Stretch="Uniform"
++                                                      Fill="White"
++                                                      HorizontalAlignment="Center"
++                                                      VerticalAlignment="Center">
++                                                    <Path.Style>
++                                                        <Style TargetType="Path">
++                                                            <Setter Property="Data" Value="{StaticResource IconPlay}"/>
++                                                            <Style.Triggers>
++                                                                <DataTrigger Binding="{Binding PlayerVm.IsPlaying}" Value="True">
++                                                                    <Setter Property="Data" Value="{StaticResource IconPause}"/>
++                                                                </DataTrigger>
++                                                            </Style.Triggers>
++                                                        </Style>
++                                                    </Path.Style>
++                                                </Path>
++                                            </Border>
++                                        </ControlTemplate>
++                                    </Button.Template>
++                                </Button>
++
++                                <!-- Expand (restore to full player) -->
++                                <Button Command="{Binding RestorePlayerCommand}"
++                                        Width="32" Height="32" Background="Transparent"
++                                        BorderThickness="0" Cursor="Hand" Margin="6,0"
++                                        ToolTip="Expand Player">
++                                    <Button.Template>
++                                        <ControlTemplate TargetType="Button">
++                                            <Border Background="#66000000" CornerRadius="16"
++                                                    Width="32" Height="32">
++                                                <Path Data="{StaticResource IconFullscreen}"
++                                                      Fill="White" Width="12" Height="12"
++                                                      Stretch="Uniform"
++                                                      HorizontalAlignment="Center"
++                                                      VerticalAlignment="Center"/>
++                                            </Border>
++                                        </ControlTemplate>
++                                    </Button.Template>
++                                </Button>
++
++                                <!-- Close -->
++                                <Button Command="{Binding ClosePipCommand}"
++                                        Width="32" Height="32" Background="Transparent"
++                                        BorderThickness="0" Cursor="Hand"
++                                        ToolTip="Close Player">
++                                    <Button.Template>
++                                        <ControlTemplate TargetType="Button">
++                                            <Border Background="#66000000" CornerRadius="16"
++                                                    Width="32" Height="32">
++                                                <Path Data="{StaticResource IconClose}"
++                                                      Fill="#FF5370" Width="10" Height="10"
++                                                      Stretch="Uniform"
++                                                      HorizontalAlignment="Center"
++                                                      VerticalAlignment="Center"/>
++                                            </Border>
++                                        </ControlTemplate>
++                                    </Button.Template>
++                                </Button>
++                            </StackPanel>
++                        </Grid>
++                    </Border>
++                </Grid>
++            </Popup>
++
++<!-- Airspace-safe Popup Overlay for HwndHost -->
+             <Popup x:Name="PlayerOverlayPopup"
+-                   PlacementTarget="{Binding ElementName=VideoView}"
++                   PlacementTarget="{Binding ElementName=PlayerPanel}"
+                    Placement="Center"
+                    AllowsTransparency="True"
+-                   Width="{Binding ActualWidth, ElementName=VideoView}"
+-                   Height="{Binding ActualHeight, ElementName=VideoView}">
++                   Width="{Binding ActualWidth, ElementName=PlayerPanel}"
++                   Height="{Binding ActualHeight, ElementName=PlayerPanel}"
++                   Opened="Popup_Opened">
+                 
+                 <!-- Overlay Background -->
+                 <Grid Background="#01000000"
+@@ -2484,7 +2868,7 @@
+                                 </Grid.ColumnDefinitions>
+                                 <TextBlock Grid.Column="0" Text="{Binding PlayerVm.PositionText}"
+                                            Foreground="White" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+-                                <Slider Grid.Column="1"
++                                <Slider Grid.Column="1" Style="{StaticResource PremiumSliderStyle}"
+                                         Minimum="0" Maximum="1" Value="{Binding PlayerVm.Position, Mode=OneWay}"
+                                         SmallChange="0.001" LargeChange="0.05"
+                                         IsMoveToPointEnabled="True"
+@@ -2619,7 +3003,7 @@
+                                             </Path.Style>
+                                         </Path>
+                                     </Button>
+-                                    <Slider Minimum="0" Maximum="100"
++                                    <Slider Minimum="0" Maximum="100" Style="{StaticResource PremiumSliderStyle}"
+                                             Value="{Binding PlayerVm.Volume}"
+                                             Width="80" VerticalAlignment="Center"
+                                             Foreground="{DynamicResource AccentBlue}"
+@@ -2650,7 +3034,7 @@
+             <!-- Centered Glassy Card -->
+             <Border Width="850" Height="600"
+                     Background="{DynamicResource BgDeep}"
+-                    BorderBrush="{DynamicResource DividerColor}"
++                    BorderBrush="#15FFFFFF"
+                     BorderThickness="1"
+                     CornerRadius="16"
+                     HorizontalAlignment="Center"
+@@ -2988,18 +3372,29 @@
+                                         <Setter Property="Template">
+                                             <Setter.Value>
+                                                 <ControlTemplate TargetType="Button">
+-                                                    <Border x:Name="Bd" CornerRadius="8">
++                                                    <Border x:Name="Bd" CornerRadius="10" RenderTransformOrigin="0.5,0.5">
+                                                         <Border.Background>
+                                                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+-                                                                <GradientStop Color="#4F8EF7" Offset="0"/>
+-                                                                <GradientStop Color="#7C5CBF" Offset="1"/>
++                                                                <GradientStop Color="#5B9BFF" Offset="0"/>
++                                                                <GradientStop Color="#8B6BD4" Offset="1"/>
+                                                             </LinearGradientBrush>
+                                                         </Border.Background>
++                                                        <Border.Effect>
++                                                            <DropShadowEffect BlurRadius="15" Color="#5B9BFF" Opacity="0.3" ShadowDepth="2" Direction="270"/>
++                                                        </Border.Effect>
++                                                        <Border.RenderTransform>
++                                                            <ScaleTransform ScaleX="1" ScaleY="1"/>
++                                                        </Border.RenderTransform>
+                                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                     </Border>
+                                                     <ControlTemplate.Triggers>
+                                                         <Trigger Property="IsMouseOver" Value="True">
+-                                                            <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
++                                                            <Setter TargetName="Bd" Property="Opacity" Value="0.95"/>
++                                                            <Setter TargetName="Bd" Property="RenderTransform">
++                                                                <Setter.Value>
++                                                                    <ScaleTransform ScaleX="1.02" ScaleY="1.02"/>
++                                                                </Setter.Value>
++                                                            </Setter>
+                                                         </Trigger>
+                                                     </ControlTemplate.Triggers>
+                                                 </ControlTemplate>
+diff --git a/IPXtream/Views/DashboardWindow.xaml.cs b/IPXtream/Views/DashboardWindow.xaml.cs
+index a5b660e..75f7437 100644
+--- a/IPXtream/Views/DashboardWindow.xaml.cs
++++ b/IPXtream/Views/DashboardWindow.xaml.cs
+@@ -22,6 +22,8 @@ public partial class DashboardWindow : Window
+     private readonly System.Windows.Threading.DispatcherTimer _hideTimer;
+     private bool _barsLocked;
+     private bool _isFullscreen;
++    private bool _wasPlayerPopupOpenBeforeDeactivation;
++    private bool _wasPipPopupOpenBeforeDeactivation;
+ 
+     // VLC and WebView2 fields
+     private LibVLCSharp.Shared.LibVLC? _libVLC;
+@@ -562,6 +564,12 @@ public partial class DashboardWindow : Window
+             PlayerOverlayPopup.HorizontalOffset = offset + 0.1;
+             PlayerOverlayPopup.HorizontalOffset = offset;
+         }
++        if (PipOverlayPopup != null && PipOverlayPopup.IsOpen)
++        {
++            var offset = PipOverlayPopup.HorizontalOffset;
++            PipOverlayPopup.HorizontalOffset = offset + 0.1;
++            PipOverlayPopup.HorizontalOffset = offset;
++        }
+     }
+ 
+     private void Window_KeyDown(object sender, KeyEventArgs e)
+@@ -836,4 +844,48 @@ public partial class DashboardWindow : Window
+             _vm.CloseSettingsCommand.Execute(null);
+         }
+     }
++
++    private void Popup_Opened(object sender, EventArgs e)
++    {
++        UpdatePopupPosition();
++    }
++
++    private void PlayerPanel_SizeChanged(object sender, SizeChangedEventArgs e)
++    {
++        UpdatePopupPosition();
++    }
++
++    private void PipOverlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
++    {
++        if (e.ChangedButton == MouseButton.Left)
++        {
++            DragMove();
++        }
++    }
++
++    private void Window_Deactivated(object sender, EventArgs e)
++    {
++        _wasPlayerPopupOpenBeforeDeactivation = PlayerOverlayPopup.IsOpen;
++        _wasPipPopupOpenBeforeDeactivation = PipOverlayPopup != null && PipOverlayPopup.IsOpen;
++
++        PlayerOverlayPopup.IsOpen = false;
++        if (PipOverlayPopup != null)
++        {
++            PipOverlayPopup.IsOpen = false;
++        }
++    }
++
++    private void Window_Activated(object sender, EventArgs e)
++    {
++        if (_wasPlayerPopupOpenBeforeDeactivation)
++        {
++            PlayerOverlayPopup.IsOpen = true;
++            UpdatePopupPosition();
++        }
++        if (_wasPipPopupOpenBeforeDeactivation && PipOverlayPopup != null)
++        {
++            PipOverlayPopup.IsOpen = true;
++            UpdatePopupPosition();
++        }
++    }
+ }
+diff --git a/IPXtream/Views/LoginWindow.xaml b/IPXtream/Views/LoginWindow.xaml
+index fdfe12c..5c1813a 100644
+--- a/IPXtream/Views/LoginWindow.xaml
++++ b/IPXtream/Views/LoginWindow.xaml
+@@ -10,18 +10,18 @@
+         MinWidth="400" MinHeight="550"
+         WindowStartupLocation="CenterScreen"
+         ResizeMode="CanMinimize"
+-        Background="#0F0F1A">
++        Background="#080812">
+ 
+     <Window.Resources>
+         <!-- ── Colour palette ───────────────────────────────────────────── -->
+-        <SolidColorBrush x:Key="BgDeep"       Color="#0F0F1A"/>
+-        <SolidColorBrush x:Key="BgCard"       Color="#1A1A2E"/>
+-        <SolidColorBrush x:Key="AccentBlue"   Color="#4F8EF7"/>
+-        <SolidColorBrush x:Key="AccentPurple" Color="#7C5CBF"/>
+-        <SolidColorBrush x:Key="TextPrimary"  Color="#E8E8F0"/>
++        <SolidColorBrush x:Key="BgDeep"       Color="#080812"/>
++        <SolidColorBrush x:Key="BgCard"       Color="#141422"/>
++        <SolidColorBrush x:Key="AccentBlue"   Color="#5B9BFF"/>
++        <SolidColorBrush x:Key="AccentPurple" Color="#8B6BD4"/>
++        <SolidColorBrush x:Key="TextPrimary"  Color="#F0F0F8"/>
+         <SolidColorBrush x:Key="TextMuted"    Color="#888899"/>
+-        <SolidColorBrush x:Key="InputBg"      Color="#12122A"/>
+-        <SolidColorBrush x:Key="InputBorder"  Color="#2E2E50"/>
++        <SolidColorBrush x:Key="InputBg"      Color="#0E0E20"/>
++        <SolidColorBrush x:Key="InputBorder"  Color="#252545"/>
+         <SolidColorBrush x:Key="ErrorRed"     Color="#FF5370"/>
+ 
+         <!-- ── TextBox style ──────────────────────────────────────────────── -->
+@@ -43,7 +43,7 @@
+                                 Background="{TemplateBinding Background}"
+                                 BorderBrush="{TemplateBinding BorderBrush}"
+                                 BorderThickness="{TemplateBinding BorderThickness}"
+-                                CornerRadius="8">
++                                CornerRadius="10">
+                             <ScrollViewer x:Name="PART_ContentHost"
+                                           Margin="{TemplateBinding Padding}"
+                                           VerticalAlignment="Center"
+@@ -77,7 +77,7 @@
+                                 Background="{TemplateBinding Background}"
+                                 BorderBrush="{TemplateBinding BorderBrush}"
+                                 BorderThickness="{TemplateBinding BorderThickness}"
+-                                CornerRadius="8">
++                                CornerRadius="10">
+                             <ScrollViewer x:Name="PART_ContentHost"
+                                           Margin="{TemplateBinding Padding}"
+                                           VerticalAlignment="Center"
+@@ -113,11 +113,11 @@
+             <Setter Property="Template">
+                 <Setter.Value>
+                     <ControlTemplate TargetType="Button">
+-                        <Border x:Name="Bd" CornerRadius="10">
++                        <Border x:Name="Bd" CornerRadius="12">
+                             <Border.Background>
+                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+-                                    <GradientStop Color="#4F8EF7" Offset="0"/>
+-                                    <GradientStop Color="#7C5CBF" Offset="1"/>
++                                    <GradientStop Color="#5B9BFF" Offset="0"/>
++                                    <GradientStop Color="#8B6BD4" Offset="1"/>
+                                 </LinearGradientBrush>
+                             </Border.Background>
+                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+@@ -195,7 +195,7 @@
+                                                 Background="{TemplateBinding Background}"
+                                                 BorderBrush="{TemplateBinding BorderBrush}"
+                                                 BorderThickness="{TemplateBinding BorderThickness}"
+-                                                CornerRadius="8">
++                                                CornerRadius="10">
+                                             <Grid HorizontalAlignment="Right" Width="30">
+                                                 <Path x:Name="Arrow"
+                                                       Fill="{StaticResource TextMuted}"
+@@ -234,7 +234,7 @@
+                                             Background="{StaticResource InputBg}"
+                                             BorderBrush="{StaticResource InputBorder}"
+                                             BorderThickness="1"
+-                                            CornerRadius="8"
++                                            CornerRadius="10"
+                                             Margin="0,2,0,0">
+                                         <ScrollViewer SnapsToDevicePixels="True">
+                                             <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+@@ -271,9 +271,12 @@
+ 
+     <!-- ── Root card ────────────────────────────────────────────────────────── -->
+     <Border Background="{StaticResource BgCard}"
+-            CornerRadius="16"
++            CornerRadius="20"
+             Margin="16"
+-            Padding="28,20">
++            Padding="32,24">
++        <Border.Effect>
++            <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.5" ShadowDepth="0"/>
++        </Border.Effect>
+         <Grid>
+             <Grid.RowDefinitions>
+                 <RowDefinition Height="Auto"/>   <!-- Logo + title -->
+@@ -284,19 +287,19 @@
+ 
+             <!-- ── Header ───────────────────────────────────────────────── -->
+             <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,14">
+-                <Border Width="48" Height="48" CornerRadius="24"
++                <Border Width="56" Height="56" CornerRadius="28"
+                         HorizontalAlignment="Center" Margin="0,0,0,10">
+                     <Border.Background>
+                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+-                            <GradientStop Color="#4F8EF7" Offset="0"/>
+-                            <GradientStop Color="#7C5CBF" Offset="1"/>
++                            <GradientStop Color="#5B9BFF" Offset="0"/>
++                            <GradientStop Color="#8B6BD4" Offset="1"/>
+                         </LinearGradientBrush>
+                     </Border.Background>
+-                    <Path Data="{StaticResource IconLogo}" Fill="White" Width="22" Height="22" Stretch="Uniform"
++                    <Path Data="{StaticResource IconLogo}" Fill="White" Width="26" Height="26" Stretch="Uniform"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                 </Border>
+                 <TextBlock Text="IPXtream"
+-                           FontSize="22" FontWeight="Bold"
++                           FontSize="24" FontWeight="Bold"
+                            Foreground="{StaticResource TextPrimary}"
+                            HorizontalAlignment="Center"/>
+                 <TextBlock Text="Sign in to your IPTV service"
+@@ -352,7 +355,7 @@
+             <!-- ── Error message ─────────────────────────────────────────── -->
+             <Border Grid.Row="2"
+                     Background="#3DFF5370"
+-                    CornerRadius="8"
++                    CornerRadius="10"
+                     Padding="12,8"
+                     Margin="0,14,0,0"
+                     Visibility="{Binding ErrorMessage,
+@@ -383,7 +386,13 @@
+                 </Button>
+ 
+                 <!-- Simple loading indicator -->
+-                <Border Background="#7C5CBF" CornerRadius="10" Height="48">
++                <Border CornerRadius="12" Height="48">
++                    <Border.Background>
++                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
++                            <GradientStop Color="#5B9BFF" Offset="0"/>
++                            <GradientStop Color="#8B6BD4" Offset="1"/>
++                        </LinearGradientBrush>
++                    </Border.Background>
+                     <Border.Style>
+                         <Style TargetType="Border">
+                             <Setter Property="Visibility" Value="Collapsed"/>
+diff --git a/IPXtream_Installer.iss b/IPXtream_Installer.iss
+index be27d67..3ae2f7c 100644
+--- a/IPXtream_Installer.iss
++++ b/IPXtream_Installer.iss
+@@ -1,22 +1,22 @@
+ ; ============================================================
+-;  IPXtream v2.0.32 — Inno Setup 6 Installer Script
++;  IPXtream v2.0.39 — Inno Setup 6 Installer Script
+ ;
+ ;  Step 1 — Publish the app first (run from IPXtream\ folder):
+ ;    dotnet publish -c Release -r win-x64 --self-contained true ^
+ ;      -p:PublishSingleFile=false ^
+-;      -o "bin\publish_v2.0.32"
++;      -o "bin\publish_v2.0.39"
+ ;
+ ;  Step 2 — Open this file in Inno Setup 6 and press F9.
+ ;
+-;  Output: Output\IPXtream_Setup_v2.0.32.exe
++;  Output: Output\IPXtream_Setup_v2.0.39.exe
+ ; ============================================================
+ 
+ #define MyAppName      "IPXtream"
+-#define MyAppVersion   "2.0.32"
++#define MyAppVersion   "2.0.39"
+ #define MyAppPublisher "Dr. Yaser"
+ #define MyAppURL       "https://github.com/KyuJunior/IPXtream"
+ #define MyAppExeName   "IPXtream.exe"
+-#define MyPublishDir   "IPXtream\bin\publish_v2.0.32"
++#define MyPublishDir   "IPXtream\bin\publish_v2.0.39"
+ 
+ [Setup]
+ AppId={{E7A2C3D4-F8B1-4E5A-9C6D-1234567890AB}
+diff --git a/Output/IPXtream_Setup_v1.5.1.exe b/Output/IPXtream_Setup_v1.5.1.exe
+deleted file mode 100644
+index 0a4eb4f..0000000
+Binary files a/Output/IPXtream_Setup_v1.5.1.exe and /dev/null differ
+diff --git a/Output/IPXtream_Setup_v1.5.2.exe b/Output/IPXtream_Setup_v1.5.2.exe
+deleted file mode 100644
+index 5bda764..0000000
+Binary files a/Output/IPXtream_Setup_v1.5.2.exe and /dev/null differ
+diff --git a/Output/IPXtream_Setup_v1.5.7.exe b/Output/IPXtream_Setup_v1.5.7.exe
+deleted file mode 100644
+index 984fc72..0000000
+Binary files a/Output/IPXtream_Setup_v1.5.7.exe and /dev/null differ
+diff --git a/Output/IPXtream_Setup_v1.9.0.exe b/Output/IPXtream_Setup_v1.9.0.exe
+deleted file mode 100644
+index 0204eeb..0000000
+Binary files a/Output/IPXtream_Setup_v1.9.0.exe and /dev/null differ
+diff --git a/Output/IPXtream_Setup_v1.9.8.exe b/Output/IPXtream_Setup_v1.9.8.exe
+deleted file mode 100644
+index e92c4e4..0000000
+Binary files a/Output/IPXtream_Setup_v1.9.8.exe and /dev/null differ
+diff --git a/Output/IPXtream_Setup_v1.9.9.exe b/Output/IPXtream_Setup_v1.9.9.exe
+deleted file mode 100644
+index efc84a8..0000000
+Binary files a/Output/IPXtream_Setup_v1.9.9.exe and /dev/null differ
+diff --git a/Output/IPXtream_Setup_v2.0.0.exe b/Output/IPXtream_Setup_v2.0.0.exe
+deleted file mode 100644
+index 9456a64..0000000
+Binary files a/Output/IPXtream_Setup_v2.0.0.exe and /dev/null differ
+diff --git a/Output/IPXtream_Setup_v2.0.1.exe b/Output/IPXtream_Setup_v2.0.1.exe
+deleted file mode 100644
+index 145045d..0000000
+Binary files a/Output/IPXtream_Setup_v2.0.1.exe and /dev/null differ
+diff --git a/Output/IPXtream_Setup_v2.0.2.exe b/Output/IPXtream_Setup_v2.0.2.exe
+deleted file mode 100644
+index fa662a5..0000000
+Binary files a/Output/IPXtream_Setup_v2.0.2.exe and /dev/null differ

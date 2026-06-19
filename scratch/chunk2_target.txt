@@ -1,0 +1,8 @@
+    private void SettingsOverlay_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource == sender)
+        {
+            _vm.CloseSettingsCommand.Execute(null);
+        }
+    }
+}

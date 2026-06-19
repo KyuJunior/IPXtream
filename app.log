@@ -1,0 +1,257 @@
+[2026-06-07 04:28:31.749] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/189258.mp4
+[2026-06-07 04:28:31.787] Player SyncStatus: AL - Romance (1999) state changed to Opening
+[2026-06-07 04:28:31.896] Player SyncStatus: AL - Romance (1999) state changed to Failed
+[2026-06-07 04:28:31.897] Player Playback Error: AL - Romance (1999) failed to load.
+[2026-06-07 04:29:44.569] HTTP Request error for URL: HTTP://cf.og-cdn.site/player_api.php?username=[REDACTED]&password=[REDACTED]
+[EXCEPTION] System.Net.Http.HttpRequestException: Response status code does not indicate success: 513 (<none>).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at IPXtream.Services.XtreamApiService.GetRawAsync(String url, CancellationToken ct, Boolean forceRefresh)
+[2026-06-07 04:30:29.105] HTTP Request error for URL: http://cf.ottvip.top/player_api.php?username=[REDACTED]&password=[REDACTED]
+[EXCEPTION] System.Net.Http.HttpRequestException: No such host is known. (cf.ottvip.top:80)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.DecompressionHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at IPXtream.Services.XtreamApiService.GetRawAsync(String url, CancellationToken ct, Boolean forceRefresh)
+[2026-06-07 04:30:29.601] HTTP Request error for URL: http://cf.ottvip.top/player_api.php?username=[REDACTED]&password=[REDACTED]
+[EXCEPTION] System.Net.Http.HttpRequestException: No such host is known. (cf.ottvip.top:80)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.DecompressionHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at IPXtream.Services.XtreamApiService.GetRawAsync(String url, CancellationToken ct, Boolean forceRefresh)
+[2026-06-07 04:30:30.062] HTTP Request error for URL: http://cf.ottvip.top/player_api.php?username=[REDACTED]&password=[REDACTED]
+[EXCEPTION] System.Net.Http.HttpRequestException: No such host is known. (cf.ottvip.top:80)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.DecompressionHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at IPXtream.Services.XtreamApiService.GetRawAsync(String url, CancellationToken ct, Boolean forceRefresh)
+[2026-06-07 04:30:30.386] HTTP Request error for URL: http://cf.ottvip.top/player_api.php?username=[REDACTED]&password=[REDACTED]
+[EXCEPTION] System.Net.Http.HttpRequestException: No such host is known. (cf.ottvip.top:80)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.DecompressionHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at IPXtream.Services.XtreamApiService.GetRawAsync(String url, CancellationToken ct, Boolean forceRefresh)
+[2026-06-07 04:30:30.565] HTTP Request error for URL: http://cf.ottvip.top/player_api.php?username=[REDACTED]&password=[REDACTED]
+[EXCEPTION] System.Net.Http.HttpRequestException: No such host is known. (cf.ottvip.top:80)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.DecompressionHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at IPXtream.Services.XtreamApiService.GetRawAsync(String url, CancellationToken ct, Boolean forceRefresh)
+[2026-06-07 04:30:30.743] HTTP Request error for URL: http://cf.ottvip.top/player_api.php?username=[REDACTED]&password=[REDACTED]
+[EXCEPTION] System.Net.Http.HttpRequestException: No such host is known. (cf.ottvip.top:80)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.DecompressionHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at IPXtream.Services.XtreamApiService.GetRawAsync(String url, CancellationToken ct, Boolean forceRefresh)
+[2026-06-07 04:30:30.905] HTTP Request error for URL: http://cf.ottvip.top/player_api.php?username=[REDACTED]&password=[REDACTED]
+[EXCEPTION] System.Net.Http.HttpRequestException: No such host is known. (cf.ottvip.top:80)
+ ---> System.Net.Sockets.SocketException (11001): No such host is known.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.DecompressionHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at IPXtream.Services.XtreamApiService.GetRawAsync(String url, CancellationToken ct, Boolean forceRefresh)
+[2026-06-07 04:31:53.868] Player Initialise: Opening stream: Https://xc.iptvmate.net/live/[REDACTED]/[REDACTED]/1.m3u8
+[2026-06-07 04:31:53.882] Player SyncStatus: Pornstar state changed to Opening
+[2026-06-07 04:31:53.890] Player SyncStatus: Pornstar state changed to Failed
+[2026-06-07 04:31:53.890] Player Playback Error: Pornstar failed to load.
+[2026-06-07 04:32:01.100] Player Initialise: Opening stream: Https://xc.iptvmate.net/movie/[REDACTED]/[REDACTED]/200.m3u8
+[2026-06-07 04:32:01.110] Player SyncStatus: XXX VOD 200 state changed to Opening
+[2026-06-07 04:32:01.111] Player SyncStatus: XXX VOD 200 state changed to Failed
+[2026-06-07 04:32:01.112] Player Playback Error: XXX VOD 200 failed to load.
+[2026-06-07 04:33:22.614] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/2012093.mkv
+[2026-06-07 04:33:22.633] Player SyncStatus: AS - Ace Female Bodyguard (2026) state changed to Opening
+[2026-06-07 04:33:22.641] Player SyncStatus: AS - Ace Female Bodyguard (2026) state changed to Failed
+[2026-06-07 04:33:22.641] Player Playback Error: AS - Ace Female Bodyguard (2026) failed to load.
+[2026-06-07 04:33:26.433] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/1985060.mkv
+[2026-06-07 04:33:26.444] Player SyncStatus: AS - DAWN PLAN (2026) state changed to Opening
+[2026-06-07 04:33:26.445] Player SyncStatus: AS - DAWN PLAN (2026) state changed to Failed
+[2026-06-07 04:33:26.446] Player Playback Error: AS - DAWN PLAN (2026) failed to load.
+[2026-06-07 04:34:58.798] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/live/[REDACTED]/[REDACTED]/483714.ts
+[2026-06-07 04:34:58.810] Player SyncStatus: ### ARABIC 24/7 4K UHD 3840P ### state changed to Opening
+[2026-06-07 04:34:58.811] Player SyncStatus: ### ARABIC 24/7 4K UHD 3840P ### state changed to Failed
+[2026-06-07 04:34:58.811] Player Playback Error: ### ARABIC 24/7 4K UHD 3840P ### failed to load.
+[2026-06-07 04:35:01.303] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/live/[REDACTED]/[REDACTED]/1454586.ts
+[2026-06-07 04:35:01.339] Player SyncStatus: AR 4K: العربجي 1 state changed to Opening
+[2026-06-07 04:35:01.340] Player SyncStatus: AR 4K: العربجي 1 state changed to Failed
+[2026-06-07 04:35:01.340] Player Playback Error: AR 4K: العربجي 1 failed to load.
+[2026-06-07 04:35:06.025] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/1555959.mkv
+[2026-06-07 04:35:06.038] Player SyncStatus: 4K-OSN+ - Godzilla x Kong: The New Empire (2024) state changed to Opening
+[2026-06-07 04:35:06.039] Player SyncStatus: 4K-OSN+ - Godzilla x Kong: The New Empire (2024) state changed to Failed
+[2026-06-07 04:35:06.039] Player Playback Error: 4K-OSN+ - Godzilla x Kong: The New Empire (2024) failed to load.
+[2026-06-07 04:35:10.697] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/1555959.mkv
+[2026-06-07 04:35:10.708] Player SyncStatus: 4K-OSN+ - Godzilla x Kong: The New Empire (2024) state changed to Opening
+[2026-06-07 04:35:10.709] Player SyncStatus: 4K-OSN+ - Godzilla x Kong: The New Empire (2024) state changed to Failed
+[2026-06-07 04:35:10.709] Player Playback Error: 4K-OSN+ - Godzilla x Kong: The New Empire (2024) failed to load.
+[2026-06-07 04:54:13.304] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/189258.mp4
+[2026-06-07 04:54:13.334] Player SyncStatus: AL - Romance (1999) state changed to Opening
+[2026-06-07 04:54:13.345] Player SyncStatus: AL - Romance (1999) state changed to Failed
+[2026-06-07 04:54:13.345] Player Playback Error: AL - Romance (1999) failed to load.
+[2026-06-07 04:54:40.584] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/1212214.mkv
+[2026-06-07 04:54:40.594] Player SyncStatus: NF - Swing Into Romance (2023) state changed to Opening
+[2026-06-07 04:54:40.595] Player SyncStatus: NF - Swing Into Romance (2023) state changed to Failed
+[2026-06-07 04:54:40.596] Player Playback Error: NF - Swing Into Romance (2023) failed to load.
+[2026-06-07 04:55:35.327] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/1925976.mkv
+[2026-06-07 04:55:35.339] Player SyncStatus: TOP: GOAT (2026) state changed to Opening
+[2026-06-07 04:55:35.340] Player SyncStatus: TOP: GOAT (2026) state changed to Failed
+[2026-06-07 04:55:35.340] Player Playback Error: TOP: GOAT (2026) failed to load.
+[2026-06-07 04:57:11.838] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/1925976.mkv
+[2026-06-07 04:57:11.852] Player SyncStatus: TOP: GOAT (2026) state changed to Opening
+[2026-06-07 04:57:11.853] Player SyncStatus: TOP: GOAT (2026) state changed to Failed
+[2026-06-07 04:57:11.854] Player Playback Error: TOP: GOAT (2026) failed to load.
+[2026-06-07 05:08:04.734] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/2021838.mkv
+[2026-06-07 05:08:04.746] Player SyncStatus: 4K-NF - GOAT (2026) state changed to Opening
+[2026-06-07 05:08:04.748] Player SyncStatus: 4K-NF - GOAT (2026) state changed to Failed
+[2026-06-07 05:08:04.748] Player Playback Error: 4K-NF - GOAT (2026) failed to load.
+[2026-06-07 05:08:06.709] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/289342.mkv
+[2026-06-07 05:08:06.720] Player SyncStatus: 4K-NF - The SpongeBob Movie: Sponge on the Run  (2020) state changed to Opening
+[2026-06-07 05:08:06.722] Player SyncStatus: 4K-NF - The SpongeBob Movie: Sponge on the Run  (2020) state changed to Failed
+[2026-06-07 05:08:06.722] Player Playback Error: 4K-NF - The SpongeBob Movie: Sponge on the Run  (2020) failed to load.
+[2026-06-07 05:08:09.528] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/418457.mkv
+[2026-06-07 05:08:09.538] Player SyncStatus: 4K-NF - Wendell & Wild (2022) state changed to Opening
+[2026-06-07 05:08:09.539] Player SyncStatus: 4K-NF - Wendell & Wild (2022) state changed to Failed
+[2026-06-07 05:08:09.540] Player Playback Error: 4K-NF - Wendell & Wild (2022) failed to load.
+[2026-06-07 05:12:03.376] Player Initialise: Opening stream: HTTP://cf.og-cdn.site/movie/[REDACTED]/[REDACTED]/189258.mp4
+[2026-06-07 05:12:03.403] Player SyncStatus: AL - Romance (1999) state changed to Opening
+[2026-06-07 05:12:03.413] Player SyncStatus: AL - Romance (1999) state changed to Failed
+[2026-06-07 05:12:03.414] Player Playback Error: AL - Romance (1999) failed to load.
+[2026-06-07 05:26:02.915] Player Initialise: Opening stream: C:\Users\Yaser\Downloads\IPXtream\AL - Romance (1999).mp4
+[2026-06-07 05:26:02.922] Player SyncStatus: AL - Romance (1999) state changed to Opening
+[2026-06-07 05:26:02.922] Player SyncStatus: AL - Romance (1999) state changed to Buffering
+[2026-06-07 05:26:03.009] Player SyncStatus: AL - Romance (1999) state changed to Playing
+[2026-06-07 05:26:03.009] Player SyncStatus: AL - Romance (1999) state changed to Buffering
+[2026-06-07 05:26:03.009] Player SyncStatus: AL - Romance (1999) state changed to Buffering
+[2026-06-07 05:26:03.010] Player SyncStatus: AL - Romance (1999) state changed to Buffering
+[2026-06-07 05:26:03.011] Player SyncStatus: AL - Romance (1999) state changed to Buffering
+[2026-06-07 05:26:03.011] Player SyncStatus: AL - Romance (1999) state changed to Buffering
+[2026-06-07 05:26:03.012] Player SyncStatus: AL - Romance (1999) state changed to Buffering
+[2026-06-07 05:28:15.150] Player SyncStatus: AL - Romance (1999) state changed to Paused
+[2026-06-07 05:28:18.602] Player SyncStatus: AL - Romance (1999) state changed to Playing
+[2026-06-07 05:28:19.913] Player SyncStatus: AL - Romance (1999) state changed to Paused
+[2026-06-08 08:24:36.175] PlayAsync: Name=AR-SUBS - Margo's Got Money Troubles (2026) (US), SeriesId=44927, StreamId=0, StreamType=, ActiveSection=WhatsNew
+[2026-06-08 08:24:36.863] OnSelectedSeasonChanged: Season 1, EpisodesCount=8
+[2026-06-08 08:24:36.864] OnSelectedSeasonChanged: Streams.Count=8, _allStreams.Count=8, IsViewingSeriesInfo=True
+[2026-06-08 08:24:36.865] LoadSeriesEpisodesAsync: CurrentSeries=AR-SUBS - Margo's Got Money Troubles (2026) (US), SeasonsCount=1, EpisodesCount=8
+[2026-06-08 08:24:39.665] PlayAsync: Name=AR-SUBS - Margo's Got Money Troubles (2026) (US) - S01E02 - Homecoming, SeriesId=0, StreamId=1929370, StreamType=series, ActiveSection=WhatsNew
+[2026-06-08 08:25:09.413] PlayAsync: Name=AR-SUBS - Margo's Got Money Troubles (2026) (US), SeriesId=44927, StreamId=0, StreamType=, ActiveSection=WhatsNew
+[2026-06-08 08:25:09.416] OnSelectedSeasonChanged: value is null
+[2026-06-08 08:25:09.420] OnSelectedSeasonChanged: Season 1, EpisodesCount=8
+[2026-06-08 08:25:09.420] OnSelectedSeasonChanged: Streams.Count=8, _allStreams.Count=8, IsViewingSeriesInfo=True
+[2026-06-08 08:25:09.421] LoadSeriesEpisodesAsync: CurrentSeries=AR-SUBS - Margo's Got Money Troubles (2026) (US), SeasonsCount=1, EpisodesCount=8
+[2026-06-08 08:25:11.989] PlayAsync: Name=AR-SUBS - Margo's Got Money Troubles (2026) (US) - S01E02 - Homecoming, SeriesId=0, StreamId=1929370, StreamType=series, ActiveSection=WhatsNew
+[2026-06-09 18:03:31.363] PlayAsync: Name=AR-SUBS - FROM (2022) (US), SeriesId=6399, StreamId=0, StreamType=, ActiveSection=Series
+[2026-06-09 18:03:31.832] OnSelectedSeasonChanged: Season 1, EpisodesCount=10
+[2026-06-09 18:03:31.832] OnSelectedSeasonChanged: Streams.Count=10, _allStreams.Count=10, IsViewingSeriesInfo=True
+[2026-06-09 18:03:31.833] LoadSeriesEpisodesAsync: CurrentSeries=AR-SUBS - FROM (2022) (US), SeasonsCount=4, EpisodesCount=37
+[2026-06-09 18:03:36.971] OnSelectedSeasonChanged: Season 4, EpisodesCount=7
+[2026-06-09 18:03:36.972] OnSelectedSeasonChanged: Streams.Count=7, _allStreams.Count=7, IsViewingSeriesInfo=True
+[2026-06-09 18:03:40.450] PlayAsync: Name=AR-SUBS - FROM (2022) (US) - S04E06 - The Heart Is a Lonely Hunter, SeriesId=0, StreamId=2014762, StreamType=series, ActiveSection=Series
+[2026-06-09 18:05:00.041] OnSelectedSeasonChanged: value is null
+[2026-06-09 18:05:08.025] PlayAsync: Name=AR-SUBS - FROM (2022) (US), SeriesId=6399, StreamId=0, StreamType=, ActiveSection=Series
+[2026-06-09 18:05:08.032] OnSelectedSeasonChanged: Season 1, EpisodesCount=10
+[2026-06-09 18:05:08.032] OnSelectedSeasonChanged: Streams.Count=10, _allStreams.Count=10, IsViewingSeriesInfo=True
+[2026-06-09 18:05:08.033] LoadSeriesEpisodesAsync: CurrentSeries=AR-SUBS - FROM (2022) (US), SeasonsCount=4, EpisodesCount=37
+[2026-06-09 18:05:09.150] OnSelectedSeasonChanged: Season 4, EpisodesCount=7
+[2026-06-09 18:05:09.150] OnSelectedSeasonChanged: Streams.Count=7, _allStreams.Count=7, IsViewingSeriesInfo=True
+[2026-06-09 18:05:11.182] PlayAsync: Name=AR-SUBS - FROM (2022) (US) - S04E06 - The Heart Is a Lonely Hunter, SeriesId=0, StreamId=2014762, StreamType=series, ActiveSection=Series
+[2026-06-09 18:05:33.693] PlayAsync: Name=AR-SUBS - High Potential (2024) (US), SeriesId=24777, StreamId=0, StreamType=, ActiveSection=WhatsNew
+[2026-06-09 18:05:34.507] OnSelectedSeasonChanged: Season 1, EpisodesCount=13
+[2026-06-09 18:05:34.508] OnSelectedSeasonChanged: Streams.Count=13, _allStreams.Count=13, IsViewingSeriesInfo=True
+[2026-06-09 18:05:34.509] LoadSeriesEpisodesAsync: CurrentSeries=AR-SUBS - High Potential (2024) (US), SeasonsCount=2, EpisodesCount=31
+[2026-06-09 18:05:35.996] PlayAsync: Name=AR-SUBS - High Potential (2024) (US) - S01E01 - Pilot, SeriesId=0, StreamId=1307487, StreamType=series, ActiveSection=WhatsNew
+[2026-06-09 18:05:39.883] OnSelectedSeasonChanged: Season 2, EpisodesCount=18
+[2026-06-09 18:05:39.884] OnSelectedSeasonChanged: Streams.Count=18, _allStreams.Count=18, IsViewingSeriesInfo=True
+[2026-06-09 18:05:47.216] OnSelectedSeasonChanged: Season 1, EpisodesCount=13
+[2026-06-09 18:05:47.217] OnSelectedSeasonChanged: Streams.Count=13, _allStreams.Count=13, IsViewingSeriesInfo=True
+[2026-06-09 18:05:47.744] OnSelectedSeasonChanged: Season 2, EpisodesCount=18
+[2026-06-09 18:05:47.744] OnSelectedSeasonChanged: Streams.Count=18, _allStreams.Count=18, IsViewingSeriesInfo=True
+[2026-06-09 18:05:49.643] PlayAsync: Name=AR-SUBS - High Potential (2024) (US) - S02E01 - Pawns, SeriesId=0, StreamId=1551534, StreamType=series, ActiveSection=WhatsNew
+[2026-06-09 18:05:56.431] OnSelectedSeasonChanged: Season 1, EpisodesCount=13
+[2026-06-09 18:05:56.431] OnSelectedSeasonChanged: Streams.Count=13, _allStreams.Count=13, IsViewingSeriesInfo=True
+[2026-06-09 18:06:00.261] OnSelectedSeasonChanged: value is null
+[2026-06-09 18:22:59.344] PlayAsync: Name=AR-SUBS - Margo's Got Money Troubles (2026) (US), SeriesId=44927, StreamId=0, StreamType=, ActiveSection=WhatsNew
+[2026-06-09 18:22:59.373] OnSelectedSeasonChanged: Season 1, EpisodesCount=8
+[2026-06-09 18:22:59.373] OnSelectedSeasonChanged: Streams.Count=8, _allStreams.Count=8, IsViewingSeriesInfo=True
+[2026-06-09 18:22:59.374] LoadSeriesEpisodesAsync: CurrentSeries=AR-SUBS - Margo's Got Money Troubles (2026) (US), SeasonsCount=1, EpisodesCount=8
+[2026-06-09 18:23:01.959] PlayAsync: Name=AR-SUBS - Margo's Got Money Troubles (2026) (US) - S01E02 - Homecoming, SeriesId=0, StreamId=1929370, StreamType=series, ActiveSection=WhatsNew

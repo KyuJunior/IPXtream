@@ -547,51 +547,33 @@ public partial class DashboardWindow : Window
                     {
                         WindowStyle = WindowStyle.None,
                         AllowsTransparency = true,
-                        Background = System.Windows.Media.Brushes.Transparent,
+                        Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#01000000")!,
                         ShowInTaskbar = false,
                         Topmost = true,
                         ResizeMode = ResizeMode.NoResize,
-                        WindowStartupLocation = WindowStartupLocation.Manual,
-                        Owner = this,
+                        Owner = null, // Set Owner = null to prevent DWM layering issues
                         DataContext = this.DataContext
                     };
                     
                     _fullscreenOverlayWindow.PreviewMouseMove += Player_MouseMove;
                     _fullscreenOverlayWindow.MouseLeftButtonDown += Player_MouseLeftButtonDown;
+                    _fullscreenOverlayWindow.KeyDown += Window_KeyDown;
                 }
                 else
                 {
                     _fullscreenOverlayWindow.DataContext = this.DataContext;
                 }
 
-                // Match PlayerPanel's position and size in device coordinates
-                if (PlayerPanel.IsVisible)
-                {
-                    try
-                    {
-                        Point locationFromScreen = PlayerPanel.PointToScreen(new Point(0, 0));
-                        var presentationSource = PresentationSource.FromVisual(PlayerPanel);
-                        if (presentationSource != null && presentationSource.CompositionTarget != null)
-                        {
-                            var matrix = presentationSource.CompositionTarget.TransformToDevice;
-                            double dpiX = matrix.M11;
-                            double dpiY = matrix.M22;
+                // Match monitor by positioning near the main window first
+                _fullscreenOverlayWindow.Left = this.Left + 10;
+                _fullscreenOverlayWindow.Top = this.Top + 10;
+                _fullscreenOverlayWindow.Width = 300;
+                _fullscreenOverlayWindow.Height = 300;
+                _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
 
-                            _fullscreenOverlayWindow.Left = locationFromScreen.X / dpiX;
-                            _fullscreenOverlayWindow.Top = locationFromScreen.Y / dpiY;
-                            _fullscreenOverlayWindow.Width = PlayerPanel.RenderSize.Width;
-                            _fullscreenOverlayWindow.Height = PlayerPanel.RenderSize.Height;
-                            
-                            // Explicitly set grid size to cover the entire window
-                            PlayerOverlayGrid.Width = PlayerPanel.RenderSize.Width;
-                            PlayerOverlayGrid.Height = PlayerPanel.RenderSize.Height;
-                        }
-                    }
-                    catch
-                    {
-                        _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
-                    }
-                }
+                // Reset grid size to Auto (double.NaN) so it stretches naturally to fill the maximized window
+                PlayerOverlayGrid.Width = double.NaN;
+                PlayerOverlayGrid.Height = double.NaN;
 
                 if (_fullscreenOverlayWindow.Content == null)
                 {
@@ -708,29 +690,11 @@ public partial class DashboardWindow : Window
         }
         else if (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible)
         {
-            try
+            // Do NOT position it manually. Just keep it maximized.
+            if (_fullscreenOverlayWindow.WindowState != WindowState.Maximized)
             {
-                if (PlayerPanel.IsVisible)
-                {
-                    Point locationFromScreen = PlayerPanel.PointToScreen(new Point(0, 0));
-                    var presentationSource = PresentationSource.FromVisual(PlayerPanel);
-                    if (presentationSource != null && presentationSource.CompositionTarget != null)
-                    {
-                        var matrix = presentationSource.CompositionTarget.TransformToDevice;
-                        double dpiX = matrix.M11;
-                        double dpiY = matrix.M22;
-
-                        _fullscreenOverlayWindow.Left = locationFromScreen.X / dpiX;
-                        _fullscreenOverlayWindow.Top = locationFromScreen.Y / dpiY;
-                        _fullscreenOverlayWindow.Width = PlayerPanel.RenderSize.Width;
-                        _fullscreenOverlayWindow.Height = PlayerPanel.RenderSize.Height;
-
-                        PlayerOverlayGrid.Width = PlayerPanel.RenderSize.Width;
-                        PlayerOverlayGrid.Height = PlayerPanel.RenderSize.Height;
-                    }
-                }
+                _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
             }
-            catch {}
         }
         if (PipOverlayPopup != null && PipOverlayPopup.IsOpen)
         {

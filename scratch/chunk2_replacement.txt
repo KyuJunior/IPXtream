@@ -1,0 +1,67 @@
+    private void SettingsOverlay_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource == sender)
+        {
+            _vm.CloseSettingsCommand.Execute(null);
+        }
+    }
+
+    private void Popup_Opened(object sender, EventArgs e)
+    {
+        UpdatePopupPosition();
+    }
+
+    private void PlayerPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdatePopupPosition();
+    }
+
+    private void PipOverlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left)
+        {
+            DragMove();
+        }
+    }
+
+    private void Window_Deactivated(object sender, EventArgs e)
+    {
+        _wasPlayerPopupOpenBeforeDeactivation = PlayerOverlayPopup.IsOpen;
+        _wasPipPopupOpenBeforeDeactivation = PipOverlayPopup != null && PipOverlayPopup.IsOpen;
+
+        PlayerOverlayPopup.IsOpen = false;
+        if (PipOverlayPopup != null)
+        {
+            PipOverlayPopup.IsOpen = false;
+        }
+
+        if (_fullscreenOverlay != null)
+        {
+            _fullscreenOverlay.Hide();
+        }
+    }
+
+    private void Window_Activated(object sender, EventArgs e)
+    {
+        if (!_isFullscreen)
+        {
+            if (_wasPlayerPopupOpenBeforeDeactivation)
+            {
+                PlayerOverlayPopup.IsOpen = true;
+                UpdatePopupPosition();
+            }
+            if (_wasPipPopupOpenBeforeDeactivation && PipOverlayPopup != null)
+            {
+                PipOverlayPopup.IsOpen = true;
+                UpdatePopupPosition();
+            }
+        }
+        else
+        {
+            if (_fullscreenOverlay != null)
+            {
+                _fullscreenOverlay.Show();
+            }
+        }
+    }
+}
