@@ -552,11 +552,16 @@ public partial class DashboardWindow : Window
                         Topmost = true,
                         ResizeMode = ResizeMode.NoResize,
                         WindowStartupLocation = WindowStartupLocation.Manual,
-                        Owner = this
+                        Owner = this,
+                        DataContext = this.DataContext
                     };
                     
                     _fullscreenOverlayWindow.PreviewMouseMove += Player_MouseMove;
                     _fullscreenOverlayWindow.MouseLeftButtonDown += Player_MouseLeftButtonDown;
+                }
+                else
+                {
+                    _fullscreenOverlayWindow.DataContext = this.DataContext;
                 }
 
                 // Match PlayerPanel's position and size in device coordinates
@@ -597,6 +602,7 @@ public partial class DashboardWindow : Window
             }
             else
             {
+                PlayerOverlayPopup.IsOpen = false;
                 if (_fullscreenOverlayWindow != null)
                 {
                     _fullscreenOverlayWindow.Hide();
@@ -1226,6 +1232,20 @@ public partial class DashboardWindow : Window
                 };
                 scrollViewer.RaiseEvent(eventArg);
             }
+        }
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        if (_fullscreenOverlayWindow != null)
+        {
+            try
+            {
+                _fullscreenOverlayWindow.Close();
+            }
+            catch {}
+            _fullscreenOverlayWindow = null;
         }
     }
 }
