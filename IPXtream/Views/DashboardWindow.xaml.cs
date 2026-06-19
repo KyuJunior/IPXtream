@@ -34,6 +34,7 @@ public partial class DashboardWindow : Window
     private bool _isFullscreen;
     private bool _wasPlayerPopupOpenBeforeDeactivation;
     private bool _wasPipPopupOpenBeforeDeactivation;
+    private Window? _fullscreenOverlayWindow;
 
     // VLC and WebView2 fields
     private LibVLCSharp.Shared.LibVLC? _libVLC;
@@ -134,6 +135,7 @@ public partial class DashboardWindow : Window
         // Force popup position update on resize/move since WPF popups don't track inherently
         this.LocationChanged += (_, _) => UpdatePopupPosition();
         this.SizeChanged     += (_, _) => UpdatePopupPosition();
+        PlayerPanel.SizeChanged += PlayerPanel_SizeChanged;
 
         _hideTimer = new System.Windows.Threading.DispatcherTimer
         {
@@ -416,7 +418,7 @@ public partial class DashboardWindow : Window
                 ApplyFullscreen(playerVm.IsFullscreen);
         };
 
-        PlayerOverlayPopup.IsOpen = true;
+        SetOverlayOpen(true);
         _hideTimer.Start();
     }
 
@@ -472,7 +474,7 @@ public partial class DashboardWindow : Window
             old?.Dispose();
         });
 
-        PlayerOverlayPopup.IsOpen = false;
+        SetOverlayOpen(false);
         PlayerPanel.Visibility = Visibility.Collapsed;
         _vm.IsPlayerMinimized = false;
     }
@@ -525,13 +527,116 @@ public partial class DashboardWindow : Window
     private void BackToLibrary_Click(object sender, RoutedEventArgs e)
         => ClosePlayer();
 
+    private void SetOverlayOpen(bool open)
+    {
+        if (_isFullscreen)
+        {
+            // Fullscreen mode: Use our custom borderless Window
+            if (open)
+            {
+                // Make sure popup is closed and content is removed
+                PlayerOverlayPopup.IsOpen = false;
+                if (PlayerOverlayPopup.Child != null)
+                {
+                    PlayerOverlayPopup.Child = null;
+                }
+
+                if (_fullscreenOverlayWindow == null)
+                {
+                    _fullscreenOverlayWindow = new Window
+                    {
+                        WindowStyle = WindowStyle.None,
+                        AllowsTransparency = true,
+                        Background = System.Windows.Media.Brushes.Transparent,
+                        ShowInTaskbar = false,
+                        Topmost = true,
+                        ResizeMode = ResizeMode.NoResize,
+                        WindowStartupLocation = WindowStartupLocation.Manual,
+                        Owner = this
+                    };
+                    
+                    _fullscreenOverlayWindow.PreviewMouseMove += Player_MouseMove;
+                    _fullscreenOverlayWindow.MouseLeftButtonDown += Player_MouseLeftButtonDown;
+                }
+
+                // Match PlayerPanel's position and size in device coordinates
+                if (PlayerPanel.IsVisible)
+                {
+                    try
+                    {
+                        Point locationFromScreen = PlayerPanel.PointToScreen(new Point(0, 0));
+                        var presentationSource = PresentationSource.FromVisual(PlayerPanel);
+                        if (presentationSource != null && presentationSource.CompositionTarget != null)
+                        {
+                            var matrix = presentationSource.CompositionTarget.TransformToDevice;
+                            double dpiX = matrix.M11;
+                            double dpiY = matrix.M22;
+
+                            _fullscreenOverlayWindow.Left = locationFromScreen.X / dpiX;
+                            _fullscreenOverlayWindow.Top = locationFromScreen.Y / dpiY;
+                            _fullscreenOverlayWindow.Width = PlayerPanel.RenderSize.Width;
+                            _fullscreenOverlayWindow.Height = PlayerPanel.RenderSize.Height;
+                            
+                            // Explicitly set grid size to cover the entire window
+                            PlayerOverlayGrid.Width = PlayerPanel.RenderSize.Width;
+                            PlayerOverlayGrid.Height = PlayerPanel.RenderSize.Height;
+                        }
+                    }
+                    catch
+                    {
+                        _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
+                    }
+                }
+
+                if (_fullscreenOverlayWindow.Content == null)
+                {
+                    _fullscreenOverlayWindow.Content = PlayerOverlayGrid;
+                }
+
+                _fullscreenOverlayWindow.Show();
+            }
+            else
+            {
+                if (_fullscreenOverlayWindow != null)
+                {
+                    _fullscreenOverlayWindow.Hide();
+                    _fullscreenOverlayWindow.Content = null;
+                }
+            }
+        }
+        else
+        {
+            // Windowed mode: Use standard WPF Popup
+            if (_fullscreenOverlayWindow != null)
+            {
+                _fullscreenOverlayWindow.Hide();
+                _fullscreenOverlayWindow.Content = null;
+            }
+
+            if (PlayerOverlayPopup.Child == null)
+            {
+                PlayerOverlayPopup.Child = PlayerOverlayGrid;
+            }
+
+            // Restore Grid size to Auto
+            PlayerOverlayGrid.Width = double.NaN;
+            PlayerOverlayGrid.Height = double.NaN;
+
+            PlayerOverlayPopup.IsOpen = open;
+            if (open)
+            {
+                UpdatePopupPosition();
+            }
+        }
+    }
+
     // ── Fullscreen ────────────────────────────────────────────────────────────
     private void ApplyFullscreen(bool go)
     {
         _isFullscreen = go;
 
-        // Temporarily close popup to trigger HWND recreation on top of the fullscreen topmost window
-        PlayerOverlayPopup.IsOpen = false;
+        // Temporarily close overlay to trigger HWND recreation on top of the fullscreen topmost window
+        SetOverlayOpen(false);
 
         if (go)
         {
@@ -574,9 +679,15 @@ public partial class DashboardWindow : Window
             PlayerPanel.Margin = new Thickness(0);
         }
 
-        // Re-open popup so it is created on top of the active topmost window with the correct size
-        PlayerOverlayPopup.IsOpen = true;
-        UpdatePopupPosition();
+        // Re-open overlay so it is created on top of the active topmost window with the correct size
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
+        {
+            if (_vm.PlayerVm != null && !_vm.IsPlayerMinimized)
+            {
+                SetOverlayOpen(true);
+                ShowBars();
+            }
+        }));
     }
 
     private void UpdatePopupPosition()
@@ -588,6 +699,32 @@ public partial class DashboardWindow : Window
             PlayerOverlayPopup.HorizontalOffset = offset + 0.1;
             PlayerOverlayPopup.HorizontalOffset = offset;
             ForcePopupTopmost(PlayerOverlayPopup);
+        }
+        else if (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible)
+        {
+            try
+            {
+                if (PlayerPanel.IsVisible)
+                {
+                    Point locationFromScreen = PlayerPanel.PointToScreen(new Point(0, 0));
+                    var presentationSource = PresentationSource.FromVisual(PlayerPanel);
+                    if (presentationSource != null && presentationSource.CompositionTarget != null)
+                    {
+                        var matrix = presentationSource.CompositionTarget.TransformToDevice;
+                        double dpiX = matrix.M11;
+                        double dpiY = matrix.M22;
+
+                        _fullscreenOverlayWindow.Left = locationFromScreen.X / dpiX;
+                        _fullscreenOverlayWindow.Top = locationFromScreen.Y / dpiY;
+                        _fullscreenOverlayWindow.Width = PlayerPanel.RenderSize.Width;
+                        _fullscreenOverlayWindow.Height = PlayerPanel.RenderSize.Height;
+
+                        PlayerOverlayGrid.Width = PlayerPanel.RenderSize.Width;
+                        PlayerOverlayGrid.Height = PlayerPanel.RenderSize.Height;
+                    }
+                }
+            }
+            catch {}
         }
         if (PipOverlayPopup != null && PipOverlayPopup.IsOpen)
         {
@@ -606,7 +743,7 @@ public partial class DashboardWindow : Window
             if (_isFullscreen) ApplyFullscreen(false);
 
             // Hide the full-player overlay popup and stop auto-hide timer
-            PlayerOverlayPopup.IsOpen = false;
+            SetOverlayOpen(false);
             _hideTimer.Stop();
 
             // Place in root coordinates spanning everything so it floats over top bar
@@ -651,9 +788,8 @@ public partial class DashboardWindow : Window
 
             if (_vm.PlayerVm != null)
             {
-                PlayerOverlayPopup.IsOpen = true;
+                SetOverlayOpen(true);
                 _hideTimer.Start();
-                UpdatePopupPosition();
             }
         }
     }
@@ -985,10 +1121,10 @@ public partial class DashboardWindow : Window
 
     private void Window_Deactivated(object sender, EventArgs e)
     {
-        _wasPlayerPopupOpenBeforeDeactivation = PlayerOverlayPopup.IsOpen;
+        _wasPlayerPopupOpenBeforeDeactivation = PlayerOverlayPopup.IsOpen || (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible);
         _wasPipPopupOpenBeforeDeactivation = PipOverlayPopup != null && PipOverlayPopup.IsOpen;
 
-        PlayerOverlayPopup.IsOpen = false;
+        SetOverlayOpen(false);
         if (PipOverlayPopup != null)
         {
             PipOverlayPopup.IsOpen = false;
@@ -999,8 +1135,7 @@ public partial class DashboardWindow : Window
     {
         if (_wasPlayerPopupOpenBeforeDeactivation)
         {
-            PlayerOverlayPopup.IsOpen = true;
-            UpdatePopupPosition();
+            SetOverlayOpen(true);
         }
         if (_wasPipPopupOpenBeforeDeactivation && PipOverlayPopup != null)
         {
@@ -1015,12 +1150,48 @@ public partial class DashboardWindow : Window
 
         try
         {
-            var hwndSource = System.Windows.PresentationSource.FromVisual(popup.Child) as System.Windows.Interop.HwndSource;
+            var hwndSource = PresentationSource.FromVisual(popup.Child) as System.Windows.Interop.HwndSource;
             if (hwndSource != null)
             {
                 IntPtr hwnd = hwndSource.Handle;
                 if (hwnd != IntPtr.Zero)
                 {
+                    // Check if the popup has a placement target to align with
+                    if (popup.PlacementTarget is UIElement target && target.IsVisible)
+                    {
+                        try
+                        {
+                            Point locationFromScreen = target.PointToScreen(new Point(0, 0));
+                            var presentationSource = PresentationSource.FromVisual(target);
+                            if (presentationSource != null && presentationSource.CompositionTarget != null)
+                            {
+                                var matrix = presentationSource.CompositionTarget.TransformToDevice;
+                                double dpiX = matrix.M11;
+                                double dpiY = matrix.M22;
+
+                                int physicalX = (int)locationFromScreen.X;
+                                int physicalY = (int)locationFromScreen.Y;
+                                int physicalWidth = (int)(target.RenderSize.Width * dpiX);
+                                int physicalHeight = (int)(target.RenderSize.Height * dpiY);
+
+                                Services.LogService.Log($"[ForcePopupTopmost] popup={popup.Name} target={target.GetType().Name} target.IsVisible={target.IsVisible} physicalX={physicalX} physicalY={physicalY} physicalWidth={physicalWidth} physicalHeight={physicalHeight} dpiX={dpiX} dpiY={dpiY} RenderSize={target.RenderSize.Width}x{target.RenderSize.Height} ActualSize={((FrameworkElement)target).ActualWidth}x{((FrameworkElement)target).ActualHeight}");
+
+                                if (popup.Child is FrameworkElement child)
+                                {
+                                    Services.LogService.Log($"[ForcePopupTopmost] popup child size: {child.ActualWidth}x{child.ActualHeight} RenderSize={child.RenderSize.Width}x{child.RenderSize.Height}");
+                                }
+
+                                SetWindowPos(hwnd, HWND_TOPMOST, physicalX, physicalY, physicalWidth, physicalHeight, SWP_NOACTIVATE);
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[ForcePopupTopmost] Position matching error: {ex.Message}");
+                        }
+                    }
+
+                    // Fallback to standard topmost positioning
                     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
                 }
             }

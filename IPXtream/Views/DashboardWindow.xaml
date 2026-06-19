@@ -3186,7 +3186,8 @@
                    Opened="Popup_Opened">
                 
                 <!-- Overlay Background -->
-                <Grid Background="#01000000"
+                <Grid x:Name="PlayerOverlayGrid"
+                      Background="#01000000"
                       PreviewMouseMove="Player_MouseMove"
                       MouseLeftButtonDown="Player_MouseLeftButtonDown">
 
