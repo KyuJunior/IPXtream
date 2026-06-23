@@ -3176,7 +3176,7 @@
                 </Grid>
             </Popup>
 
-<!-- Airspace-safe Popup Overlay for HwndHost -->
+            <!-- Airspace-safe Popup Overlay for HwndHost -->
             <Popup x:Name="PlayerOverlayPopup"
                    PlacementTarget="{Binding ElementName=PlayerPanel}"
                    Placement="Center"

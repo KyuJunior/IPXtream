@@ -26,6 +26,17 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        System.AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
+        {
+            LogService.Log("Unhandled AppDomain Exception", ev.ExceptionObject as Exception);
+        };
+
+        this.DispatcherUnhandledException += (s, ev) =>
+        {
+            LogService.Log("Unhandled Dispatcher Exception", ev.Exception);
+            ev.Handled = true;
+        };
+
         ShowLoginWindow();
     }
 

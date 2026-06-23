@@ -18,10 +18,18 @@ public partial class DashboardWindow : Window
     [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
     private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
     private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
     private const uint SWP_NOSIZE = 0x0001;
     private const uint SWP_NOMOVE = 0x0002;
     private const uint SWP_NOACTIVATE = 0x0010;
+    private const int GWL_EXSTYLE = -20;
+    private const int WS_EX_NOACTIVATE = 0x08000000;
 
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
@@ -74,11 +82,11 @@ public partial class DashboardWindow : Window
         {
             if (e.PropertyName == nameof(DashboardViewModel.SelectedTheme))
             {
-                UpdateTitleBarTheme(_vm.SelectedTheme);
+                Dispatcher.BeginInvoke(new Action(() => UpdateTitleBarTheme(_vm.SelectedTheme)));
             }
             else if (e.PropertyName == nameof(DashboardViewModel.IsPlayerMinimized))
             {
-                OnPipStateChanged(_vm.IsPlayerMinimized);
+                Dispatcher.BeginInvoke(new Action(() => OnPipStateChanged(_vm.IsPlayerMinimized)));
             }
         };
 
@@ -409,13 +417,15 @@ public partial class DashboardWindow : Window
         playerVm.Initialise(url);
 
         // Wire Close → back to library  
-        playerVm.CloseRequested += ClosePlayer;
+        playerVm.CloseRequested += () => Dispatcher.BeginInvoke(new Action(ClosePlayer));
 
         // Wire fullscreen property changes
         playerVm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(PlayerViewModel.IsFullscreen))
-                ApplyFullscreen(playerVm.IsFullscreen);
+            {
+                Dispatcher.BeginInvoke(new Action(() => ApplyFullscreen(playerVm.IsFullscreen)));
+            }
         };
 
         SetOverlayOpen(true);
@@ -531,10 +541,8 @@ public partial class DashboardWindow : Window
     {
         if (_isFullscreen)
         {
-            // Fullscreen mode: Use our custom borderless Window
             if (open)
             {
-                // Make sure popup is closed and content is removed
                 PlayerOverlayPopup.IsOpen = false;
                 if (PlayerOverlayPopup.Child != null)
                 {
@@ -547,14 +555,27 @@ public partial class DashboardWindow : Window
                     {
                         WindowStyle = WindowStyle.None,
                         AllowsTransparency = true,
-                        Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#01000000")!,
+                        Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(1, 0, 0, 0)),
                         ShowInTaskbar = false,
                         Topmost = true,
+                        ShowActivated = true,
                         ResizeMode = ResizeMode.NoResize,
-                        Owner = null, // Set Owner = null to prevent DWM layering issues
+                        Owner = null,
                         DataContext = this.DataContext
                     };
                     
+                    _fullscreenOverlayWindow.SourceInitialized += (s, e) =>
+                    {
+                        var helper = new System.Windows.Interop.WindowInteropHelper(_fullscreenOverlayWindow);
+                        int exStyle = GetWindowLong(helper.Handle, GWL_EXSTYLE);
+                        SetWindowLong(helper.Handle, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
+                    };
+
+                    _fullscreenOverlayWindow.Closed += (s, ev) =>
+                    {
+                        _fullscreenOverlayWindow = null;
+                    };
+
                     _fullscreenOverlayWindow.PreviewMouseMove += Player_MouseMove;
                     _fullscreenOverlayWindow.MouseLeftButtonDown += Player_MouseLeftButtonDown;
                     _fullscreenOverlayWindow.KeyDown += Window_KeyDown;
@@ -564,14 +585,14 @@ public partial class DashboardWindow : Window
                     _fullscreenOverlayWindow.DataContext = this.DataContext;
                 }
 
-                // Match monitor by positioning near the main window first
-                _fullscreenOverlayWindow.Left = this.Left + 10;
-                _fullscreenOverlayWindow.Top = this.Top + 10;
+                double leftVal = double.IsNaN(this.Left) ? 0 : this.Left;
+                double topVal = double.IsNaN(this.Top) ? 0 : this.Top;
+                _fullscreenOverlayWindow.Left = leftVal + 10;
+                _fullscreenOverlayWindow.Top = topVal + 10;
                 _fullscreenOverlayWindow.Width = 300;
                 _fullscreenOverlayWindow.Height = 300;
                 _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
 
-                // Reset grid size to Auto (double.NaN) so it stretches naturally to fill the maximized window
                 PlayerOverlayGrid.Width = double.NaN;
                 PlayerOverlayGrid.Height = double.NaN;
 
@@ -594,7 +615,6 @@ public partial class DashboardWindow : Window
         }
         else
         {
-            // Windowed mode: Use standard WPF Popup
             if (_fullscreenOverlayWindow != null)
             {
                 _fullscreenOverlayWindow.Hide();
@@ -606,7 +626,6 @@ public partial class DashboardWindow : Window
                 PlayerOverlayPopup.Child = PlayerOverlayGrid;
             }
 
-            // Restore Grid size to Auto
             PlayerOverlayGrid.Width = double.NaN;
             PlayerOverlayGrid.Height = double.NaN;
 
@@ -623,7 +642,6 @@ public partial class DashboardWindow : Window
     {
         _isFullscreen = go;
 
-        // Temporarily close overlay to trigger HWND recreation on top of the fullscreen topmost window
         SetOverlayOpen(false);
 
         if (go)
@@ -631,13 +649,14 @@ public partial class DashboardWindow : Window
             // Set pure black background to hide WPF airspace borders
             Background = System.Windows.Media.Brushes.Black;
             
-            WindowStyle = WindowStyle.None;
-            // Intentionally keeping ResizeMode.CanResize — setting NoResize 
-            // causes a known WPF bug on Win11 where it leaves white margins.
-            
-            // Force layout refresh
+            // 1. If maximized, restore to normal first before changing style
             if (WindowState == WindowState.Maximized)
                 WindowState = WindowState.Normal;
+
+            // 2. Now change style to None
+            WindowStyle = WindowStyle.None;
+            
+            // 3. Maximize
             WindowState = WindowState.Maximized;
             
             Topmost = true; // Cover taskbar
@@ -682,7 +701,6 @@ public partial class DashboardWindow : Window
     {
         if (PlayerOverlayPopup.IsOpen)
         {
-            // Toggle placement explicitly forces WPF rendering layout recalculation
             var offset = PlayerOverlayPopup.HorizontalOffset;
             PlayerOverlayPopup.HorizontalOffset = offset + 0.1;
             PlayerOverlayPopup.HorizontalOffset = offset;
@@ -690,7 +708,6 @@ public partial class DashboardWindow : Window
         }
         else if (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible)
         {
-            // Do NOT position it manually. Just keep it maximized.
             if (_fullscreenOverlayWindow.WindowState != WindowState.Maximized)
             {
                 _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
@@ -1091,6 +1108,9 @@ public partial class DashboardWindow : Window
 
     private void Window_Deactivated(object sender, EventArgs e)
     {
+        bool isAnyAppWindowActive = this.IsActive || (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsActive);
+        if (isAnyAppWindowActive) return;
+
         _wasPlayerPopupOpenBeforeDeactivation = PlayerOverlayPopup.IsOpen || (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible);
         _wasPipPopupOpenBeforeDeactivation = PipOverlayPopup != null && PipOverlayPopup.IsOpen;
 
