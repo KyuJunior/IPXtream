@@ -43,6 +43,7 @@ public partial class DashboardWindow : Window
     private bool _wasPlayerPopupOpenBeforeDeactivation;
     private bool _wasPipPopupOpenBeforeDeactivation;
     private Window? _fullscreenOverlayWindow;
+    private bool _isSettingOverlayState;
 
     // VLC and WebView2 fields
     private LibVLCSharp.Shared.LibVLC? _libVLC;
@@ -539,131 +540,135 @@ public partial class DashboardWindow : Window
 
     private void SetOverlayOpen(bool open)
     {
-        if (_isFullscreen)
+        if (_isSettingOverlayState) return;
+        _isSettingOverlayState = true;
+        try
         {
-            if (open)
+            if (_isFullscreen)
             {
-                PlayerOverlayPopup.IsOpen = false;
-                if (PlayerOverlayPopup.Child != null)
+                if (open)
                 {
-                    PlayerOverlayPopup.Child = null;
-                }
-
-                if (_fullscreenOverlayWindow == null)
-                {
-                    _fullscreenOverlayWindow = new Window
+                    PlayerOverlayPopup.IsOpen = false;
+                    if (PlayerOverlayPopup.Child != null)
                     {
-                        WindowStyle = WindowStyle.None,
-                        AllowsTransparency = true,
-                        Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(1, 0, 0, 0)),
-                        ShowInTaskbar = false,
-                        Topmost = true,
-                        ShowActivated = false,
-                        ResizeMode = ResizeMode.NoResize,
-                        WindowStartupLocation = WindowStartupLocation.Manual,
-                        Owner = this,
-                        DataContext = this.DataContext
-                    };
-                    
-                    _fullscreenOverlayWindow.SourceInitialized += (s, e) =>
+                        PlayerOverlayPopup.Child = null;
+                    }
+
+                    if (_fullscreenOverlayWindow == null)
                     {
-                        var helper = new System.Windows.Interop.WindowInteropHelper(_fullscreenOverlayWindow);
-                        int exStyle = GetWindowLong(helper.Handle, GWL_EXSTYLE);
-                        SetWindowLong(helper.Handle, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
-                    };
-
-                    _fullscreenOverlayWindow.Closed += (s, ev) =>
-                    {
-                        _fullscreenOverlayWindow = null;
-                    };
-
-                    _fullscreenOverlayWindow.PreviewMouseMove += Player_MouseMove;
-                    _fullscreenOverlayWindow.MouseLeftButtonDown += Player_MouseLeftButtonDown;
-                    _fullscreenOverlayWindow.KeyDown += Window_KeyDown;
-                }
-                else
-                {
-                    _fullscreenOverlayWindow.DataContext = this.DataContext;
-                }
-
-                double leftVal = 0;
-                double topVal = 0;
-                double widthVal = this.ActualWidth;
-                double heightVal = this.ActualHeight;
-
-                try
-                {
-                    if (this.IsLoaded)
-                    {
-                        var presentationSource = PresentationSource.FromVisual(this);
-                        if (presentationSource != null && presentationSource.CompositionTarget != null)
+                        _fullscreenOverlayWindow = new Window
                         {
-                            var matrix = presentationSource.CompositionTarget.TransformToDevice;
-                            double dpiX = matrix.M11;
-                            double dpiY = matrix.M22;
-                            if (dpiX > 0 && dpiY > 0)
+                            WindowStyle = WindowStyle.None,
+                            AllowsTransparency = true,
+                            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(1, 0, 0, 0)),
+                            ShowInTaskbar = false,
+                            Topmost = true,
+                            ShowActivated = false,
+                            ResizeMode = ResizeMode.NoResize,
+                            WindowStartupLocation = WindowStartupLocation.Manual,
+                            Owner = this,
+                            DataContext = this.DataContext
+                        };
+
+                        _fullscreenOverlayWindow.Closed += (s, ev) =>
+                        {
+                            _fullscreenOverlayWindow = null;
+                        };
+
+                        _fullscreenOverlayWindow.Deactivated += Window_Deactivated;
+
+                        _fullscreenOverlayWindow.PreviewMouseMove += Player_MouseMove;
+                        _fullscreenOverlayWindow.MouseLeftButtonDown += Player_MouseLeftButtonDown;
+                        _fullscreenOverlayWindow.KeyDown += Window_KeyDown;
+                    }
+                    else
+                    {
+                        _fullscreenOverlayWindow.DataContext = this.DataContext;
+                    }
+
+                    double leftVal = 0;
+                    double topVal = 0;
+                    double widthVal = this.ActualWidth;
+                    double heightVal = this.ActualHeight;
+
+                    try
+                    {
+                        if (this.IsLoaded)
+                        {
+                            var presentationSource = PresentationSource.FromVisual(this);
+                            if (presentationSource != null && presentationSource.CompositionTarget != null)
                             {
-                                Point screenPoint = this.PointToScreen(new Point(0, 0));
-                                leftVal = screenPoint.X / dpiX;
-                                topVal = screenPoint.Y / dpiY;
+                                var matrix = presentationSource.CompositionTarget.TransformToDevice;
+                                double dpiX = matrix.M11;
+                                double dpiY = matrix.M22;
+                                if (dpiX > 0 && dpiY > 0)
+                                {
+                                    Point screenPoint = this.PointToScreen(new Point(0, 0));
+                                    leftVal = screenPoint.X / dpiX;
+                                    topVal = screenPoint.Y / dpiY;
+                                }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Services.LogService.Log($"[SetOverlayOpen] Error getting screen coordinates: {ex.Message}");
+                        leftVal = double.IsNaN(this.Left) ? 0 : this.Left;
+                        topVal = double.IsNaN(this.Top) ? 0 : this.Top;
+                    }
+
+                    _fullscreenOverlayWindow.WindowState = WindowState.Normal;
+                    _fullscreenOverlayWindow.Left = leftVal;
+                    _fullscreenOverlayWindow.Top = topVal;
+                    _fullscreenOverlayWindow.Width = widthVal;
+                    _fullscreenOverlayWindow.Height = heightVal;
+
+                    PlayerOverlayGrid.Width = double.NaN;
+                    PlayerOverlayGrid.Height = double.NaN;
+
+                    if (_fullscreenOverlayWindow.Content == null)
+                    {
+                        _fullscreenOverlayWindow.Content = PlayerOverlayGrid;
+                    }
+
+                    _fullscreenOverlayWindow.Show();
                 }
-                catch (Exception ex)
+                else
                 {
-                    Services.LogService.Log($"[SetOverlayOpen] Error getting screen coordinates: {ex.Message}");
-                    leftVal = double.IsNaN(this.Left) ? 0 : this.Left;
-                    topVal = double.IsNaN(this.Top) ? 0 : this.Top;
+                    PlayerOverlayPopup.IsOpen = false;
+                    if (_fullscreenOverlayWindow != null)
+                    {
+                        _fullscreenOverlayWindow.Hide();
+                        _fullscreenOverlayWindow.Content = null;
+                    }
                 }
-
-                _fullscreenOverlayWindow.WindowState = WindowState.Normal;
-                _fullscreenOverlayWindow.Left = leftVal;
-                _fullscreenOverlayWindow.Top = topVal;
-                _fullscreenOverlayWindow.Width = widthVal;
-                _fullscreenOverlayWindow.Height = heightVal;
-
-                PlayerOverlayGrid.Width = double.NaN;
-                PlayerOverlayGrid.Height = double.NaN;
-
-                if (_fullscreenOverlayWindow.Content == null)
-                {
-                    _fullscreenOverlayWindow.Content = PlayerOverlayGrid;
-                }
-
-                _fullscreenOverlayWindow.Show();
             }
             else
             {
-                PlayerOverlayPopup.IsOpen = false;
                 if (_fullscreenOverlayWindow != null)
                 {
                     _fullscreenOverlayWindow.Hide();
                     _fullscreenOverlayWindow.Content = null;
                 }
+
+                if (PlayerOverlayPopup.Child == null)
+                {
+                    PlayerOverlayPopup.Child = PlayerOverlayGrid;
+                }
+
+                PlayerOverlayGrid.Width = double.NaN;
+                PlayerOverlayGrid.Height = double.NaN;
+
+                PlayerOverlayPopup.IsOpen = open;
+                if (open)
+                {
+                    UpdatePopupPosition();
+                }
             }
         }
-        else
+        finally
         {
-            if (_fullscreenOverlayWindow != null)
-            {
-                _fullscreenOverlayWindow.Hide();
-                _fullscreenOverlayWindow.Content = null;
-            }
-
-            if (PlayerOverlayPopup.Child == null)
-            {
-                PlayerOverlayPopup.Child = PlayerOverlayGrid;
-            }
-
-            PlayerOverlayGrid.Width = double.NaN;
-            PlayerOverlayGrid.Height = double.NaN;
-
-            PlayerOverlayPopup.IsOpen = open;
-            if (open)
-            {
-                UpdatePopupPosition();
-            }
+            _isSettingOverlayState = false;
         }
     }
 
@@ -729,6 +734,8 @@ public partial class DashboardWindow : Window
 
     private void UpdatePopupPosition()
     {
+        if (_isSettingOverlayState) return;
+
         if (PlayerOverlayPopup.IsOpen)
         {
             var offset = PlayerOverlayPopup.HorizontalOffset;
@@ -762,7 +769,7 @@ public partial class DashboardWindow : Window
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 leftVal = double.IsNaN(this.Left) ? 0 : this.Left;
                 topVal = double.IsNaN(this.Top) ? 0 : this.Top;
@@ -1170,8 +1177,10 @@ public partial class DashboardWindow : Window
         }
     }
 
-    private void Window_Deactivated(object sender, EventArgs e)
+    private void Window_Deactivated(object? sender, EventArgs e)
     {
+        if (_isSettingOverlayState) return;
+
         bool isAnyAppWindowActive = this.IsActive || (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsActive);
         if (isAnyAppWindowActive) return;
 
@@ -1185,14 +1194,16 @@ public partial class DashboardWindow : Window
         }
     }
 
-    private void Window_Activated(object sender, EventArgs e)
+    private void Window_Activated(object? sender, EventArgs e)
     {
         if (_wasPlayerPopupOpenBeforeDeactivation)
         {
+            _wasPlayerPopupOpenBeforeDeactivation = false;
             SetOverlayOpen(true);
         }
         if (_wasPipPopupOpenBeforeDeactivation && PipOverlayPopup != null)
         {
+            _wasPipPopupOpenBeforeDeactivation = false;
             PipOverlayPopup.IsOpen = true;
             UpdatePopupPosition();
         }
