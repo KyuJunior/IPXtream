@@ -1181,17 +1181,22 @@ public partial class DashboardWindow : Window
     {
         if (_isSettingOverlayState) return;
 
-        bool isAnyAppWindowActive = this.IsActive || (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsActive);
-        if (isAnyAppWindowActive) return;
-
-        _wasPlayerPopupOpenBeforeDeactivation = PlayerOverlayPopup.IsOpen || (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible);
-        _wasPipPopupOpenBeforeDeactivation = PipOverlayPopup != null && PipOverlayPopup.IsOpen;
-
-        SetOverlayOpen(false);
-        if (PipOverlayPopup != null)
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
         {
-            PipOverlayPopup.IsOpen = false;
-        }
+            if (_isSettingOverlayState) return;
+
+            bool isAnyAppWindowActive = this.IsActive || (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsActive);
+            if (isAnyAppWindowActive) return;
+
+            _wasPlayerPopupOpenBeforeDeactivation = PlayerOverlayPopup.IsOpen || (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible);
+            _wasPipPopupOpenBeforeDeactivation = PipOverlayPopup != null && PipOverlayPopup.IsOpen;
+
+            SetOverlayOpen(false);
+            if (PipOverlayPopup != null)
+            {
+                PipOverlayPopup.IsOpen = false;
+            }
+        }));
     }
 
     private void Window_Activated(object? sender, EventArgs e)
