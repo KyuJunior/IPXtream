@@ -586,13 +586,42 @@ public partial class DashboardWindow : Window
                     _fullscreenOverlayWindow.DataContext = this.DataContext;
                 }
 
-                double leftVal = double.IsNaN(this.Left) ? 0 : this.Left;
-                double topVal = double.IsNaN(this.Top) ? 0 : this.Top;
-                _fullscreenOverlayWindow.Left = leftVal + 10;
-                _fullscreenOverlayWindow.Top = topVal + 10;
-                _fullscreenOverlayWindow.Width = 300;
-                _fullscreenOverlayWindow.Height = 300;
+                double leftVal = 0;
+                double topVal = 0;
+                double widthVal = this.ActualWidth;
+                double heightVal = this.ActualHeight;
+
+                try
+                {
+                    if (this.IsLoaded)
+                    {
+                        var presentationSource = PresentationSource.FromVisual(this);
+                        if (presentationSource != null && presentationSource.CompositionTarget != null)
+                        {
+                            var matrix = presentationSource.CompositionTarget.TransformToDevice;
+                            double dpiX = matrix.M11;
+                            double dpiY = matrix.M22;
+                            if (dpiX > 0 && dpiY > 0)
+                            {
+                                Point screenPoint = this.PointToScreen(new Point(0, 0));
+                                leftVal = screenPoint.X / dpiX;
+                                topVal = screenPoint.Y / dpiY;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Services.LogService.Log($"[SetOverlayOpen] Error getting screen coordinates: {ex.Message}");
+                    leftVal = double.IsNaN(this.Left) ? 0 : this.Left;
+                    topVal = double.IsNaN(this.Top) ? 0 : this.Top;
+                }
+
                 _fullscreenOverlayWindow.WindowState = WindowState.Normal;
+                _fullscreenOverlayWindow.Left = leftVal;
+                _fullscreenOverlayWindow.Top = topVal;
+                _fullscreenOverlayWindow.Width = widthVal;
+                _fullscreenOverlayWindow.Height = heightVal;
 
                 PlayerOverlayGrid.Width = double.NaN;
                 PlayerOverlayGrid.Height = double.NaN;
@@ -603,7 +632,6 @@ public partial class DashboardWindow : Window
                 }
 
                 _fullscreenOverlayWindow.Show();
-                _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
             }
             else
             {
@@ -710,10 +738,44 @@ public partial class DashboardWindow : Window
         }
         else if (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible)
         {
-            if (_fullscreenOverlayWindow.WindowState != WindowState.Maximized)
+            double leftVal = 0;
+            double topVal = 0;
+            double widthVal = this.ActualWidth;
+            double heightVal = this.ActualHeight;
+
+            try
             {
-                _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
+                if (this.IsLoaded)
+                {
+                    var presentationSource = PresentationSource.FromVisual(this);
+                    if (presentationSource != null && presentationSource.CompositionTarget != null)
+                    {
+                        var matrix = presentationSource.CompositionTarget.TransformToDevice;
+                        double dpiX = matrix.M11;
+                        double dpiY = matrix.M22;
+                        if (dpiX > 0 && dpiY > 0)
+                        {
+                            Point screenPoint = this.PointToScreen(new Point(0, 0));
+                            leftVal = screenPoint.X / dpiX;
+                            topVal = screenPoint.Y / dpiY;
+                        }
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                leftVal = double.IsNaN(this.Left) ? 0 : this.Left;
+                topVal = double.IsNaN(this.Top) ? 0 : this.Top;
+            }
+
+            if (_fullscreenOverlayWindow.WindowState != WindowState.Normal)
+            {
+                _fullscreenOverlayWindow.WindowState = WindowState.Normal;
+            }
+            _fullscreenOverlayWindow.Left = leftVal;
+            _fullscreenOverlayWindow.Top = topVal;
+            _fullscreenOverlayWindow.Width = widthVal;
+            _fullscreenOverlayWindow.Height = heightVal;
         }
         if (PipOverlayPopup != null && PipOverlayPopup.IsOpen)
         {
