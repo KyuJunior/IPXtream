@@ -588,10 +588,10 @@ public partial class DashboardWindow : Window
 
                 double leftVal = double.IsNaN(this.Left) ? 0 : this.Left;
                 double topVal = double.IsNaN(this.Top) ? 0 : this.Top;
-                _fullscreenOverlayWindow.Left = leftVal;
-                _fullscreenOverlayWindow.Top = topVal;
-                _fullscreenOverlayWindow.Width = this.ActualWidth;
-                _fullscreenOverlayWindow.Height = this.ActualHeight;
+                _fullscreenOverlayWindow.Left = leftVal + 10;
+                _fullscreenOverlayWindow.Top = topVal + 10;
+                _fullscreenOverlayWindow.Width = 300;
+                _fullscreenOverlayWindow.Height = 300;
                 _fullscreenOverlayWindow.WindowState = WindowState.Normal;
 
                 PlayerOverlayGrid.Width = double.NaN;
@@ -603,6 +603,7 @@ public partial class DashboardWindow : Window
                 }
 
                 _fullscreenOverlayWindow.Show();
+                _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
             }
             else
             {
@@ -709,10 +710,10 @@ public partial class DashboardWindow : Window
         }
         else if (_fullscreenOverlayWindow != null && _fullscreenOverlayWindow.IsVisible)
         {
-            _fullscreenOverlayWindow.Left = this.Left;
-            _fullscreenOverlayWindow.Top = this.Top;
-            _fullscreenOverlayWindow.Width = this.ActualWidth;
-            _fullscreenOverlayWindow.Height = this.ActualHeight;
+            if (_fullscreenOverlayWindow.WindowState != WindowState.Maximized)
+            {
+                _fullscreenOverlayWindow.WindowState = WindowState.Maximized;
+            }
         }
         if (PipOverlayPopup != null && PipOverlayPopup.IsOpen)
         {
