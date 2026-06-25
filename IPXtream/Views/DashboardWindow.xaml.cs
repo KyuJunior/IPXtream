@@ -981,9 +981,15 @@ public partial class DashboardWindow : Window
     private void SeekSlider_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (_vm.PlayerVm is null) return;
-        if (sender is System.Windows.Controls.Slider sl)
+        if (sender is System.Windows.Controls.Slider sl && sl.ActualWidth > 0)
         {
-            _vm.PlayerVm.CommitSeek((float)sl.Value);
+            Point pt = e.GetPosition(sl);
+            double ratio = pt.X / sl.ActualWidth;
+            double newValue = sl.Minimum + (ratio * (sl.Maximum - sl.Minimum));
+            newValue = Math.Max(sl.Minimum, Math.Min(sl.Maximum, newValue));
+            
+            sl.Value = newValue;
+            _vm.PlayerVm.CommitSeek((float)newValue);
         }
         _vm.PlayerVm.IsUserSeeking = false;
     }
