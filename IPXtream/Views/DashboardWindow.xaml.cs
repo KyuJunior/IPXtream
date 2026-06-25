@@ -972,18 +972,20 @@ public partial class DashboardWindow : Window
         _hideTimer.Stop();
     }
 
-    // ── Seekbar drag ──────────────────────────────────────────────────────────
-    private void SeekSlider_DragStarted(object sender, DragStartedEventArgs e)
+    // ── Seekbar drag and click-to-seek ───────────────────────────────────────
+    private void SeekSlider_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (_vm.PlayerVm is not null) _vm.PlayerVm.IsUserSeeking = true;
     }
 
-    private void SeekSlider_DragCompleted(object sender, DragCompletedEventArgs e)
+    private void SeekSlider_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (_vm.PlayerVm is null) return;
-        _vm.PlayerVm.IsUserSeeking = false;
         if (sender is System.Windows.Controls.Slider sl)
+        {
             _vm.PlayerVm.CommitSeek((float)sl.Value);
+        }
+        _vm.PlayerVm.IsUserSeeking = false;
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────

@@ -367,9 +367,9 @@
 
                     <!-- Hover Overlay with Buttons -->
                     <Border x:Name="HoverOverlay" Background="#99000000" Opacity="0">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <UniformGrid Columns="2" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <!-- Play -->
-                            <Button Width="44" Height="44" Padding="0" FontSize="18" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand"
+                            <Button Margin="6" Width="44" Height="44" Padding="0" FontSize="18" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand"
                                     Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}">
                                 <Button.Template>
@@ -393,7 +393,7 @@
                             </Button>
                             
                             <!-- Download -->
-                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                            <Button Margin="6" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
                                     Visibility="{Binding IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Command="{Binding DataContext.DownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
@@ -413,7 +413,7 @@
                             </Button>
 
                             <!-- About Movie Info Button -->
-                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                            <Button Margin="6" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
                                     Visibility="{Binding IsMovie, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Command="{Binding DataContext.ShowMovieInfoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
@@ -433,7 +433,7 @@
                             </Button>
 
                             <!-- Toggle Like (Heart Button) -->
-                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                            <Button Margin="6" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
                                     Command="{Binding DataContext.ToggleLikeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
                                     ToolTip="Like / Unlike">
@@ -456,7 +456,7 @@
                             </Button>
 
                             <!-- Toggle Watch Later (Clock Button) -->
-                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                            <Button Margin="6" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
                                     Visibility="{Binding IsDownloadable, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Command="{Binding DataContext.ToggleWatchLaterCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
@@ -480,7 +480,7 @@
                             </Button>
 
                             <!-- Toggle Featured (Star Button) -->
-                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                            <Button Margin="6" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
                                     Visibility="{Binding DataContext.IsAdminMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Command="{Binding DataContext.ToggleFeaturedCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
@@ -504,7 +504,7 @@
                             </Button>
 
                             <!-- Toggle Dev Recommendation (Heart Button) -->
-                            <Button Margin="12,0,0,0" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
+                            <Button Margin="6" Width="44" Height="44" FontSize="18" Cursor="Hand" Background="#44FFFFFF" BorderThickness="0"
                                     Visibility="{Binding DataContext.IsAdminMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Command="{Binding DataContext.ToggleDevRecommendationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
@@ -526,7 +526,7 @@
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
-                        </StackPanel>
+                        </UniformGrid>
                     </Border>
                 </Grid>
             </Border>
@@ -846,6 +846,7 @@
 
         <!-- ── Custom Premium Slider Style ── -->
         <Style x:Key="PremiumSliderStyle" TargetType="Slider">
+            <Setter Property="IsMoveToPointEnabled" Value="True"/>
             <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false"/>
             <Setter Property="Background" Value="#25FFFFFF"/>
             <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
@@ -3305,11 +3306,12 @@
                                 <TextBlock Grid.Column="0" Text="{Binding PlayerVm.PositionText}"
                                            Foreground="White" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
                                 <Slider Grid.Column="1" Style="{StaticResource PremiumSliderStyle}"
+                                        x:Name="SeekSlider"
                                         Minimum="0" Maximum="1" Value="{Binding PlayerVm.Position, Mode=OneWay}"
                                         SmallChange="0.001" LargeChange="0.05"
                                         IsMoveToPointEnabled="True"
-                                        Thumb.DragStarted="SeekSlider_DragStarted"
-                                        Thumb.DragCompleted="SeekSlider_DragCompleted"
+                                        PreviewMouseLeftButtonDown="SeekSlider_PreviewMouseLeftButtonDown"
+                                        PreviewMouseLeftButtonUp="SeekSlider_PreviewMouseLeftButtonUp"
                                         VerticalAlignment="Center"
                                         Foreground="{DynamicResource AccentBlue}"/>
                                 <TextBlock Grid.Column="2" Text="{Binding PlayerVm.LengthText}"
