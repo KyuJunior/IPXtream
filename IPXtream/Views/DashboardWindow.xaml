@@ -40,6 +40,24 @@
         <SolidColorBrush x:Key="ErrorRed"     Color="#FF5370"/>
         <SolidColorBrush x:Key="AccentGreen"  Color="#00E676"/>
 
+        <!-- Section Transition Storyboard -->
+        <Storyboard x:Key="SectionTransitionStoryboard">
+            <DoubleAnimation Storyboard.TargetName="ContentAreaPanel"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ContentAreaTranslate"
+                             Storyboard.TargetProperty="Y"
+                             From="15" To="0" Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
         <CollectionViewSource x:Key="GroupedDownloads" Source="{Binding Downloads}">
             <CollectionViewSource.GroupDescriptions>
                 <PropertyGroupDescription PropertyName="GroupName" />
@@ -108,9 +126,10 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgHover}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                                 <Setter TargetName="Bd" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect BlurRadius="20" Color="{DynamicResource AccentBlueColor}" Opacity="0.35" ShadowDepth="4" Direction="270"/>
+                                        <DropShadowEffect BlurRadius="20" Color="{DynamicResource AccentBlueColor}" Opacity="0.45" ShadowDepth="4" Direction="270"/>
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
@@ -397,24 +416,22 @@
                         </Path.Style>
                     </Path>
 
-                    <!-- Dark Gradient for Text -->
-                    <Border VerticalAlignment="Bottom" Height="80">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#00000000" Offset="0"/>
-                                <GradientStop Color="#E60D0D1A" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
+                    <!-- Translucent Glass Info Panel -->
+                    <Border VerticalAlignment="Bottom" Height="65" Background="#C50E0E1B" BorderThickness="0,1,0,0" BorderBrush="#15FFFFFF">
+                        <Grid VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}"
+                                       Foreground="White" FontSize="11" FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="36"
+                                       Margin="8,0,8,0" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </Grid>
                     </Border>
-                    
-                    <TextBlock Text="{Binding Name}"
-                               Foreground="White" FontSize="12" FontWeight="SemiBold"
-                               TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="36"
-                               Margin="10,0,10,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" TextAlignment="Center"/>
 
                     <!-- Hover Overlay with Buttons -->
-                    <Border x:Name="HoverOverlay" Background="#99000000" Opacity="0">
-                        <UniformGrid Columns="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border x:Name="HoverOverlay" Background="#B0000000" Opacity="0">
+                        <UniformGrid x:Name="HoverGrid" Columns="2" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                            <UniformGrid.RenderTransform>
+                                <TranslateTransform x:Name="HoverGridTranslate" X="0" Y="20"/>
+                            </UniformGrid.RenderTransform>
                             <!-- Play -->
                             <Button Margin="6" Width="44" Height="44" Padding="0" FontSize="18" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand"
                                     Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -583,14 +600,24 @@
                     <DataTrigger.EnterActions>
                         <BeginStoryboard>
                             <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.25"/>
+                                <DoubleAnimation Storyboard.TargetName="HoverGridTranslate" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.3">
+                                    <DoubleAnimation.EasingFunction>
+                                        <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
                             </Storyboard>
                         </BeginStoryboard>
                     </DataTrigger.EnterActions>
                     <DataTrigger.ExitActions>
                         <BeginStoryboard>
                             <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"/>
+                                <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+                                <DoubleAnimation Storyboard.TargetName="HoverGridTranslate" Storyboard.TargetProperty="Y" To="20" Duration="0:0:0.2">
+                                    <DoubleAnimation.EasingFunction>
+                                        <QuadraticEase EasingMode="EaseIn"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
                             </Storyboard>
                         </BeginStoryboard>
                     </DataTrigger.ExitActions>
@@ -1397,8 +1424,14 @@
                 </Grid>
             </Border>
 
-            <!-- ══════════ STREAMS ═══════════════════════════════════════════ -->
-            <Grid x:Name="StreamsPanel" Grid.Row="1" Grid.Column="1" Background="Transparent">
+            <!-- ══════════ CONTENT AREA PANEL ════════════════════════════════ -->
+            <Grid x:Name="ContentAreaPanel" Grid.Row="1" Grid.Column="1" Background="Transparent">
+                <Grid.RenderTransform>
+                    <TranslateTransform x:Name="ContentAreaTranslate" X="0" Y="0"/>
+                </Grid.RenderTransform>
+
+                <!-- ══════════ STREAMS ═══════════════════════════════════════════ -->
+                <Grid x:Name="StreamsPanel" Background="Transparent">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible"/>
@@ -1639,7 +1672,13 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Hero Banner -->
-                    <Border x:Name="HeroBanner" Grid.Column="0" Height="300" CornerRadius="16" ClipToBounds="True" Background="#C51C1C32" BorderBrush="#20FFFFFF" BorderThickness="1.5">
+                    <Border x:Name="HeroBanner" Grid.Column="0" Height="300" CornerRadius="20" ClipToBounds="True" Background="#C51C1C32" BorderThickness="1.5">
+                        <Border.BorderBrush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#25FFFFFF" Offset="0"/>
+                                <GradientStop Color="#05FFFFFF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.BorderBrush>
                         <Grid>
                             <!-- Cover Background -->
                             <Image Source="{Binding FeaturedCarouselItem.Cover}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -1722,6 +1761,11 @@
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
                                                             <Setter TargetName="PlayBd" Property="Opacity" Value="0.9"/>
+                                                            <Setter TargetName="PlayBd" Property="Effect">
+                                                                <Setter.Value>
+                                                                    <DropShadowEffect BlurRadius="15" Color="{DynamicResource AccentBlueColor}" Opacity="0.4" ShadowDepth="0"/>
+                                                                </Setter.Value>
+                                                            </Setter>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -1761,14 +1805,35 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.SelectCarouselItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding}" Margin="3,0" Width="16" Height="6" Cursor="Hand" BorderThickness="0">
+                                                CommandParameter="{Binding}" Margin="3,0" Height="6" Cursor="Hand" BorderThickness="0">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
                                                     <Border x:Name="Dot" CornerRadius="2.5" Background="#55FFFFFF" Width="5" Height="5"/>
                                                     <ControlTemplate.Triggers>
                                                         <DataTrigger Binding="{Binding IsSelectedCarousel}" Value="True">
                                                             <Setter TargetName="Dot" Property="Background" Value="{DynamicResource AccentBlue}"/>
-                                                            <Setter TargetName="Dot" Property="Width" Value="12"/>
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation Storyboard.TargetName="Dot" Storyboard.TargetProperty="Width" To="16" Duration="0:0:0.2">
+                                                                            <DoubleAnimation.EasingFunction>
+                                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                                            </DoubleAnimation.EasingFunction>
+                                                                        </DoubleAnimation>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                            <DataTrigger.ExitActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation Storyboard.TargetName="Dot" Storyboard.TargetProperty="Width" To="5" Duration="0:0:0.2">
+                                                                            <DoubleAnimation.EasingFunction>
+                                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                                            </DoubleAnimation.EasingFunction>
+                                                                        </DoubleAnimation>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.ExitActions>
                                                         </DataTrigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -2573,7 +2638,7 @@
             </Grid>
 
             <!-- ══════════ DOWNLOADS PANEL ═══════════════════════════════════ -->
-            <Grid x:Name="DownloadsPanel" Grid.Row="1" Grid.Column="1" Background="Transparent">
+            <Grid x:Name="DownloadsPanel" Background="Transparent">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -2834,6 +2899,7 @@
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>
+            </Grid>
             </Grid>
 
             <!-- Movie Details Modal Overlay -->
