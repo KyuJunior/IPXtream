@@ -382,7 +382,7 @@
 
         <!-- ── Stream Card DataTemplate ────────────────────────────────────── -->
         <DataTemplate x:Key="StreamCardTemplate">
-            <Border Width="150" Height="220" CornerRadius="12" Background="{DynamicResource BgSidebar}" 
+            <Border Width="135" Height="240" CornerRadius="12" Background="{DynamicResource BgSidebar}" 
                     BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" ClipToBounds="True">
                 <Grid>
                     <!-- Poster -->
@@ -2345,61 +2345,286 @@
                             </Grid.ColumnDefinitions>
                             
                             <!-- Live TV Card -->
-                            <Border Grid.Column="0" Margin="0,0,10,0" CornerRadius="16" Height="140" Cursor="Hand"
-                                    BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Padding="20">
+                            <Border Grid.Column="0" Margin="0,0,10,0" CornerRadius="16" Height="200" Cursor="Hand" Padding="24">
                                 <Border.InputBindings>
                                     <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="live"/>
                                 </Border.InputBindings>
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                        <GradientStop Color="#40FF3B30" Offset="0"/>
-                                        <GradientStop Color="#10000000" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource DividerColor}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="Background">
+                                            <Setter.Value>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#25FF3B30" Offset="0"/>
+                                                    <GradientStop Color="#0A000000" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                                        <Setter Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="BorderBrush" Value="#FF3B30"/>
+                                                <Setter Property="Background">
+                                                    <Setter.Value>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                            <GradientStop Color="#38FF3B30" Offset="0"/>
+                                                            <GradientStop Color="#10000000" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Setter Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect BlurRadius="25" Color="#FF3B30" Opacity="0.25" ShadowDepth="4" Direction="270"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                            <EventTrigger RoutedEvent="MouseEnter">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                         To="1.03" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                         To="1.03" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                            <EventTrigger RoutedEvent="MouseLeave">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                         To="1.0" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                         To="1.0" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Grid>
+                                    <!-- Decorative Glowing Accent Icon -->
+                                    <Path Data="{StaticResource IconTv}" Stroke="#FF3B30" StrokeThickness="1.5"
+                                          Width="56" Height="56" Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                          Opacity="0.75" RenderTransformOrigin="0.5,0.5">
+                                        <Path.Effect>
+                                            <DropShadowEffect BlurRadius="15" Color="#FF3B30" Opacity="0.5" ShadowDepth="0"/>
+                                        </Path.Effect>
+                                    </Path>
                                     <StackPanel VerticalAlignment="Bottom">
-                                        <TextBlock Text="LIVE TV" FontSize="20" FontWeight="Black" Foreground="White"/>
-                                        <TextBlock Text="Stream live broadcasts &amp; channels" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0"/>
+                                        <TextBlock Text="LIVE TV" FontSize="22" FontWeight="Black" Foreground="White"/>
+                                        <TextBlock Text="Stream live broadcasts &amp; channels" FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
                             
                             <!-- Movies Card -->
-                            <Border Grid.Column="1" Margin="10,0,10,0" CornerRadius="16" Height="140" Cursor="Hand"
-                                    BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Padding="20">
+                            <Border Grid.Column="1" Margin="10,0,10,0" CornerRadius="16" Height="200" Cursor="Hand" Padding="24">
                                 <Border.InputBindings>
                                     <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="vod"/>
                                 </Border.InputBindings>
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                        <GradientStop Color="#40007AFF" Offset="0"/>
-                                        <GradientStop Color="#10000000" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource DividerColor}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="Background">
+                                            <Setter.Value>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#25007AFF" Offset="0"/>
+                                                    <GradientStop Color="#0A000000" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                                        <Setter Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="BorderBrush" Value="#007AFF"/>
+                                                <Setter Property="Background">
+                                                    <Setter.Value>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                            <GradientStop Color="#38007AFF" Offset="0"/>
+                                                            <GradientStop Color="#10000000" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Setter Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect BlurRadius="25" Color="#007AFF" Opacity="0.25" ShadowDepth="4" Direction="270"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                            <EventTrigger RoutedEvent="MouseEnter">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                         To="1.03" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                         To="1.03" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                            <EventTrigger RoutedEvent="MouseLeave">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                         To="1.0" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                         To="1.0" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Grid>
+                                    <!-- Decorative Glowing Accent Icon -->
+                                    <Path Data="{StaticResource IconMovies}" Stroke="#007AFF" StrokeThickness="1.5"
+                                          Width="56" Height="56" Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                          Opacity="0.75" RenderTransformOrigin="0.5,0.5">
+                                        <Path.Effect>
+                                            <DropShadowEffect BlurRadius="15" Color="#007AFF" Opacity="0.5" ShadowDepth="0"/>
+                                        </Path.Effect>
+                                    </Path>
                                     <StackPanel VerticalAlignment="Bottom">
-                                        <TextBlock Text="MOVIES" FontSize="20" FontWeight="Black" Foreground="White"/>
-                                        <TextBlock Text="Watch blockbuster movies on demand" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0"/>
+                                        <TextBlock Text="MOVIES" FontSize="22" FontWeight="Black" Foreground="White"/>
+                                        <TextBlock Text="Watch blockbuster movies on demand" FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
 
-                            <!-- Series Card -->
-                            <Border Grid.Column="2" Margin="10,0,0,0" CornerRadius="16" Height="140" Cursor="Hand"
-                                    BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Padding="20">
+                            <!-- TV Series Card -->
+                            <Border Grid.Column="2" Margin="10,0,0,0" CornerRadius="16" Height="200" Cursor="Hand" Padding="24">
                                 <Border.InputBindings>
                                     <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="series"/>
                                 </Border.InputBindings>
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                        <GradientStop Color="#40AF52DE" Offset="0"/>
-                                        <GradientStop Color="#10000000" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource DividerColor}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="Background">
+                                            <Setter.Value>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#25AF52DE" Offset="0"/>
+                                                    <GradientStop Color="#0A000000" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                                        <Setter Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="BorderBrush" Value="#AF52DE"/>
+                                                <Setter Property="Background">
+                                                    <Setter.Value>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                            <GradientStop Color="#38AF52DE" Offset="0"/>
+                                                            <GradientStop Color="#10000000" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Setter Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect BlurRadius="25" Color="#AF52DE" Opacity="0.25" ShadowDepth="4" Direction="270"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                            <EventTrigger RoutedEvent="MouseEnter">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                         To="1.03" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                         To="1.03" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                            <EventTrigger RoutedEvent="MouseLeave">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                         To="1.0" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                         To="1.0" Duration="0:0:0.15">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Grid>
+                                    <!-- Decorative Glowing Accent Icon -->
+                                    <Path Data="{StaticResource IconSeries}" Stroke="#AF52DE" StrokeThickness="1.5"
+                                          Width="56" Height="56" Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                          Opacity="0.75" RenderTransformOrigin="0.5,0.5">
+                                        <Path.Effect>
+                                            <DropShadowEffect BlurRadius="15" Color="#AF52DE" Opacity="0.5" ShadowDepth="0"/>
+                                        </Path.Effect>
+                                    </Path>
                                     <StackPanel VerticalAlignment="Bottom">
-                                        <TextBlock Text="TV SERIES" FontSize="20" FontWeight="Black" Foreground="White"/>
-                                        <TextBlock Text="Binge-watch episodic shows" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0"/>
+                                        <TextBlock Text="TV SERIES" FontSize="22" FontWeight="Black" Foreground="White"/>
+                                        <TextBlock Text="Binge-watch episodic shows" FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -2709,6 +2934,18 @@
                                 </DataTrigger>
                                 <!-- Hide empty state when in Downloads section -->
                                 <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <!-- Hide empty state when in Home section -->
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="Home">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <!-- Hide empty state when in Currently Watching (My Library) section -->
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="CurrentlyWatching">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <!-- Hide empty state when in Settings section -->
+                                <DataTrigger Binding="{Binding ActiveSection}" Value="Settings">
                                     <Setter Property="Visibility" Value="Collapsed"/>
                                 </DataTrigger>
                             </Style.Triggers>
