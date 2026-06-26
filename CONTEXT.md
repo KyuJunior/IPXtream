@@ -14,6 +14,7 @@ This document preserves the active context, goals, accomplished tasks, and opera
 
 ## 2. Active Development Goals (Current State)
 We are currently in a polish and maintenance phase. Recent work centered on sidebar navigation improvements and release automation.
+* **Mandatory Versioning Rule**: After every change/feature implementation, the version must be incremented by `+0.0.1` (e.g., from `2.0.90` to `2.0.91`) before building, publishing, or creating a release.
 * **Done**: 
   - Restyled Dashboard navigation by moving Home & Downloads into the sidebar.
   - Removed top action bar navigation buttons to clean up clutter.
@@ -36,12 +37,20 @@ $env:GITHUB_TOKEN = $null; $env:GH_TOKEN = $null; python swalalala.py
 ```
 After running, commit and push the updated version files:
 ```powershell
-git add IPXtream/IPXtream.csproj IPXtream_Installer.iss
+git add IPXtream/IPXtream.csproj IPXtream_Installer.iss CONTEXT.md
 git commit -m "Bump version to X.Y.Z after successful release"
 $env:GITHUB_TOKEN = $null; $env:GH_TOKEN = $null; git push
 ```
 
-### B. Standard Local Build & Publish
+### B. Release Integrity & In-App Update Mechanism
+For the in-app update check to function correctly, the following criteria must be met:
+1. **Installer Asset Naming**: The compiled installer must be named `IPXtream_Setup_v{Version}.exe` (matching the version defined in `IPXtream.csproj`).
+2. **Asset Upload**: The setup `.exe` must be uploaded as a release asset in the GitHub Release using the GitHub CLI (`gh release create v{Version} Output/IPXtream_Setup_v{Version}.exe`).
+3. **Primary Checker**: The primary update checker parses the release assets list looking for any asset ending with `.exe`.
+4. **Fallback Checker**: The fallback update mechanism builds a direct download URL matching `https://github.com/KyuJunior/IPXtream/releases/download/{tagName}/IPXtream_Setup_{tagName}.exe`, which requires the asset filename to match the release tag name exactly (e.g., tag `v2.0.91` downloads `IPXtream_Setup_v2.0.91.exe`).
+5. **Git Push**: Ensure all modified tracking files (`IPXtream/IPXtream.csproj`, `IPXtream_Installer.iss`, `CONTEXT.md`) are committed and pushed to GitHub main branch.
+
+### C. Standard Local Build & Publish
 * **Dotnet Build**:
   ```powershell
   dotnet build IPXtream\IPXtream.csproj
