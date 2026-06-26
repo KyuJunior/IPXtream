@@ -89,6 +89,16 @@ public partial class DashboardWindow : Window
             {
                 Dispatcher.BeginInvoke(new Action(() => OnPipStateChanged(_vm.IsPlayerMinimized)));
             }
+            else if (e.PropertyName == nameof(DashboardViewModel.ActiveSection))
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (FindResource("SectionTransitionStoryboard") is System.Windows.Media.Animation.Storyboard sb)
+                    {
+                        sb.Begin(ContentAreaPanel);
+                    }
+                }));
+            }
         };
 
         // Initialize LibVLC Core safely
