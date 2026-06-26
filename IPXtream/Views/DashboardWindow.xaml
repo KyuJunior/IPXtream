@@ -389,7 +389,7 @@
 
         <!-- ── Stream Card DataTemplate ────────────────────────────────────── -->
         <DataTemplate x:Key="StreamCardTemplate">
-            <Border Width="135" Height="240" CornerRadius="12" Background="{DynamicResource BgSidebar}" 
+            <Border Width="162" Height="288" CornerRadius="12" Background="{DynamicResource BgSidebar}" 
                     BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" ClipToBounds="True">
                 <Grid>
                     <!-- Poster -->
@@ -424,11 +424,11 @@
                     </Path>
 
                     <!-- Translucent Glass Info Panel -->
-                    <Border VerticalAlignment="Bottom" Height="65" Background="#C50E0E1B" BorderThickness="0,1,0,0" BorderBrush="#15FFFFFF">
+                    <Border VerticalAlignment="Bottom" Height="72" Background="#C50E0E1B" BorderThickness="0,1,0,0" BorderBrush="#15FFFFFF">
                         <Grid VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name}"
-                                       Foreground="White" FontSize="11" FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="36"
+                                       Foreground="White" FontSize="12" FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="40"
                                        Margin="8,0,8,0" HorizontalAlignment="Center" TextAlignment="Center"/>
                         </Grid>
                     </Border>
@@ -2109,7 +2109,7 @@
                     </ListBox.Style>
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel/>
+                            <WrapPanel ItemWidth="180" ItemHeight="310"/>
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                 </ListBox>
