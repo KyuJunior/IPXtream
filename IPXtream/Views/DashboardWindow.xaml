@@ -1118,7 +1118,7 @@
                     <!-- Branding Logo (Left) -->
                     <Border Grid.Column="0" Margin="24,0,24,0" VerticalAlignment="Center" CornerRadius="12" Padding="14,6" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Cursor="Hand">
                         <Border.InputBindings>
-                            <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="whatsnew"/>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="home"/>
                         </Border.InputBindings>
                         <StackPanel Orientation="Horizontal">
                             <!-- Play icon in a dark rounded square -->
@@ -1131,54 +1131,6 @@
 
                     <!-- Navigation Pills (Center) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="whatsnew"
-                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=WhatsNew}">
-                            <TextBlock Text="WHAT'S NEW"/>
-                        </Button>
-
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="live"
-                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=LiveTV}">
-                            <TextBlock Text="LIVE TV"/>
-                        </Button>
-
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="vod"
-                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=VOD}">
-                            <TextBlock Text="MOVIES"/>
-                        </Button>
-
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="series"
-                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=Series}">
-                            <TextBlock Text="SERIES"/>
-                        </Button>
-
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="currentlywatching"
-                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=CurrentlyWatching}">
-                            <TextBlock Text="MY LIBRARY"/>
-                        </Button>
-
-                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="downloads"
-                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=Downloads}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="DOWNLOADS" VerticalAlignment="Center"/>
-                                <!-- Active download count badge -->
-                                <Border Grid.Column="1" Background="{DynamicResource AccentBlue}" CornerRadius="8"
-                                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Padding="5,1" Margin="8,0,0,0"
-                                        Visibility="{Binding HasActiveDownloads,
-                                                     Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <TextBlock Text="{Binding ActiveDownloadCount}"
-                                               FontSize="10" Foreground="White"
-                                               FontWeight="Bold"/>
-                                </Border>
-                            </Grid>
-                        </Button>
-
-                        <!-- Vertical Divider -->
-                        <Border Width="1" Height="20" Background="{DynamicResource DividerColor}" Margin="16,0"/>
 
                         <!-- Cache / Cancel toggle -->
                         <Button Command="{Binding CancelCacheCommand}"
@@ -1206,6 +1158,12 @@
                         <!-- Settings Button -->
                         <Button Command="{Binding SelectSectionCommand}" CommandParameter="settings" Style="{StaticResource NavBtn}" Padding="8" ToolTip="Settings" Margin="4,0">
                             <Path Data="{StaticResource IconSettings}" Style="{StaticResource VectorIcon}" Width="14" Height="14"/>
+                        </Button>
+
+                        <!-- Switch Account Button -->
+                        <Button Command="{Binding OpenSwitchAccountCommand}" Style="{StaticResource NavBtn}" Padding="8" ToolTip="Switch Account" Margin="4,0">
+                            <Path Data="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75" 
+                                  Style="{StaticResource VectorIcon}" Width="14" Height="14"/>
                         </Button>
 
                         <!-- Logout Button -->
@@ -1328,99 +1286,248 @@
                 </Grid>
             </Border>
 
-            <!-- ══════════ CATEGORIES ════════════════════════════════════════ -->
-            <Border x:Name="CategoriesPanel" Grid.Row="1" Grid.Column="0" Background="Transparent"
+            <!-- ══════════ UNIFIED SIDEBAR ══════════════════════════════════ -->
+            <Border x:Name="SidebarPanel" Grid.Row="1" Grid.Column="0" Background="{DynamicResource BgDeep}"
                     BorderBrush="{DynamicResource DividerColor}" BorderThickness="0,0,1,0">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Visible"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding ActiveSection}" Value="CurrentlyWatching">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding ActiveSection}" Value="Settings">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/> <!-- Navigation Section -->
+                        <RowDefinition Height="Auto"/> <!-- Divider -->
+                        <RowDefinition Height="*"/>    <!-- Category List (when active) -->
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Padding="16,16,16,12">
-                        <StackPanel>
-                            <TextBlock Text="CATEGORIES"
-                                       Foreground="{DynamicResource TextMuted}"
-                                       FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Text="Loading…"
-                                       Foreground="{DynamicResource AccentBlue}"
-                                       FontSize="12" Margin="0,4,0,0"
-                                       Visibility="{Binding IsLoadingCategories,
-                                                    Converter={StaticResource BoolToVisibilityConverter}}"/>
-                        </StackPanel>
+                    <!-- Sidebar Navigation (Home, WhatsNew, CurrentlyWatching) -->
+                    <StackPanel Grid.Row="0" Margin="12,16,12,12">
+                        <!-- Navigation Item Style / ListBox could be used, or just buttons -->
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="home"
+                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=Home}"
+                                Height="40" Margin="0,0,0,6"
+                                HorizontalContentAlignment="Left" Padding="12,0">
+                            <!-- Background color change if active -->
+                            <Button.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActiveSection}" Value="Home">
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Home Icon -->
+                                <Path Data="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" Style="{StaticResource VectorIcon}" Width="14" Height="14" Margin="0,0,10,0"/>
+                                <TextBlock Text="Home" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="whatsnew"
+                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=WhatsNew}"
+                                Height="40" Margin="0,0,0,6"
+                                HorizontalContentAlignment="Left" Padding="12,0">
+                            <Button.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Sparkles/Flame Icon -->
+                                <Path Data="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" Style="{StaticResource VectorIcon}" Width="14" Height="14" Margin="0,0,10,0"/>
+                                <TextBlock Text="What's New" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="currentlywatching"
+                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=CurrentlyWatching}"
+                                Height="40" Margin="0,0,0,6"
+                                HorizontalContentAlignment="Left" Padding="12,0">
+                            <Button.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActiveSection}" Value="CurrentlyWatching">
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Library Icon -->
+                                <Path Data="M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z" Style="{StaticResource VectorIcon}" Width="14" Height="14" Margin="0,0,10,0"/>
+                                <TextBlock Text="My Library" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SelectSectionCommand}" CommandParameter="downloads"
+                                Style="{Binding ActiveSection, Converter={StaticResource SectionToStyleConverter}, ConverterParameter=Downloads}"
+                                Height="40" Margin="0,0,0,6"
+                                HorizontalContentAlignment="Left" Padding="12,0">
+                            <Button.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Resources>
+                            <Grid HorizontalAlignment="Stretch" Width="180">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <!-- Downloads Icon -->
+                                    <Path Data="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3" Style="{StaticResource VectorIcon}" Width="14" Height="14" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Downloads" FontSize="13" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <!-- Active download count badge -->
+                                <Border Grid.Column="2" Background="{DynamicResource AccentBlue}" CornerRadius="8"
+                                        Padding="5,1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                        Visibility="{Binding HasActiveDownloads,
+                                                     Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Text="{Binding ActiveDownloadCount}"
+                                               FontSize="10" Foreground="White"
+                                               FontWeight="Bold"/>
+                                </Border>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Divider -->
+                    <Border Grid.Row="1" Height="1" Background="{DynamicResource DividerColor}" Margin="12,0,12,12">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="CurrentlyWatching">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="Settings">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="Home">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                     </Border>
 
-                    <ListBox Grid.Row="1"
-                             ItemsSource="{Binding Categories}"
-                             SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
-                             ItemContainerStyle="{StaticResource CategoryItemStyle}"
-                             Background="Transparent" BorderThickness="0"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             VirtualizingPanel.IsVirtualizing="True"
-                             VirtualizingPanel.VirtualizationMode="Recycling">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding CategoryName}" TextTrimming="CharacterEllipsis"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <!-- Category Panel Content (Visible only for LiveTV, VOD, Series) -->
+                    <Grid Grid.Row="2">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="WhatsNew">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="CurrentlyWatching">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="Downloads">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="Settings">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="Home">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
 
-                    <!-- Error + Retry -->
-                    <Border Grid.Row="1" VerticalAlignment="Top"
-                            Background="#441A0A" CornerRadius="8"
-                            Padding="10,8" Margin="8,4"
-                            Visibility="{Binding ErrorMessage,
-                                         Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
-                        <StackPanel>
-                            <TextBlock Text="{Binding ErrorMessage}"
-                                       Foreground="#FF7B6B" FontSize="11"
-                                       TextWrapping="Wrap" Margin="0,0,0,6"/>
-                            <Button Command="{Binding SelectSectionCommand}" CommandParameter="live"
-                                    Background="{DynamicResource AccentBlue}" Foreground="White"
-                                    BorderThickness="0" Padding="8,4"
-                                    FontSize="11" FontWeight="Bold" Cursor="Hand">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                                            CornerRadius="5" Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="Bd" Property="Opacity" Value="0.8"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </Button.Style>
-                                &#x21BA; Retry
-                            </Button>
-                        </StackPanel>
-                    </Border>
+                            <Border Grid.Row="0" Padding="16,0,16,12">
+                                <StackPanel>
+                                    <TextBlock Text="CATEGORIES"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Text="Loading…"
+                                               Foreground="{DynamicResource AccentBlue}"
+                                               FontSize="12" Margin="0,4,0,0"
+                                               Visibility="{Binding IsLoadingCategories,
+                                                             Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <ListBox Grid.Row="1"
+                                     ItemsSource="{Binding Categories}"
+                                     SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                                     ItemContainerStyle="{StaticResource CategoryItemStyle}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding CategoryName}" TextTrimming="CharacterEllipsis"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- Error + Retry -->
+                            <Border Grid.Row="1" VerticalAlignment="Top"
+                                    Background="#441A0A" CornerRadius="8"
+                                    Padding="10,8" Margin="8,4"
+                                    Visibility="{Binding ErrorMessage,
+                                                 Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding ErrorMessage}"
+                                               Foreground="#FF7B6B" FontSize="11"
+                                               TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    <Button Command="{Binding SelectSectionCommand}" CommandParameter="live"
+                                            Background="{DynamicResource AccentBlue}" Foreground="White"
+                                            BorderThickness="0" Padding="8,4"
+                                            FontSize="11" FontWeight="Bold" Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                                                    CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="Bd" Property="Opacity" Value="0.8"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
+                                        &#x21BA; Retry
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
                 </Grid>
             </Border>
 
@@ -2209,6 +2316,194 @@
                                 <TextBlock Text="Like items or add them to Watch Later while browsing to build your collection." Foreground="{DynamicResource TextMuted}" FontSize="13" HorizontalAlignment="Center" TextAlignment="Center"/>
                             </StackPanel>
                         </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Home Section ScrollViewer (only visible when ActiveSection == Home and IsViewingSeriesInfo is False) -->
+                <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="10">
+                    <ScrollViewer.Style>
+                        <Style TargetType="ScrollViewer">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding ActiveSection}" Value="Home"/>
+                                        <Condition Binding="{Binding IsViewingSeriesInfo}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ScrollViewer.Style>
+                    <StackPanel>
+                        <!-- Navigation Cards (Live TV, Movies, Series) -->
+                        <Grid Margin="10,0,10,24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Live TV Card -->
+                            <Border Grid.Column="0" Margin="0,0,10,0" CornerRadius="16" Height="140" Cursor="Hand"
+                                    BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Padding="20">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="live"/>
+                                </Border.InputBindings>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#40FF3B30" Offset="0"/>
+                                        <GradientStop Color="#10000000" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Grid>
+                                    <StackPanel VerticalAlignment="Bottom">
+                                        <TextBlock Text="LIVE TV" FontSize="20" FontWeight="Black" Foreground="White"/>
+                                        <TextBlock Text="Stream live broadcasts &amp; channels" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Movies Card -->
+                            <Border Grid.Column="1" Margin="10,0,10,0" CornerRadius="16" Height="140" Cursor="Hand"
+                                    BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Padding="20">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="vod"/>
+                                </Border.InputBindings>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#40007AFF" Offset="0"/>
+                                        <GradientStop Color="#10000000" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Grid>
+                                    <StackPanel VerticalAlignment="Bottom">
+                                        <TextBlock Text="MOVIES" FontSize="20" FontWeight="Black" Foreground="White"/>
+                                        <TextBlock Text="Watch blockbuster movies on demand" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Series Card -->
+                            <Border Grid.Column="2" Margin="10,0,0,0" CornerRadius="16" Height="140" Cursor="Hand"
+                                    BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Padding="20">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="series"/>
+                                </Border.InputBindings>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#40AF52DE" Offset="0"/>
+                                        <GradientStop Color="#10000000" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Grid>
+                                    <StackPanel VerticalAlignment="Bottom">
+                                        <TextBlock Text="TV SERIES" FontSize="20" FontWeight="Black" Foreground="White"/>
+                                        <TextBlock Text="Binge-watch episodic shows" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- Continue Watching (if any) -->
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ContinueWatching.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="Continue Watching" FontSize="16" FontWeight="Bold" Foreground="White" Margin="10,0,10,10"/>
+                            <ListBox Style="{StaticResource HorizontalListBoxStyle}"
+                                     ItemsSource="{Binding ContinueWatching}"
+                                     ItemContainerStyle="{StaticResource StreamItemStyle}"
+                                     ItemTemplate="{StaticResource StreamCardTemplate}">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding PlayCommand}"
+                                                  CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                                </ListBox.InputBindings>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- Popular Movies Slider -->
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FeaturedMovies.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="Popular Movies" FontSize="16" FontWeight="Bold" Foreground="White" Margin="10,0,10,10"/>
+                            <ListBox Style="{StaticResource HorizontalListBoxStyle}"
+                                     ItemsSource="{Binding FeaturedMovies}"
+                                     ItemContainerStyle="{StaticResource StreamItemStyle}"
+                                     ItemTemplate="{StaticResource StreamCardTemplate}">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding PlayCommand}"
+                                                  CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                                </ListBox.InputBindings>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- Popular TV Series Slider -->
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FeaturedShows.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="Popular TV Series" FontSize="16" FontWeight="Bold" Foreground="White" Margin="10,0,10,10"/>
+                            <ListBox Style="{StaticResource HorizontalListBoxStyle}"
+                                     ItemsSource="{Binding FeaturedShows}"
+                                     ItemContainerStyle="{StaticResource StreamItemStyle}"
+                                     ItemTemplate="{StaticResource StreamCardTemplate}">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding PlayCommand}"
+                                                  CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                                </ListBox.InputBindings>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- Featured Live TV Slider -->
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FeaturedLive.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="Featured Live TV" FontSize="16" FontWeight="Bold" Foreground="White" Margin="10,0,10,10"/>
+                            <ListBox Style="{StaticResource HorizontalListBoxStyle}"
+                                     ItemsSource="{Binding FeaturedLive}"
+                                     ItemContainerStyle="{StaticResource StreamItemStyle}"
+                                     ItemTemplate="{StaticResource StreamCardTemplate}">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding PlayCommand}"
+                                                  CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                                </ListBox.InputBindings>
+                            </ListBox>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
 

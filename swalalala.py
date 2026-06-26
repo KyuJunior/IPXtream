@@ -111,7 +111,7 @@ def main():
     ]
     
     # Run publishing
-    res = subprocess.run(publish_cmd, shell=True)
+    res = subprocess.run(publish_cmd, shell=True, env=os.environ)
     if res.returncode != 0:
         error("dotnet publish failed. Aborting installer compilation.")
     log("Publishing completed successfully.")
@@ -123,7 +123,7 @@ def main():
 
     log("Compiling Inno Setup installer package...")
     iscc_cmd = [iscc_path, iss_path]
-    res_iscc = subprocess.run(iscc_cmd, shell=True)
+    res_iscc = subprocess.run(iscc_cmd, shell=True, env=os.environ)
     if res_iscc.returncode != 0:
         error("Inno Setup installer compilation failed.")
     
@@ -141,7 +141,7 @@ def main():
 
     has_diff_notes = False
     try:
-        git_diff_stat = subprocess.run(["git", "diff", "--name-status"], capture_output=True, text=True, shell=True).stdout
+        git_diff_stat = subprocess.run(["git", "diff", "--name-status"], capture_output=True, text=True, shell=True, env=os.environ).stdout
         if git_diff_stat:
             modified_files = [line.strip().split() for line in git_diff_stat.strip().split('\n') if line]
             seen_categories = set()
@@ -201,7 +201,7 @@ def main():
     try:
         gh_bin = "gh"
         try:
-            gh_check = subprocess.run(["gh", "--version"], capture_output=True, text=True, shell=True)
+            gh_check = subprocess.run(["gh", "--version"], capture_output=True, text=True, shell=True, env=os.environ)
             if gh_check.returncode != 0:
                 raise FileNotFoundError
         except (FileNotFoundError, Exception):
@@ -224,7 +224,7 @@ def main():
                 "--title", f"v{new_version}",
                 "--notes-file", notes_path
             ]
-            res_gh = subprocess.run(gh_cmd, shell=True)
+            res_gh = subprocess.run(gh_cmd, shell=True, env=os.environ)
             if res_gh.returncode == 0:
                 log("SUCCESS: GitHub release created and installer uploaded successfully!")
             else:

@@ -15,7 +15,7 @@ public class SectionToStyleConverter : IValueConverter
     {
         if (value is MediaSection activeSection
             && parameter is string targetSection
-            && Enum.TryParse<MediaSection>(targetSection, out var target))
+            && Enum.TryParse<MediaSection>(targetSection, true, out var target))
         {
             var key = activeSection == target ? "NavBtnActive" : "NavBtn";
             if (Application.Current.MainWindow != null)

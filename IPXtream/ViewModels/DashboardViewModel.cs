@@ -39,8 +39,8 @@ public partial class DashboardViewModel : ObservableObject
     private int _currentSeriesId;
 
     // ── Auth info (displayed in header) ───────────────────────────────────────
-    public string DisplayUsername { get; }
-    public string ServerDisplay   { get; }
+    [ObservableProperty] private string _displayUsername = string.Empty;
+    [ObservableProperty] private string _serverDisplay = string.Empty;
 
     // ── Version & Update Check ────────────────────────────────────────────────
     public string AppVersion { get; } =
@@ -56,10 +56,15 @@ public partial class DashboardViewModel : ObservableObject
 
     [ObservableProperty] private bool _isAdminMode;
 
+    [ObservableProperty] private bool _isSwitchAccountOpen;
+    [ObservableProperty] private bool _isSwitchingAccount;
+    [ObservableProperty] private string _switchingAccountStatus = string.Empty;
+    [ObservableProperty] private string _switchingAccountError = string.Empty;
+
     // ── Sidebar selection ─────────────────────────────────────────────────────
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
-    private MediaSection _activeSection = MediaSection.WhatsNew;
+    private MediaSection _activeSection = MediaSection.Home;
 
     // ── Carousel (for What's New Hero) ────────────────────────────────────────
     public ObservableCollection<StreamItem> FeaturedItems { get; } = new();
@@ -569,6 +574,12 @@ public partial class DashboardViewModel : ObservableObject
             SetFilteredStreams(featured);
             StatusMessage = $"{featured.Count} featured items";
         }
+        else if (ActiveSection == MediaSection.Home)
+        {
+            LoadRecentlyWatched();
+            SyncFeaturedItemsCollection();
+            StatusMessage = "Welcome back to IPXtream";
+        }
         else if (ActiveSection == MediaSection.CurrentlyWatching)
         {
             LoadLibraryData();
@@ -625,6 +636,106 @@ public partial class DashboardViewModel : ObservableObject
     {
         SelectedMovieForInfo = null;
         LogoutRequested?.Invoke();
+    }
+
+    [RelayCommand]
+    private void OpenSwitchAccount()
+    {
+        SwitchingAccountError = string.Empty;
+        IsSwitchAccountOpen = true;
+    }
+
+    [RelayCommand]
+    private void CloseSwitchAccount()
+    {
+        IsSwitchAccountOpen = false;
+    }
+
+    [RelayCommand]
+    private async Task SwitchToAccountAsync(UserCredentials creds)
+    {
+        if (creds == null || IsSwitchingAccount) return;
+        IsSwitchingAccount = true;
+        SwitchingAccountError = string.Empty;
+        SwitchingAccountStatus = $"Switching to {creds.Username}...";
+
+        try
+        {
+            // Close active playback before switching
+            ClosePipRequested?.Invoke();
+
+            var auth = await _api.AuthenticateAsync(creds);
+            if (!auth.IsAuthenticated)
+            {
+                SwitchingAccountError = "Authentication failed. The account might be expired or invalid.";
+                IsSwitchingAccount = false;
+                return;
+            }
+
+            // Update global credentials
+            App.CurrentCredentials = creds;
+
+            // Save as default account in settings
+            _appSettings.DefaultAccountUsername = creds.Username;
+            _appSettings.DefaultAccountServerUrl = creds.ServerUrl;
+            
+            // Move current creds to the top of SavedAccounts or ensure it's there
+            var existing = _appSettings.SavedAccounts.FirstOrDefault(a => 
+                a.Username.Equals(creds.Username, StringComparison.OrdinalIgnoreCase) && 
+                a.ServerUrl.TrimEnd('/').Equals(creds.ServerUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
+            {
+                existing.Password = creds.Password;
+            }
+            else
+            {
+                _appSettings.SavedAccounts.Add(creds);
+            }
+            
+            Helpers.CredentialStore.Save(_appSettings);
+
+            // Re-load settings to refresh the SavedAccounts list in the ViewModel
+            LoadSettings();
+
+            // Clear view model state & collections
+            DisplayUsername = creds.Username;
+            ServerDisplay = new Uri(creds.BaseUrl).Host;
+
+            SelectedCategory = null;
+            CurrentSeries = null;
+            SelectedMovieForInfo = null;
+            SelectedSeriesForInfo = null;
+
+            Streams.Clear();
+            Categories.Clear();
+            FeaturedItems.Clear();
+            FeaturedLive.Clear();
+            FeaturedShows.Clear();
+            FeaturedMovies.Clear();
+            DevRecommendations.Clear();
+            RecentlyWatched.Clear();
+            ContinueWatching.Clear();
+            LikedShows.Clear();
+            LikedLive.Clear();
+            LikedMovies.Clear();
+            WatchLater.Clear();
+
+            // Reload data
+            await InitializeWhatsNewAsync();
+            await LoadCategoriesAsync(forceRefresh: true);
+
+            // Navigate to Home
+            ActiveSection = MediaSection.Home;
+            IsSwitchAccountOpen = false;
+        }
+        catch (Exception ex)
+        {
+            SwitchingAccountError = $"Failed to switch account: {ex.Message}";
+        }
+        finally
+        {
+            IsSwitchingAccount = false;
+        }
     }
 
     // ── Download commands ─────────────────────────────────────────────────────
@@ -1781,6 +1892,14 @@ public partial class DashboardViewModel : ObservableObject
         Helpers.ThemeHelper.ApplyTheme(value);
     }
 
+    [ObservableProperty]
+    private string _homeCardStyle = "Minimal Gradients & Icons";
+
+    partial void OnHomeCardStyleChanged(string value)
+    {
+        SaveSettings();
+    }
+
     public System.Collections.ObjectModel.ObservableCollection<UserCredentials> SavedAccounts { get; } = new();
 
     private void LoadSettings()
@@ -1794,6 +1913,7 @@ public partial class DashboardViewModel : ObservableObject
             DefaultContainerExtension = _appSettings.DefaultContainerExtension;
             SelectedPlayerEngine = _appSettings.SelectedPlayerEngine ?? "Flyleaf";
             SelectedTheme = _appSettings.SelectedTheme ?? "Dark Purple";
+            HomeCardStyle = _appSettings.HomeCardStyle ?? "Minimal Gradients & Icons";
 
             SavedAccounts.Clear();
             foreach (var account in _appSettings.SavedAccounts)
@@ -1817,6 +1937,7 @@ public partial class DashboardViewModel : ObservableObject
             DefaultContainerExtension = "ts";
             SelectedPlayerEngine = "Flyleaf";
             SelectedTheme = "Dark Purple";
+            HomeCardStyle = "Minimal Gradients & Icons";
         }
     }
 
@@ -1837,6 +1958,7 @@ public partial class DashboardViewModel : ObservableObject
             _appSettings.DefaultContainerExtension = DefaultContainerExtension;
             _appSettings.SelectedPlayerEngine = SelectedPlayerEngine;
             _appSettings.SelectedTheme = SelectedTheme;
+            _appSettings.HomeCardStyle = HomeCardStyle;
 
             Helpers.CredentialStore.Save(_appSettings);
         }

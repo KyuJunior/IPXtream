@@ -19,4 +19,5 @@ public class AppSettings
     public string? GithubToken { get; set; }
     public string SelectedPlayerEngine { get; set; } = "Flyleaf";
     public string SelectedTheme { get; set; } = "Dark Purple";
+    public string HomeCardStyle { get; set; } = "Minimal Gradients & Icons";
 }
