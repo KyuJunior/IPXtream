@@ -10,7 +10,7 @@
         MinWidth="400" MinHeight="550"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanMinimize"
-        Background="#080812">
+        Background="{DynamicResource BgDeep}">
 
     <Window.Resources>
         <!-- ── Colour palette ───────────────────────────────────────────── -->
@@ -26,15 +26,15 @@
 
         <!-- ── TextBox style ──────────────────────────────────────────────── -->
         <Style x:Key="TextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background"      Value="{StaticResource InputBg}"/>
-            <Setter Property="Foreground"      Value="{StaticResource TextPrimary}"/>
-            <Setter Property="BorderBrush"     Value="{StaticResource InputBorder}"/>
+            <Setter Property="Background"      Value="{DynamicResource InputBg}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource InputBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding"         Value="12,0"/>
             <Setter Property="FontSize"        Value="14"/>
             <Setter Property="Height"          Value="44"/>
-            <Setter Property="CaretBrush"      Value="{StaticResource AccentBlue}"/>
-            <Setter Property="SelectionBrush"  Value="{StaticResource AccentBlue}"/>
+            <Setter Property="CaretBrush"      Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="SelectionBrush"  Value="{DynamicResource AccentBlue}"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -51,7 +51,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                                 <Setter TargetName="Bd" Property="Effect">
                                     <Setter.Value>
                                         <DropShadowEffect BlurRadius="8" Color="#5B9BFF" Opacity="0.25" ShadowDepth="0"/>
@@ -66,9 +66,9 @@
 
         <!-- ── PasswordBox style ───────────────────────────────────────────── -->
         <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox">
-            <Setter Property="Background"      Value="{StaticResource InputBg}"/>
-            <Setter Property="Foreground"      Value="{StaticResource TextPrimary}"/>
-            <Setter Property="BorderBrush"     Value="{StaticResource InputBorder}"/>
+            <Setter Property="Background"      Value="{DynamicResource InputBg}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource InputBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding"         Value="12,0"/>
             <Setter Property="FontSize"        Value="14"/>
@@ -89,7 +89,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                                 <Setter TargetName="Bd" Property="Effect">
                                     <Setter.Value>
                                         <DropShadowEffect BlurRadius="8" Color="#5B9BFF" Opacity="0.25" ShadowDepth="0"/>
@@ -104,7 +104,7 @@
 
         <!-- ── Label style ──────────────────────────────────────────────── -->
         <Style x:Key="FieldLabel" TargetType="TextBlock">
-            <Setter Property="Foreground"  Value="{StaticResource TextMuted}"/>
+            <Setter Property="Foreground"  Value="{DynamicResource TextMuted}"/>
             <Setter Property="FontSize"    Value="12"/>
             <Setter Property="Margin"      Value="0,8,0,4"/>
             <Setter Property="FontWeight"  Value="SemiBold"/>
@@ -121,13 +121,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" CornerRadius="12">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#5B9BFF" Offset="0"/>
-                                    <GradientStop Color="#8B6BD4" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <Border x:Name="Bd" CornerRadius="12" Background="{DynamicResource PrimaryAccentGradient}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -148,8 +142,8 @@
 
         <!-- ── ComboBox item style ───────────────────────────────────────── -->
         <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="{StaticResource InputBg}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Background" Value="{DynamicResource InputBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,10"/>
             <Setter Property="FontSize" Value="14"/>
@@ -164,10 +158,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2E2E50"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgHover}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#4F8EF7"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBlue}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -178,9 +172,9 @@
 
         <!-- ── ComboBox style ────────────────────────────────────────────── -->
         <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Background"      Value="{StaticResource InputBg}"/>
-            <Setter Property="Foreground"      Value="{StaticResource TextPrimary}"/>
-            <Setter Property="BorderBrush"     Value="{StaticResource InputBorder}"/>
+            <Setter Property="Background"      Value="{DynamicResource InputBg}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource InputBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize"        Value="14"/>
             <Setter Property="Height"          Value="44"/>
@@ -206,7 +200,7 @@
                                                 CornerRadius="10">
                                             <Grid HorizontalAlignment="Right" Width="30">
                                                 <Path x:Name="Arrow"
-                                                      Fill="{StaticResource TextMuted}"
+                                                      Fill="{DynamicResource TextMuted}"
                                                       HorizontalAlignment="Center"
                                                       VerticalAlignment="Center"
                                                       Data="M 0 0 L 4 4 L 8 0 Z"/>
@@ -214,7 +208,7 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -239,8 +233,8 @@
                                       MinWidth="{TemplateBinding ActualWidth}"
                                       MaxHeight="{TemplateBinding MaxDropDownHeight}">
                                     <Border x:Name="DropDownBorder"
-                                            Background="{StaticResource InputBg}"
-                                            BorderBrush="{StaticResource InputBorder}"
+                                            Background="{DynamicResource InputBg}"
+                                            BorderBrush="{DynamicResource InputBorder}"
                                             BorderThickness="1"
                                             CornerRadius="10"
                                             Margin="0,2,0,0">
@@ -256,7 +250,7 @@
                                 <Setter TargetName="DropDownBorder" Property="MinHeight" Value="95"/>
                             </Trigger>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="ToggleButton" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="ToggleButton" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                                 <Setter TargetName="ToggleButton" Property="Effect">
                                     <Setter.Value>
                                         <DropShadowEffect BlurRadius="8" Color="#5B9BFF" Opacity="0.25" ShadowDepth="0"/>
@@ -287,12 +281,12 @@
         <!-- Ambient Backdrop Artwork Glow -->
         <Grid IsHitTestVisible="False">
             <Image Source="/dashboard_bg.png" Stretch="UniformToFill" Opacity="0.55"/>
-            <Border Background="#E5080812"/>
+            <Border Background="{DynamicResource BgDeep}"/>
         </Grid>
 
         <!-- ── Root card ────────────────────────────────────────────────────────── -->
-        <Border Background="#D0141422"
-                BorderBrush="#15FFFFFF"
+        <Border Background="{DynamicResource BgSidebar}"
+                BorderBrush="{DynamicResource DividerColor}"
                 BorderThickness="1"
                 CornerRadius="20"
                 Margin="24"
@@ -313,23 +307,17 @@
             <!-- ── Header ───────────────────────────────────────────────── -->
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,14">
                 <Border Width="56" Height="56" CornerRadius="28"
-                        HorizontalAlignment="Center" Margin="0,0,0,10">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#5B9BFF" Offset="0"/>
-                            <GradientStop Color="#8B6BD4" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
+                        HorizontalAlignment="Center" Margin="0,0,0,10" Background="{DynamicResource PrimaryAccentGradient}">
                     <Path Data="{StaticResource IconLogo}" Fill="White" Width="26" Height="26" Stretch="Uniform"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <TextBlock Text="IPXtream"
                            FontSize="24" FontWeight="Bold"
-                           Foreground="{StaticResource TextPrimary}"
+                           Foreground="{DynamicResource TextPrimary}"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="Sign in to your IPTV service"
                            FontSize="12"
-                           Foreground="{StaticResource TextMuted}"
+                           Foreground="{DynamicResource TextMuted}"
                            HorizontalAlignment="Center"
                            Margin="0,3,0,0"/>
             </StackPanel>
@@ -379,13 +367,13 @@
                                     <Border Background="Transparent">
                                         <Path x:Name="Icon"
                                               Data="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
-                                              Fill="{StaticResource TextMuted}"
+                                              Fill="{DynamicResource TextMuted}"
                                               Stretch="Uniform"
                                               Width="16" Height="16"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsChecked" Value="True">
-                                            <Setter TargetName="Icon" Property="Fill" Value="{StaticResource AccentBlue}"/>
+                                            <Setter TargetName="Icon" Property="Fill" Value="{DynamicResource AccentBlue}"/>
                                             <Setter TargetName="Icon" Property="Data" Value="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.27 3.27c1.42-1.37 2.54-3.11 3.22-4.73-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-4 .7l2.29 2.29c.51-.14 1-.22 1.46-.22zm7.78 13.53L3.51 3.75 2.24 5.02l3.86 3.86C4.41 10.02 2.9 11.85 2 13.5c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l4.3 4.3 1.27-1.27zM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .39-.03.57-.06l1.57 1.57c-.64.31-1.37.49-2.14.49zm-.94-8.06l3.44 3.44C14.44 11.69 14.19 12 13.5 12c-1.66 0-3-1.34-3-3 0-.69.31-.94.44-1.56z"/>
                                         </Trigger>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -401,10 +389,10 @@
                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                         <CheckBox IsChecked="{Binding RememberMe}"
                                   VerticalAlignment="Center"
-                                  Foreground="{StaticResource TextMuted}"
-                                  BorderBrush="{StaticResource InputBorder}">
+                                  Foreground="{DynamicResource TextMuted}"
+                                  BorderBrush="{DynamicResource InputBorder}">
                             <TextBlock Text="Remember Me"
-                                       Foreground="{StaticResource TextMuted}"
+                                       Foreground="{DynamicResource TextMuted}"
                                        FontSize="13"/>
                         </CheckBox>
                     </StackPanel>
@@ -420,7 +408,7 @@
                     Visibility="{Binding ErrorMessage,
                                  Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
                 <TextBlock Text="{Binding ErrorMessage}"
-                           Foreground="{StaticResource ErrorRed}"
+                           Foreground="{DynamicResource ErrorRed}"
                            FontSize="12"
                            TextWrapping="Wrap"/>
             </Border>

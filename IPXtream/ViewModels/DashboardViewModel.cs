@@ -21,7 +21,7 @@ namespace IPXtream.ViewModels;
 /// <summary>
 /// Sidebar section identifiers.
 /// </summary>
-public enum MediaSection { LiveTV, VOD, Series, WhatsNew, CurrentlyWatching, Downloads, Settings }
+public enum MediaSection { LiveTV, VOD, Series, WhatsNew, CurrentlyWatching, Downloads, Settings, Home }
 
 /// <summary>
 /// ViewModel for DashboardWindow.
@@ -285,6 +285,7 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private bool _showDownloadsTray;
     [ObservableProperty] private string _downloadFolder = string.Empty;
     [ObservableProperty] private bool _isSettingsOpen;
+    [ObservableProperty] private bool _isWhatsNewOpen;
 
     [ObservableProperty] private string _newAccountServerUrl = string.Empty;
     [ObservableProperty] private string _newAccountUsername = string.Empty;
@@ -539,12 +540,14 @@ public partial class DashboardViewModel : ObservableObject
 
         ActiveSection     = section switch
         {
-            "vod"       => MediaSection.VOD,
-            "series"    => MediaSection.Series,
-            "whatsnew"  => MediaSection.WhatsNew,
+            "live"              => MediaSection.LiveTV,
+            "vod"               => MediaSection.VOD,
+            "series"            => MediaSection.Series,
+            "whatsnew"          => MediaSection.WhatsNew,
             "currentlywatching" => MediaSection.CurrentlyWatching,
-            "downloads" => MediaSection.Downloads,
-            _           => MediaSection.LiveTV
+            "downloads"         => MediaSection.Downloads,
+            "home"              => MediaSection.Home,
+            _                   => MediaSection.Home
         };
 
         SelectedCategory = null;
@@ -588,6 +591,18 @@ public partial class DashboardViewModel : ObservableObject
     private void CloseSettings()
     {
         IsSettingsOpen = false;
+    }
+
+    [RelayCommand]
+    private void OpenWhatsNew()
+    {
+        IsWhatsNewOpen = true;
+    }
+
+    [RelayCommand]
+    private void CloseWhatsNew()
+    {
+        IsWhatsNewOpen = false;
     }
 
     [RelayCommand]
@@ -1591,7 +1606,7 @@ public partial class DashboardViewModel : ObservableObject
 
     private async Task LoadCategoriesAsync(bool forceRefresh = false)
     {
-        if (ActiveSection == MediaSection.WhatsNew || ActiveSection == MediaSection.CurrentlyWatching) return;
+        if (ActiveSection == MediaSection.WhatsNew || ActiveSection == MediaSection.CurrentlyWatching || ActiveSection == MediaSection.Home) return;
         IsLoadingCategories = true;
         ErrorMessage        = string.Empty;
         Categories.Clear();
@@ -1637,7 +1652,7 @@ public partial class DashboardViewModel : ObservableObject
 
     private async Task LoadStreamsAsync(string categoryId, bool forceRefresh = false, CancellationToken ct = default)
     {
-        if (ActiveSection == MediaSection.WhatsNew || ActiveSection == MediaSection.CurrentlyWatching) return;
+        if (ActiveSection == MediaSection.WhatsNew || ActiveSection == MediaSection.CurrentlyWatching || ActiveSection == MediaSection.Home) return;
         IsLoadingStreams = true;
         ErrorMessage     = string.Empty;
         Streams.Clear();

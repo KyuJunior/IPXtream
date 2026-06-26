@@ -69,17 +69,10 @@
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Foreground" Value="White"/>
-                                <Setter TargetName="Bd" Property="Background">
-                                    <Setter.Value>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                            <GradientStop Color="#5B9BFF" Offset="0"/>
-                                            <GradientStop Color="#8B6BD4" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Setter.Value>
-                                </Setter>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PrimaryAccentGradient}"/>
                                 <Setter TargetName="Bd" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect BlurRadius="12" Color="#5B9BFF" Opacity="0.3" ShadowDepth="2" Direction="270"/>
+                                        <DropShadowEffect BlurRadius="12" Color="{DynamicResource AccentBlueColor}" Opacity="0.3" ShadowDepth="2" Direction="270"/>
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
@@ -117,7 +110,7 @@
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgHover}"/>
                                 <Setter TargetName="Bd" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect BlurRadius="20" Color="#5B9BFF" Opacity="0.35" ShadowDepth="4" Direction="270"/>
+                                        <DropShadowEffect BlurRadius="20" Color="{DynamicResource AccentBlueColor}" Opacity="0.35" ShadowDepth="4" Direction="270"/>
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
@@ -245,7 +238,67 @@
                                 <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                                 <Setter TargetName="OuterBd" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect BlurRadius="12" Color="#5B9BFF" Opacity="0.25" ShadowDepth="0"/>
+                                        <DropShadowEffect BlurRadius="12" Color="{DynamicResource AccentBlueColor}" Opacity="0.25" ShadowDepth="0"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── Settings TextBox Style ──────────────────────────────────────── -->
+        <Style x:Key="SettingsTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background"      Value="{DynamicResource InputBg}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource InputBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="12,0"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Height"          Value="36"/>
+            <Setter Property="CaretBrush"      Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="SelectionBrush"  Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <Grid>
+                                <!-- Placeholder text using Tag -->
+                                <TextBlock Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" 
+                                           Foreground="{DynamicResource TextMuted}"
+                                           Margin="{TemplateBinding Padding}"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False"
+                                           Opacity="0.5">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              Margin="{TemplateBinding Padding}"
+                                              VerticalAlignment="Center"
+                                              Focusable="False"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                <Setter TargetName="Bd" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect BlurRadius="8" Color="{DynamicResource AccentBlueColor}" Opacity="0.25" ShadowDepth="0"/>
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
@@ -266,13 +319,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" CornerRadius="8">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#5B9BFF" Offset="0"/>
-                                    <GradientStop Color="#8B6BD4" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <Border x:Name="Bd" CornerRadius="8" Background="{DynamicResource PrimaryAccentGradient}">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
                                               Margin="{TemplateBinding Padding}"/>
@@ -569,10 +616,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2E2E50"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgHover}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#4F8EF7"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBlue}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -687,7 +734,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2E2E50"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgHover}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBlue}"/>
@@ -789,7 +836,7 @@
 
         <!-- ── Toggle Switch style for CheckBox ────────────────────────────── -->
         <Style x:Key="ToggleCheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Background" Value="#2E2E50"/>
+            <Setter Property="Background" Value="{DynamicResource BgHover}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -928,7 +975,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#15FFFFFF"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DividerColor}"/>
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="#25FFFFFF"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
@@ -1011,7 +1058,7 @@
                 </Image.Effect>
             </Image>
             <!-- Overlay to blend the glow into the deep background -->
-            <Border Background="#D5080812"/>
+            <Border Background="{DynamicResource BgDeep}"/>
         </Grid>
 
         <!-- ══════════════════════════════════════════════════════════════════
@@ -1030,7 +1077,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- ══════════ TOP NAVIGATION BAR ══════════════════════════════ -->
-            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="#D5080812" BorderBrush="{DynamicResource DividerColor}" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="{DynamicResource BgDeep}" BorderBrush="{DynamicResource DividerColor}" BorderThickness="0,0,0,1">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="15" Color="Black" Opacity="0.3" ShadowDepth="1" Direction="270"/>
                 </Border.Effect>
@@ -1042,19 +1089,13 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Branding Logo (Left) -->
-                    <Border Grid.Column="0" Margin="24,0,24,0" VerticalAlignment="Center" CornerRadius="12" Padding="14,6" Background="#141422" BorderBrush="#15FFFFFF" BorderThickness="1" Cursor="Hand">
+                    <Border Grid.Column="0" Margin="24,0,24,0" VerticalAlignment="Center" CornerRadius="12" Padding="14,6" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Cursor="Hand">
                         <Border.InputBindings>
                             <MouseBinding MouseAction="LeftClick" Command="{Binding SelectSectionCommand}" CommandParameter="whatsnew"/>
                         </Border.InputBindings>
                         <StackPanel Orientation="Horizontal">
                             <!-- Play icon in a dark rounded square -->
-                            <Border Width="22" Height="22" CornerRadius="5" Margin="0,0,8,0">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                        <GradientStop Color="#5B9BFF" Offset="0"/>
-                                        <GradientStop Color="#8B6BD4" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                            <Border Width="22" Height="22" CornerRadius="5" Margin="0,0,8,0" Background="{DynamicResource PrimaryAccentGradient}">
                                 <Path Data="{StaticResource IconLogo}" Fill="White" Stretch="Uniform" Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="IPXtream" FontSize="14" FontWeight="Black" Foreground="White" VerticalAlignment="Center"/>
@@ -1327,7 +1368,7 @@
                                        Foreground="#FF7B6B" FontSize="11"
                                        TextWrapping="Wrap" Margin="0,0,0,6"/>
                             <Button Command="{Binding SelectSectionCommand}" CommandParameter="live"
-                                    Background="#4F8EF7" Foreground="White"
+                                    Background="{DynamicResource AccentBlue}" Foreground="White"
                                     BorderThickness="0" Padding="8,4"
                                     FontSize="11" FontWeight="Bold" Cursor="Hand">
                                 <Button.Style>
@@ -1557,7 +1598,7 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
+                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgCard}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsSelected" Value="True">
                                                     <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
@@ -1649,10 +1690,10 @@
                                             </Border.Background>
                                             <TextBlock Text="WHAT'S NEW" Foreground="White" FontSize="9" FontWeight="Black"/>
                                         </Border>
-                                        <Border Background="#15FFFFFF" CornerRadius="6" Padding="6,2" Margin="0,0,6,0">
+                                        <Border Background="{DynamicResource DividerColor}" CornerRadius="6" Padding="6,2" Margin="0,0,6,0">
                                             <TextBlock Text="{Binding FeaturedCarouselItem.ReleaseDate}" Foreground="White" FontSize="10" FontWeight="SemiBold"/>
                                         </Border>
-                                        <Border Background="#15FFFFFF" CornerRadius="6" Padding="6,2">
+                                        <Border Background="{DynamicResource DividerColor}" CornerRadius="6" Padding="6,2">
                                             <StackPanel Orientation="Horizontal">
                                                 <Path Data="{StaticResource IconStar}" Fill="#FFD700" Width="8" Height="8" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,3,0"/>
                                                 <TextBlock Text="{Binding FeaturedCarouselItem.Rating}" Foreground="White" FontSize="10" FontWeight="SemiBold"/>
@@ -1672,13 +1713,7 @@
                                                 Foreground="White" FontSize="12" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="PlayBd" CornerRadius="18" BorderThickness="1" BorderBrush="#33FFFFFF" Padding="22,8">
-                                                        <Border.Background>
-                                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                                <GradientStop Color="#5B9BFF" Offset="0"/>
-                                                                <GradientStop Color="#8B6BD4" Offset="1"/>
-                                                            </LinearGradientBrush>
-                                                        </Border.Background>
+                                                    <Border x:Name="PlayBd" CornerRadius="18" BorderThickness="1" BorderBrush="#33FFFFFF" Padding="22,8" Background="{DynamicResource PrimaryAccentGradient}">
                                                         <StackPanel Orientation="Horizontal">
                                                              <Path Data="M6,4 L18,12 L6,20 Z" Fill="White" Stretch="Uniform" Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                              <TextBlock Text="Watch Now" Foreground="White" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
@@ -1732,7 +1767,7 @@
                                                     <Border x:Name="Dot" CornerRadius="2.5" Background="#55FFFFFF" Width="5" Height="5"/>
                                                     <ControlTemplate.Triggers>
                                                         <DataTrigger Binding="{Binding IsSelectedCarousel}" Value="True">
-                                                            <Setter TargetName="Dot" Property="Background" Value="#5B9BFF"/>
+                                                            <Setter TargetName="Dot" Property="Background" Value="{DynamicResource AccentBlue}"/>
                                                             <Setter TargetName="Dot" Property="Width" Value="12"/>
                                                         </DataTrigger>
                                                     </ControlTemplate.Triggers>
@@ -1791,7 +1826,7 @@
                                 </ListBox.ItemContainerStyle>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#15FFFFFF" CornerRadius="12" BorderBrush="#15FFFFFF" BorderThickness="1" Padding="10,8">
+                                        <Border Background="{DynamicResource DividerColor}" CornerRadius="12" BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Padding="10,8">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="64"/> <!-- Thumbnail -->
@@ -2144,7 +2179,7 @@
                                     <TextBlock Text="Add or remove items using Star (Whats New) and Heart (Dev Recommendation) buttons on any stream card." Foreground="{DynamicResource TextMuted}" FontSize="12" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" Command="{Binding PushWhatsNewCommand}"
-                                        Background="#4F8EF7" Foreground="White" FontWeight="Bold" FontSize="12"
+                                        Background="{DynamicResource AccentBlue}" Foreground="White" FontWeight="Bold" FontSize="12"
                                         Padding="16,8" Cursor="Hand" VerticalAlignment="Center">
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
@@ -2412,7 +2447,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Tray header -->
-                        <Border Grid.Row="0" Padding="14,7" Background="#12122A">
+                        <Border Grid.Row="0" Padding="14,7" Background="{DynamicResource InputBg}">
                             <Grid>
                                 <TextBlock Text="DOWNLOADS" Foreground="{DynamicResource TextMuted}"
                                            FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -2488,9 +2523,9 @@
                                                     <Button Command="{Binding DataContext.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"
                                                             Background="Transparent" BorderThickness="0"
-                                                            Foreground="#FF5370" Cursor="Hand"
+                                                            Foreground="{DynamicResource ErrorRed}" Cursor="Hand"
                                                             Padding="6,0" ToolTip="Cancel / Remove">
-                                                        <Path Data="{StaticResource IconClose}" Fill="#FF5370" Width="10" Height="10" Stretch="Uniform"/>
+                                                        <Path Data="{StaticResource IconClose}" Fill="{DynamicResource ErrorRed}" Width="10" Height="10" Stretch="Uniform"/>
                                                     </Button>
                                                 </StackPanel>
 
@@ -2573,7 +2608,7 @@
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Button Command="{Binding ChangeDownloadFolderCommand}"
-                                    Background="#1A1A2E" BorderBrush="#2E2E50" BorderThickness="1"
+                                    Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource BgHover}" BorderThickness="1"
                                     Foreground="White" Cursor="Hand" Padding="12,6" Height="32">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
@@ -2588,7 +2623,7 @@
                             </Button>
 
                             <Button Command="{Binding OpenDownloadFolderCommand}"
-                                    Background="#1A1A2E" BorderBrush="#2E2E50" BorderThickness="1"
+                                    Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource BgHover}" BorderThickness="1"
                                     Foreground="White" Cursor="Hand" Padding="12,6" Height="32" Margin="8,0,0,0">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
@@ -2603,7 +2638,7 @@
                             </Button>
 
                             <Button Command="{Binding ClearCompletedDownloadsCommand}"
-                                    Background="#1A1A2E" BorderBrush="#2E2E50" BorderThickness="1"
+                                    Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource BgHover}" BorderThickness="1"
                                     Foreground="White" Cursor="Hand" Padding="12,6" Height="32" Margin="8,0,0,0">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
@@ -2686,7 +2721,7 @@
                                             <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0">
                                                 <TextBlock Text="Limit: " Foreground="{DynamicResource TextMuted}" FontSize="11" VerticalAlignment="Center"/>
                                                 <ComboBox SelectedValue="{Binding SpeedLimitKbps, Mode=TwoWay}" SelectedValuePath="Tag"
-                                                          Background="#12122A" Foreground="White" BorderBrush="#2E2E50"
+                                                          Background="{DynamicResource InputBg}" Foreground="White" BorderBrush="{DynamicResource BgHover}"
                                                           Padding="6,4" Width="90" Height="28" VerticalAlignment="Center" FontSize="11">
                                                      <ComboBoxItem Content="Unlimited" Tag="{StaticResource Limit0}"/>
                                                      <ComboBoxItem Content="256 KB/s" Tag="{StaticResource Limit256}"/>
@@ -2774,7 +2809,7 @@
 
                                             <!-- Progress bar row -->
                                             <Grid Grid.Row="1" Grid.ColumnSpan="3" x:Name="ProgressTrack" Height="6" Margin="0,10,0,2">
-                                                <Border CornerRadius="3" Background="#12122A"/>
+                                                <Border CornerRadius="3" Background="{DynamicResource InputBg}"/>
                                                 <Border CornerRadius="3" Background="{DynamicResource AccentBlue}" HorizontalAlignment="Left">
                                                     <Border.Width>
                                                         <MultiBinding Converter="{StaticResource ProgressToWidthMultiConverter}">
@@ -2814,7 +2849,7 @@
                 </Button>
 
                 <!-- Details Card -->
-                <Border Width="700" Height="460" CornerRadius="16" Background="#10101F" BorderBrush="#15FFFFFF" BorderThickness="1"
+                <Border Width="700" Height="460" CornerRadius="16" Background="#10101F" BorderBrush="{DynamicResource DividerColor}" BorderThickness="1"
                         HorizontalAlignment="Center" VerticalAlignment="Center" Padding="28" ClipToBounds="True">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.6" ShadowDepth="0"/>
@@ -2840,7 +2875,7 @@
                             </Grid.ColumnDefinitions>
 
                             <!-- Movie Poster -->
-                            <Border Grid.Column="0" CornerRadius="12" ClipToBounds="True" BorderBrush="#15FFFFFF" BorderThickness="1" Height="320" VerticalAlignment="Top" Margin="0,0,24,0">
+                            <Border Grid.Column="0" CornerRadius="12" ClipToBounds="True" BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" Height="320" VerticalAlignment="Top" Margin="0,0,24,0">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="15" Color="#000000" Opacity="0.4" ShadowDepth="4" Direction="270"/>
                                 </Border.Effect>
@@ -2870,14 +2905,14 @@
                                             </LinearGradientBrush>
                                         </Border.Background>
                                         <StackPanel Orientation="Horizontal">
-                                            <Path Data="{StaticResource IconStar}" Fill="#0F0F1A" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                            <TextBlock Text="{Binding SelectedMovieForInfo.Rating}" Foreground="#0F0F1A" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <Path Data="{StaticResource IconStar}" Fill="{DynamicResource BgDeep}" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                            <TextBlock Text="{Binding SelectedMovieForInfo.Rating}" Foreground="{DynamicResource BgDeep}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
-                                    <Border Background="#15FFFFFF" BorderBrush="#15FFFFFF" BorderThickness="1" CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
+                                    <Border Background="{DynamicResource DividerColor}" BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
                                         <TextBlock Text="{Binding SelectedMovieForInfo.ReleaseDate}" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </Border>
-                                    <Border Background="#15FFFFFF" BorderBrush="#15FFFFFF" BorderThickness="1" CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
+                                    <Border Background="{DynamicResource DividerColor}" BorderBrush="{DynamicResource DividerColor}" BorderThickness="1" CornerRadius="8" Padding="8,3" Margin="0,0,8,0">
                                         <TextBlock Text="{Binding SelectedMovieForInfo.Genre}" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </Border>
                                 </WrapPanel>
@@ -2904,15 +2939,9 @@
                                             Foreground="White" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="24,10" Margin="0,0,12,0">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
-                                                <Border x:Name="PlayBd" CornerRadius="10" RenderTransformOrigin="0.5,0.5">
-                                                    <Border.Background>
-                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                            <GradientStop Color="#5B9BFF" Offset="0"/>
-                                                            <GradientStop Color="#8B6BD4" Offset="1"/>
-                                                        </LinearGradientBrush>
-                                                    </Border.Background>
+                                                <Border x:Name="PlayBd" CornerRadius="10" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource PrimaryAccentGradient}">
                                                     <Border.Effect>
-                                                        <DropShadowEffect BlurRadius="15" Color="#5B9BFF" Opacity="0.3" ShadowDepth="2" Direction="270"/>
+                                                        <DropShadowEffect BlurRadius="15" Color="{DynamicResource AccentBlueColor}" Opacity="0.3" ShadowDepth="2" Direction="270"/>
                                                     </Border.Effect>
                                                     <Border.RenderTransform>
                                                         <ScaleTransform ScaleX="1" ScaleY="1"/>
@@ -3163,7 +3192,7 @@
                                             <Border Background="#66000000" CornerRadius="16"
                                                     Width="32" Height="32">
                                                 <Path Data="{StaticResource IconClose}"
-                                                      Fill="#FF5370" Width="10" Height="10"
+                                                      Fill="{DynamicResource ErrorRed}" Width="10" Height="10"
                                                       Stretch="Uniform"
                                                       HorizontalAlignment="Center"
                                                       VerticalAlignment="Center"/>
@@ -3676,16 +3705,13 @@
                                     <TextBlock Text="Add IPTV Account" Foreground="White" FontSize="15" FontWeight="Bold" Margin="0,0,0,14"/>
 
                                     <TextBlock Text="SERVER URL" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBox Style="{StaticResource SearchBox}" Height="36" Margin="0,0,0,10" Foreground="White"
-                                             Text="{Binding NewAccountServerUrl, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBox Style="{StaticResource SettingsTextBoxStyle}" Tag="e.g., http://domain.com:port" Margin="0,0,0,10" Foreground="White" Text="{Binding NewAccountServerUrl, UpdateSourceTrigger=PropertyChanged}"/>
 
                                     <TextBlock Text="USERNAME" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBox Style="{StaticResource SearchBox}" Height="36" Margin="0,0,0,10" Foreground="White"
-                                             Text="{Binding NewAccountUsername, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBox Style="{StaticResource SettingsTextBoxStyle}" Tag="Enter username" Margin="0,0,0,10" Foreground="White" Text="{Binding NewAccountUsername, UpdateSourceTrigger=PropertyChanged}"/>
 
                                     <TextBlock Text="PASSWORD" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBox Style="{StaticResource SearchBox}" Height="36" Margin="0,0,0,12" Foreground="White"
-                                             Text="{Binding NewAccountPassword, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBox Style="{StaticResource SettingsTextBoxStyle}" Tag="Enter password" Margin="0,0,0,12" Foreground="White" Text="{Binding NewAccountPassword, UpdateSourceTrigger=PropertyChanged}"/>
 
                                     <TextBlock Text="{Binding NewAccountErrorMessage}" Foreground="{StaticResource ErrorRed}" FontSize="12" Margin="0,0,0,10" TextWrapping="Wrap"
                                                Visibility="{Binding NewAccountErrorMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
@@ -3697,13 +3723,7 @@
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="Button">
-                                                            <Border x:Name="Bd" CornerRadius="8">
-                                                                <Border.Background>
-                                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                                        <GradientStop Color="#5B9BFF" Offset="0"/>
-                                                                        <GradientStop Color="#8B6BD4" Offset="1"/>
-                                                                    </LinearGradientBrush>
-                                                                </Border.Background>
+                                                            <Border x:Name="Bd" CornerRadius="8" Background="{DynamicResource PrimaryAccentGradient}">
                                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                             </Border>
                                                             <ControlTemplate.Triggers>
@@ -3758,7 +3778,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" Style="{StaticResource SearchBox}" Height="38" Text="{Binding DownloadFolder}" IsReadOnly="True"/>
+                                            <TextBox Grid.Column="0" Style="{StaticResource SettingsTextBoxStyle}" Tag="No folder selected" Height="38" Text="{Binding DownloadFolder}" IsReadOnly="True"/>
                                             <Button Grid.Column="1" Content="Browse..." Command="{Binding ChangeDownloadFolderCommand}" Height="38" Padding="16,0" Margin="8,0,0,0" Cursor="Hand">
                                                 <Button.Style>
                                                     <Style TargetType="Button">
@@ -3890,15 +3910,9 @@
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="Bd" CornerRadius="10" RenderTransformOrigin="0.5,0.5">
-                                                        <Border.Background>
-                                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                                <GradientStop Color="#5B9BFF" Offset="0"/>
-                                                                <GradientStop Color="#8B6BD4" Offset="1"/>
-                                                            </LinearGradientBrush>
-                                                        </Border.Background>
+                                                    <Border x:Name="Bd" CornerRadius="10" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource PrimaryAccentGradient}">
                                                         <Border.Effect>
-                                                            <DropShadowEffect BlurRadius="15" Color="#5B9BFF" Opacity="0.3" ShadowDepth="2" Direction="270"/>
+                                                            <DropShadowEffect BlurRadius="15" Color="{DynamicResource AccentBlueColor}" Opacity="0.3" ShadowDepth="2" Direction="270"/>
                                                         </Border.Effect>
                                                         <Border.RenderTransform>
                                                             <ScaleTransform ScaleX="1" ScaleY="1"/>

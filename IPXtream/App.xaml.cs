@@ -26,6 +26,14 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Apply saved theme at startup
+        try
+        {
+            var settings = CredentialStore.Load();
+            ThemeHelper.ApplyTheme(settings.SelectedTheme ?? "Dark Purple");
+        }
+        catch { }
+
         System.AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
         {
             LogService.Log("Unhandled AppDomain Exception", ev.ExceptionObject as Exception);

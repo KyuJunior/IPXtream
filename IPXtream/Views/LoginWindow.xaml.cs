@@ -14,6 +14,14 @@ public partial class LoginWindow : Window
         _vm = viewModel;
         DataContext = _vm;
 
+        // Apply saved theme immediately at startup
+        try
+        {
+            var settings = Helpers.CredentialStore.Load();
+            Helpers.ThemeHelper.ApplyTheme(settings.SelectedTheme ?? "Dark Purple", this);
+        }
+        catch { }
+
         // If credentials were saved, the VM already set the password string —
         // push it into the controls (one-time, at startup only).
         PbPassword.Password = _vm.Password;

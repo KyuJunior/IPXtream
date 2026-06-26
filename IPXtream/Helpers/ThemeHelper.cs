@@ -21,7 +21,7 @@ public static class ThemeHelper
         public string DividerColor { get; set; } = "#22FFFFFF";
     }
 
-    public static void ApplyTheme(string themeName)
+    public static void ApplyTheme(string themeName, Window? targetWindow = null)
     {
         var colors = themeName switch
         {
@@ -86,9 +86,14 @@ public static class ThemeHelper
 
         ApplyToDictionary(Application.Current.Resources, colors);
         
-        if (Application.Current.MainWindow != null)
+        if (targetWindow != null)
         {
-            ApplyToDictionary(Application.Current.MainWindow.Resources, colors);
+            ApplyToDictionary(targetWindow.Resources, colors);
+        }
+
+        foreach (Window window in Application.Current.Windows)
+        {
+            ApplyToDictionary(window.Resources, colors);
         }
     }
 
@@ -105,11 +110,32 @@ public static class ThemeHelper
         dict["InputBg"] = CreateBrush(colors.InputBg);
         dict["InputBorder"] = CreateBrush(colors.InputBorder);
         dict["DividerColor"] = CreateBrush(colors.DividerColor);
+        
+        // Dynamic Accent Colors (needed for effects like DropShadowEffect)
+        dict["AccentBlueColor"] = ConvertColor(colors.AccentBlue);
+        dict["AccentPurpleColor"] = ConvertColor(colors.AccentPurple);
+
+        // Dynamic Accent Gradient Brush
+        dict["PrimaryAccentGradient"] = CreateGradientBrush(colors.AccentBlue, colors.AccentPurple);
     }
 
     private static SolidColorBrush CreateBrush(string hexColor)
     {
-        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hexColor));
+        var brush = new SolidColorBrush(ConvertColor(hexColor));
+        brush.Freeze();
+        return brush;
+    }
+
+    private static Color ConvertColor(string hexColor)
+    {
+        return (Color)ColorConverter.ConvertFromString(hexColor);
+    }
+
+    private static LinearGradientBrush CreateGradientBrush(string startHex, string endHex)
+    {
+        var startColor = ConvertColor(startHex);
+        var endColor = ConvertColor(endHex);
+        var brush = new LinearGradientBrush(startColor, endColor, new Point(0, 0), new Point(1, 1));
         brush.Freeze();
         return brush;
     }

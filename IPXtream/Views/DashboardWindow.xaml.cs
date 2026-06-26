@@ -58,7 +58,7 @@ public partial class DashboardWindow : Window
         DataContext = _vm;
 
         // Apply saved theme immediately
-        Helpers.ThemeHelper.ApplyTheme(_vm.SelectedTheme);
+        Helpers.ThemeHelper.ApplyTheme(_vm.SelectedTheme, this);
 
         // Register DWM backdrop and theme updates
         this.Loaded += (s, e) =>
@@ -1164,6 +1164,14 @@ public partial class DashboardWindow : Window
         if (e.OriginalSource == sender)
         {
             _vm.CloseSettingsCommand.Execute(null);
+        }
+    }
+
+    private void WhatsNewOverlay_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource == sender)
+        {
+            _vm.CloseWhatsNewCommand.Execute(null);
         }
     }
 
