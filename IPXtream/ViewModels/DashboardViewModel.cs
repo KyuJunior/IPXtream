@@ -291,6 +291,7 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private string _downloadFolder = string.Empty;
     [ObservableProperty] private bool _isSettingsOpen;
     [ObservableProperty] private bool _isWhatsNewOpen;
+    [ObservableProperty] private bool _isLoadingHomeData;
 
     [ObservableProperty] private string _newAccountServerUrl = string.Empty;
     [ObservableProperty] private string _newAccountUsername = string.Empty;
@@ -577,7 +578,7 @@ public partial class DashboardViewModel : ObservableObject
         else if (ActiveSection == MediaSection.Home)
         {
             LoadRecentlyWatched();
-            SyncFeaturedItemsCollection();
+            _ = LoadHomeDynamicDataAsync();
             StatusMessage = "Welcome back to IPXtream";
         }
         else if (ActiveSection == MediaSection.CurrentlyWatching)
@@ -1170,13 +1171,129 @@ public partial class DashboardViewModel : ObservableObject
         SyncItemLibraryState(stream);
     }
 
+    private async Task LoadHomeDynamicDataAsync(bool forceRefresh = false)
+    {
+        if (IsLoadingHomeData) return;
+        IsLoadingHomeData = true;
+
+        try
+        {
+            // Clear current lists immediately on UI thread
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                FeaturedMovies.Clear();
+                FeaturedShows.Clear();
+                FeaturedLive.Clear();
+            });
+
+            // Fetch movies, series, and live streams in parallel
+            var moviesTask = _api.GetVodStreamsAsync(null, forceRefresh: forceRefresh);
+            var seriesTask = _api.GetSeriesAsync(null, forceRefresh: forceRefresh);
+            var liveTask = _api.GetLiveStreamsAsync(null, forceRefresh: forceRefresh);
+
+            await Task.WhenAll(moviesTask, seriesTask, liveTask);
+
+            var movies = await moviesTask ?? new List<StreamItem>();
+            var series = await seriesTask ?? new List<StreamItem>();
+            var live = await liveTask ?? new List<StreamItem>();
+
+            // Popular Movies: contains (2026), rating > 7.0
+            var filteredMovies = movies.Where(m =>
+                !string.IsNullOrEmpty(m.Name) &&
+                m.Name.Contains("(2026)", StringComparison.OrdinalIgnoreCase) &&
+                double.TryParse(m.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) &&
+                r > 7.0
+            ).ToList();
+
+            // Popular Shows / TV Series: contains (2026), rating > 7.0
+            var filteredSeries = series.Where(s =>
+                !string.IsNullOrEmpty(s.Name) &&
+                s.Name.Contains("(2026)", StringComparison.OrdinalIgnoreCase) &&
+                double.TryParse(s.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) &&
+                r > 7.0
+            ).ToList();
+
+            // Featured Live TV: contains "Alwan" or "Al Wan"
+            var filteredLive = live.Where(l =>
+                !string.IsNullOrEmpty(l.Name) &&
+                (l.Name.Contains("Alwan", StringComparison.OrdinalIgnoreCase) ||
+                 l.Name.Contains("Al Wan", StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+
+            // Fallback for Movies: relax criteria to 2025/2026 if none found
+            if (filteredMovies.Count == 0)
+            {
+                filteredMovies = movies.Where(m =>
+                    !string.IsNullOrEmpty(m.Name) &&
+                    (m.Name.Contains("(2025)", StringComparison.OrdinalIgnoreCase) || m.Name.Contains("(2026)", StringComparison.OrdinalIgnoreCase)) &&
+                    double.TryParse(m.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) &&
+                    r > 7.0
+                ).ToList();
+            }
+            if (filteredMovies.Count == 0)
+            {
+                filteredMovies = movies.Where(m =>
+                    double.TryParse(m.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) &&
+                    r > 7.0
+                ).ToList();
+            }
+
+            // Fallback for Series: relax criteria to 2025/2026 if none found
+            if (filteredSeries.Count == 0)
+            {
+                filteredSeries = series.Where(s =>
+                    !string.IsNullOrEmpty(s.Name) &&
+                    (s.Name.Contains("(2025)", StringComparison.OrdinalIgnoreCase) || s.Name.Contains("(2026)", StringComparison.OrdinalIgnoreCase)) &&
+                    double.TryParse(s.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) &&
+                    r > 7.0
+                ).ToList();
+            }
+            if (filteredSeries.Count == 0)
+            {
+                filteredSeries = series.Where(s =>
+                    double.TryParse(s.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) &&
+                    r > 7.0
+                ).ToList();
+            }
+
+            // Randomly select up to 20 items
+            var random = new Random();
+            var selectedMovies = filteredMovies.OrderBy(_ => random.Next()).Take(20).ToList();
+            var selectedSeries = filteredSeries.OrderBy(_ => random.Next()).Take(20).ToList();
+
+            // Populate on the UI thread
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                foreach (var m in selectedMovies) FeaturedMovies.Add(m);
+                foreach (var s in selectedSeries) FeaturedShows.Add(s);
+                foreach (var l in filteredLive) FeaturedLive.Add(l);
+            });
+        }
+        catch (Exception ex)
+        {
+            LogService.Log("Error loading home page dynamic content", ex);
+        }
+        finally
+        {
+            IsLoadingHomeData = false;
+        }
+    }
+
     private async Task InitializeWhatsNewAsync()
     {
         LoadLibraryData();
 
         await LoadWhatsNewAsync();
         
-        SyncFeaturedItemsCollection();
+        if (ActiveSection == MediaSection.Home)
+        {
+            _ = LoadHomeDynamicDataAsync();
+        }
+        else
+        {
+            SyncFeaturedItemsCollection();
+        }
+
         if (_featuredItems.Count > 0)
         {
             _carouselIndex = 0;
@@ -1419,6 +1536,12 @@ public partial class DashboardViewModel : ObservableObject
         if (ActiveSection == MediaSection.CurrentlyWatching)
         {
             LoadCurrentlyWatching();
+            return;
+        }
+
+        if (ActiveSection == MediaSection.Home)
+        {
+            await LoadHomeDynamicDataAsync(forceRefresh: true);
             return;
         }
 
