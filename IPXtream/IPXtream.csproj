@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>IPXtream</AssemblyName>
-    <Version>2.0.95</Version>
+    <Version>2.0.96</Version>
     <RootNamespace>IPXtream</RootNamespace>
     <ApplicationIcon>appicon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -38,6 +38,7 @@
 
     <!-- XAML Behaviors (for Interaction.Triggers, EventTrigger etc.) -->
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
+    <PackageReference Include="WPF-UI" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>
