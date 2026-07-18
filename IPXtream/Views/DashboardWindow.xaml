@@ -1086,10 +1086,26 @@
             <!-- Static geometric backdrop -->
             <Image Source="/dashboard_bg.png" Stretch="UniformToFill" Opacity="0.45"/>
             <!-- Dynamic ambient cover glow -->
-            <Image Source="{Binding FeaturedCarouselItem.Cover}" Stretch="UniformToFill" Opacity="0.08" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Image Source="{Binding AmbientBackdropCover, Converter={StaticResource CachedImageConverter}, NotifyOnTargetUpdated=True}" 
+                   Stretch="UniformToFill" Opacity="0.0" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Image.Effect>
                     <BlurEffect Radius="100" RenderingBias="Quality"/>
                 </Image.Effect>
+                <Image.Triggers>
+                    <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                 From="0.0" To="0.25"
+                                                 Duration="0:0:0.85">
+                                    <DoubleAnimation.EasingFunction>
+                                        <QuadraticEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Image.Triggers>
             </Image>
             <!-- Overlay to blend the glow into the deep background -->
             <Border Background="{DynamicResource BgDeep}"/>
@@ -1795,7 +1811,7 @@
                         </Border.BorderBrush>
                         <Grid>
                             <!-- Cover Background -->
-                            <Image Source="{Binding FeaturedCarouselItem.Cover}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image Source="{Binding FeaturedCarouselItem.Cover, Converter={StaticResource CachedImageConverter}}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Image.Effect>
                                     <BlurEffect Radius="15" RenderingBias="Quality"/>
                                 </Image.Effect>
@@ -4495,6 +4511,7 @@
                                         </StackPanel>
                                         <ComboBox Grid.Column="1" VerticalAlignment="Center" Height="36" Style="{StaticResource SettingsComboBoxStyle}" SelectedItem="{Binding SelectedTheme}">
                                             <ComboBox.Items>
+                                                <sys:String>Obsidian Cinema</sys:String>
                                                 <sys:String>Dark Purple</sys:String>
                                                 <sys:String>Midnight Black</sys:String>
                                                 <sys:String>Cyberpunk Neon</sys:String>

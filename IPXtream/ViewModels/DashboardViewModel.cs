@@ -86,6 +86,7 @@ public partial class DashboardViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
+    [NotifyPropertyChangedFor(nameof(AmbientBackdropCover))]
     private StreamItem? _featuredCarouselItem;
 
     public bool ShowHeroBanner => ActiveSection == MediaSection.WhatsNew && CurrentSeries == null && FeaturedCarouselItem != null;
@@ -134,6 +135,7 @@ public partial class DashboardViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsViewingMovieInfo))]
+    [NotifyPropertyChangedFor(nameof(AmbientBackdropCover))]
     private StreamItem? _selectedMovieForInfo;
 
     public bool IsViewingMovieInfo => SelectedMovieForInfo is not null;
@@ -141,9 +143,24 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsViewingSeriesInfo))]
     [NotifyPropertyChangedFor(nameof(ShowHeroBanner))]
+    [NotifyPropertyChangedFor(nameof(AmbientBackdropCover))]
     private SeriesInfoResponse? _currentSeries;
 
     public bool IsViewingSeriesInfo => CurrentSeries is not null;
+
+    public string? AmbientBackdropCover
+    {
+        get
+        {
+            if (SelectedMovieForInfo != null && !string.IsNullOrEmpty(SelectedMovieForInfo.Cover))
+                return SelectedMovieForInfo.Cover;
+            if (CurrentSeries != null && CurrentSeries.Info != null && !string.IsNullOrEmpty(CurrentSeries.Info.Cover))
+                return CurrentSeries.Info.Cover;
+            if (FeaturedCarouselItem != null && !string.IsNullOrEmpty(FeaturedCarouselItem.Cover))
+                return FeaturedCarouselItem.Cover;
+            return null;
+        }
+    }
 
     // ── Seasons (for series details view) ─────────────────────────────────────
     public ObservableCollection<SeasonItem> Seasons { get; } = new();
@@ -2008,7 +2025,7 @@ public partial class DashboardViewModel : ObservableObject
     private string _selectedPlayerEngine = "Flyleaf";
 
     [ObservableProperty]
-    private string _selectedTheme = "Dark Purple";
+    private string _selectedTheme = "Obsidian Cinema";
 
     partial void OnSelectedThemeChanged(string value)
     {
@@ -2035,7 +2052,7 @@ public partial class DashboardViewModel : ObservableObject
             MaxConcurrentDownloads = _appSettings.MaxConcurrentDownloads;
             DefaultContainerExtension = _appSettings.DefaultContainerExtension;
             SelectedPlayerEngine = _appSettings.SelectedPlayerEngine ?? "Flyleaf";
-            SelectedTheme = _appSettings.SelectedTheme ?? "Dark Purple";
+            SelectedTheme = _appSettings.SelectedTheme ?? "Obsidian Cinema";
             HomeCardStyle = _appSettings.HomeCardStyle ?? "Minimal Gradients & Icons";
 
             SavedAccounts.Clear();
@@ -2059,7 +2076,7 @@ public partial class DashboardViewModel : ObservableObject
             MaxConcurrentDownloads = 2;
             DefaultContainerExtension = "ts";
             SelectedPlayerEngine = "Flyleaf";
-            SelectedTheme = "Dark Purple";
+            SelectedTheme = "Obsidian Cinema";
             HomeCardStyle = "Minimal Gradients & Icons";
         }
     }

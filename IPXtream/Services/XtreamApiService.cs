@@ -23,6 +23,12 @@ public class XtreamApiService : IDisposable
     private readonly HttpClient _downloadHttp; // separate client — no timeout for large files
     private UserCredentials? _credentials;
 
+    private static volatile bool _imageCacheDirCreated;
+    private static readonly object ImageCacheLock = new();
+
+    private volatile bool _cacheDirCreated;
+    private readonly object _cacheLock = new();
+
     // ── Constructor ───────────────────────────────────────────────────────────
 
     public XtreamApiService()
@@ -403,7 +409,17 @@ public class XtreamApiService : IDisposable
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var cacheDir = Path.Combine(appData, "IPXtream", "Cache");
-        Directory.CreateDirectory(cacheDir);
+        if (!_cacheDirCreated)
+        {
+            lock (_cacheLock)
+            {
+                if (!_cacheDirCreated)
+                {
+                    Directory.CreateDirectory(cacheDir);
+                    _cacheDirCreated = true;
+                }
+            }
+        }
 
         using var md5 = MD5.Create();
         var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(url));
@@ -423,7 +439,17 @@ public class XtreamApiService : IDisposable
         var dir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "IPXtream", "ImageCache");
-        Directory.CreateDirectory(dir);
+        if (!_imageCacheDirCreated)
+        {
+            lock (ImageCacheLock)
+            {
+                if (!_imageCacheDirCreated)
+                {
+                    Directory.CreateDirectory(dir);
+                    _imageCacheDirCreated = true;
+                }
+            }
+        }
 
         using var md5 = MD5.Create();
         var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(url));

@@ -18,6 +18,6 @@ public class AppSettings
     public string DownloadFolder { get; set; } = string.Empty;
     public string? GithubToken { get; set; }
     public string SelectedPlayerEngine { get; set; } = "Flyleaf";
-    public string SelectedTheme { get; set; } = "Dark Purple";
+    public string SelectedTheme { get; set; } = "Obsidian Cinema";
     public string HomeCardStyle { get; set; } = "Minimal Gradients & Icons";
 }

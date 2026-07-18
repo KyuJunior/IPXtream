@@ -19,7 +19,9 @@ We are currently in a polish and maintenance phase. Recent work centered on side
   - Restyled Dashboard navigation by moving Home & Downloads into the sidebar.
   - Removed top action bar navigation buttons to clean up clutter.
   - Linked active navigation style highlighting using a custom converter.
-  - Version-bumped to `2.0.90` and successfully published & pushed the GitHub release.
+  - Implemented the Obsidian Cinema theme and dynamic Ambilight poster glow backdrop.
+  - Created project-specific custom skills under `.agents/skills/`.
+  - Version-bumped to `2.0.97` and successfully published & pushed the GitHub release.
 * **Next Steps**:
   - Await next feature requests or bug reports.
   - Address any issues related to media playback, settings, or multi-account overlays.
@@ -81,6 +83,11 @@ For the in-app update check to function correctly, the following criteria must b
 ---
 
 ## 5. Development History (Recent Releases)
+* **v2.0.97**:
+  - Implemented "Obsidian Cinema" theme and dynamic "Ambilight" poster glow backdrop.
+  - Fixed cover cache bindings with CachedImageConverter.
+  - Created `.agents/skills/` directory with wpf-mvvm-and-styling, iptv-performance-and-caching, media-player-lifecycle, and release-integrity rules.
+  - Automatically compiled, packaged, and released.
 * **v2.0.90**:
   - Automatically compiled, packaged, and released.
   - Staged and pushed version files to the main branch.
